@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.build/
+.cache/
+.dados/
+professor/
+.env
+.env.*
+!.env.example
+*.log
+*.dpapi
+*.pfx
+*.p12
+*.respostas.json
+.DS_Store
