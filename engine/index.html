@@ -6,6 +6,8 @@
     <meta name="lab-token" content="__TOKEN__" />
     <title>BeninDJ Hub</title>
     <link rel="stylesheet" href="/estilo.css" />
+    <link rel="stylesheet" href="/vendor/editor-tema.css" />
+    <script src="/vendor/editor.js" defer></script>
     <script src="/interface.js" defer></script>
     <script src="/ambiente-ui.js" defer></script>
     <script src="/jornada-ui.js" defer></script>
@@ -205,6 +207,7 @@
                 <div class="editor-shell">
                   <div class="editor-top">
                     <span id="nome-editor"></span><span id="salvo">Pronto</span>
+                    <button id="formatar-codigo" type="button" title="Formatar JavaScript ou JSON · Shift+Alt+F">Formatar</button>
                     <details class="file-menu">
                       <summary>Arquivo ···</summary>
                       <div>
@@ -217,19 +220,7 @@
                       </div>
                     </details>
                   </div>
-                  <div class="editor-corpo">
-                    <pre id="linhas" aria-hidden="true">1</pre>
-                    <div class="codigo-camadas">
-                      <pre id="codigo-colorido" aria-hidden="true"></pre>
-                      <textarea
-                        id="editor"
-                        spellcheck="false"
-                        autocorrect="off"
-                        autocapitalize="off"
-                        aria-label="Código da atividade"
-                      ></textarea>
-                    </div>
-                  </div>
+                  <div id="editor" class="editor-codigo"></div>
                   <div class="editor-actions">
                     <div class="grupo">
                       <button id="run-livre" class="primary">▶ Executar</button

@@ -1,52 +1,5 @@
-// Coloração local: o código é tratado como texto e nunca executado aqui.
-function colorirJS(codigo) {
-  const escapar = (texto) =>
-    texto.replace(
-      /[&<>"']/g,
-      (c) =>
-        ({
-          "&": "&amp;",
-          "<": "&lt;",
-          ">": "&gt;",
-          '"': "&quot;",
-          "'": "&#39;",
-        })[c],
-    );
-  const palavras = new Set(
-    "async await break case catch class const continue debugger default delete do else export extends finally for from function if import in instanceof let new of return static super switch this throw try typeof var void while with yield".split(
-      " ",
-    ),
-  );
-  const padrao =
-    /\/\*[\s\S]*?(?:\*\/|$)|\/\/[^\n]*|"(?:\\[\s\S]|[^"\\])*"?|'(?:\\[\s\S]|[^'\\])*'?|`(?:\\[\s\S]|[^`\\])*`?|\b(?:0[xX][\da-fA-F]+|\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)\b|[a-zA-Z_$][\w$]*/g;
-  let fim = 0;
-  let html = "";
-  for (const token of codigo.matchAll(padrao)) {
-    html += escapar(codigo.slice(fim, token.index));
-    const texto = token[0];
-    let classe = "";
-    if (texto.startsWith("//") || texto.startsWith("/*")) {
-      classe = "comentario";
-    } else if (/^["'`]/.test(texto)) {
-      classe = "string";
-    } else if (/^\d/.test(texto)) {
-      classe = "numero";
-    } else if (palavras.has(texto)) {
-      classe = "palavra";
-    } else if (/^(true|false|null|undefined|NaN|Infinity)$/.test(texto)) {
-      classe = "literal";
-    } else if (/^\s*\(/.test(codigo.slice(token.index + texto.length))) {
-      classe = "funcao";
-    }
-    html += classe
-      ? `<span class="js-${classe}">${escapar(texto)}</span>`
-      : escapar(texto);
-    fim = token.index + texto.length;
-  }
-  return html + escapar(codigo.slice(fim));
-}
-
-("use strict");
+"use strict";
+const colorirJS = HubEditor.colorirJS;
 const $ = (id) => document.getElementById(id);
 const TOKEN = document.querySelector('meta[name="lab-token"]').content;
 const parametros = new URLSearchParams(location.search);
@@ -67,6 +20,46 @@ let apiAtiva = false;
 let apiDesatualizada = false;
 let sessao;
 let modoDemo = false;
+const editorCodigo = HubEditor.criar($("editor"), {
+  nonce: TOKEN,
+  aoFormatar: () => tratar(formatarEditor)(),
+  aoVerificar: () => tratar(() => testar(false))(),
+  aoEstado: (estado) => {
+    $("formatar-codigo").disabled =
+      !aula || estado.somenteLeitura || !estado.podeFormatar;
+    $("formatar-codigo").title = estado.somenteLeitura
+      ? "Arquivo disponível somente para leitura"
+      : estado.podeFormatar
+        ? "Formatar JavaScript ou JSON · Shift+Alt+F"
+        : "Formatação disponível para JavaScript e JSON";
+  },
+});
+async function formatarEditor() {
+  if (!aula || ocupado || editorCodigo.readOnly) return;
+  $("formatar-codigo").disabled = true;
+  try {
+    const aplicado = await editorCodigo.formatar();
+    if (!aplicado) {
+      aviso("O editor mudou durante a formatação. Tente novamente.");
+      return;
+    }
+    await salvar();
+    aviso("Código formatado e salvo. Ctrl+Z desfaz a formatação.");
+  } catch (erro) {
+    const posicao = erro.loc?.start;
+    aviso(
+      "Não foi possível formatar. Revise a sintaxe" +
+        (posicao
+          ? ` na linha ${posicao.line}, coluna ${posicao.column}`
+          : " do arquivo") +
+        ". Seu código foi mantido.",
+      true,
+    );
+  } finally {
+    editorCodigo.atualizarEstado();
+  }
+}
+$("formatar-codigo").onclick = tratar(formatarEditor);
 
 function elemento(parent, tag, texto, classe) {
   const item = document.createElement(tag);
@@ -528,26 +521,6 @@ function renderizarCorrecao() {
   }
 }
 
-function sincronizarCores() {
-  const editor = $("editor");
-  const espelho = $("codigo-colorido");
-  espelho.innerHTML = colorirJS(editor.value + "\n");
-  // O espelho ocupa apenas a área útil: nunca desenha sobre as barras de rolagem.
-  espelho.style.width = editor.clientWidth + "px";
-  espelho.style.height = editor.clientHeight + "px";
-  $("linhas").style.height = editor.clientHeight + "px";
-  espelho.scrollTop = editor.scrollTop;
-  espelho.scrollLeft = editor.scrollLeft;
-  $("linhas").scrollTop = editor.scrollTop;
-}
-new ResizeObserver(sincronizarCores).observe($("editor"));
-function contagemLinhas() {
-  sincronizarCores();
-  $("linhas").textContent = Array.from(
-    { length: $("editor").value.split("\n").length },
-    (_, i) => i + 1,
-  ).join("\n");
-}
 function sincronizarEditor() {
   if (!aula) {
     return;
@@ -556,13 +529,13 @@ function sincronizarEditor() {
     return;
   }
   if (aula.modo === "funcoes") {
-    respostas.codigos[aula.exercicios[exercicioAtual].id] = $("editor").value;
+    respostas.codigos[aula.exercicios[exercicioAtual].id] = editorCodigo.value;
   } else {
     const arquivo = aula.projeto.arquivos.find(
       (item) => item.nome === arquivoAtual,
     );
     if (arquivo.editavel) {
-      respostas.arquivos[arquivoAtual] = $("editor").value;
+      respostas.arquivos[arquivoAtual] = editorCodigo.value;
     }
   }
 }
@@ -586,8 +559,12 @@ async function salvar() {
 function renderizarEditor() {
   if (aula.modo === "funcoes") {
     const exercicio = aula.exercicios[exercicioAtual];
-    $("editor").value = respostas.codigos[exercicio.id];
-    $("editor").readOnly = ocupado;
+    editorCodigo.abrir(
+      aula.id + ":" + exercicio.id,
+      exercicio.id + ".js",
+      respostas.codigos[exercicio.id],
+      ocupado,
+    );
     $("nome-editor").textContent = exercicio.id + ".js";
     $("enunciado").textContent = exercicio.enunciado;
     renderizarBriefing(exercicio);
@@ -596,10 +573,14 @@ function renderizarEditor() {
       (item) => item.nome === arquivoAtual,
     );
     $("arquivo").value = arquivoAtual;
-    $("editor").value = modoDemo
-      ? aula.professor.solucaoProjeto[arquivoAtual]
-      : respostas.arquivos[arquivoAtual];
-    $("editor").readOnly = modoDemo || !arquivo.editavel || ocupado;
+    editorCodigo.abrir(
+      aula.id + ":" + arquivoAtual + ":" + modoDemo,
+      arquivoAtual,
+      modoDemo
+        ? aula.professor.solucaoProjeto[arquivoAtual]
+        : respostas.arquivos[arquivoAtual],
+      modoDemo || !arquivo.editavel || ocupado,
+    );
     $("nome-editor").textContent = arquivoAtual;
     $("enunciado").textContent = aula.desafio;
     renderizarBriefing();
@@ -609,9 +590,7 @@ function renderizarEditor() {
         ? "Arquivo editável nesta etapa"
         : "Apoio disponível para leitura";
   }
-  $("editor").scrollTop = 0;
   $("salvo").textContent = "Salvo automaticamente";
-  contagemLinhas();
 }
 function renderizarTestes() {
   const testes =
@@ -830,7 +809,7 @@ function bloquear(valor) {
   ]) {
     $(id).disabled = valor;
   }
-  $("editor").readOnly =
+  editorCodigo.readOnly =
     valor ||
     modoDemo ||
     (aula.modo === "projeto" &&
@@ -960,10 +939,10 @@ $("arquivo").onchange = tratar(async () => {
   arquivoAtual = $("arquivo").value;
   renderizarEditor();
 });
-$("editor").oninput = () => {
+editorCodigo.oninput = () => {
+  if (!aula) return;
   sincronizarEditor();
   revisao++;
-  contagemLinhas();
   if (aula.modo === "funcoes") {
     resultados = resultados.filter(
       (r) => r.exercicioId !== aula.exercicios[exercicioAtual].id,
@@ -982,26 +961,6 @@ $("editor").oninput = () => {
     () => salvar().catch((e) => aviso("Falha ao salvar: " + e.message, true)),
     500,
   );
-};
-$("editor").onscroll = () => {
-  sincronizarCores();
-  $("linhas").scrollTop = $("editor").scrollTop;
-};
-$("editor").onkeydown = (e) => {
-  if (e.key === "Tab" && !$("editor").readOnly) {
-    e.preventDefault();
-    $("editor").setRangeText(
-      "  ",
-      $("editor").selectionStart,
-      $("editor").selectionEnd,
-      "end",
-    );
-    $("editor").dispatchEvent(new Event("input"));
-  }
-  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-    e.preventDefault();
-    tratar(() => testar(false))();
-  }
 };
 $("testar").onclick = tratar(() => testar(false));
 $("testar-tudo").onclick = tratar(() => testar(true));
@@ -1133,11 +1092,11 @@ $("recomecar").onclick = tratar(async () => {
   ) {
     return;
   }
-  $("editor").value =
+  editorCodigo.value =
     aula.modo === "funcoes"
       ? aula.exercicios[exercicioAtual].codigoInicial
       : aula.projeto.arquivos.find((a) => a.nome === arquivoAtual).codigo;
-  $("editor").dispatchEvent(new Event("input"));
+  editorCodigo.notificarAlteracao();
 });
 $("baixar-respostas").onclick = tratar(async () => {
   await salvar();
@@ -1184,8 +1143,8 @@ $("abrir-js").onclick = () => $("js-importado").click();
 $("js-importado").onchange = tratar(async () => {
   const arquivo = $("js-importado").files[0];
   if (arquivo) {
-    $("editor").value = (await arquivo.text()).replace(/^\uFEFF/, "");
-    $("editor").dispatchEvent(new Event("input"));
+    editorCodigo.value = (await arquivo.text()).replace(/^\uFEFF/, "");
+    editorCodigo.notificarAlteracao();
   }
   $("js-importado").value = "";
 });
@@ -1454,7 +1413,7 @@ $("run-livre").onclick = tratar(async () => {
     await salvar();
     const codigo =
       ($("modo-experimento").value === "desafio"
-        ? $("editor").value + "\n;\n"
+        ? editorCodigo.value + "\n;\n"
         : "") + $("rascunho").value;
     const retorno = await api("/api/executar", { aulaId: aula.id, codigo });
     $("console-livre").textContent = [

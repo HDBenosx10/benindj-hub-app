@@ -243,7 +243,7 @@ async function iniciar() {
       "Content-Type": "application/json; charset=utf-8",
       "Cache-Control": "no-store",
       "Content-Security-Policy":
-        "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'",
+        `default-src 'self'; script-src 'self'; style-src 'self' 'nonce-${token}'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'`,
     });
     res.end(JSON.stringify(dado));
   }
@@ -284,6 +284,8 @@ async function iniciar() {
       const estaticos = {
         "/": "index.html",
         "/interface.js": "interface.js",
+        "/vendor/editor.js": "vendor/editor.js",
+        "/vendor/editor-tema.css": "vendor/editor-tema.css",
         "/ambiente-ui.js": "ambiente-ui.js",
         "/jornada-ui.js": "jornada-ui.js",
         "/estilo.css": "estilo.css",
@@ -313,7 +315,7 @@ async function iniciar() {
           "Content-Type": tipo + "; charset=utf-8",
           "Cache-Control": "no-store",
           "Content-Security-Policy":
-            "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'",
+            `default-src 'self'; script-src 'self'; style-src 'self' 'nonce-${token}'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'`,
         });
         res.end(texto);
         return;

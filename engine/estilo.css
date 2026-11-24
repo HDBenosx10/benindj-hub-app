@@ -816,76 +816,21 @@ main {
     sans-serif;
   color: var(--subtle);
 }
-.editor-corpo {
-  position: relative;
-  padding-left: 44px;
-}
-#linhas {
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 44px;
-  margin: 0;
-  padding: 17px 10px 17px 0;
-  text-align: right;
-  color: #605a73;
-  background: #1c1b24;
-  font:
-    13px/1.85 Consolas,
-    monospace;
-  overflow: hidden;
-  border-right: 1px solid #302b3b;
-}
-.codigo-camadas {
-  position: relative;
-  min-width: 0;
-}
-#editor,
-#codigo-colorido {
-  margin: 0;
-  border: 0;
-  border-radius: 0;
-  padding: 17px 17px 17px 11px;
-  font:
-    13px/1.85 Consolas,
-    "Cascadia Code",
-    monospace;
-  letter-spacing: normal;
-  tab-size: 2;
-  white-space: pre;
-  overflow-wrap: normal;
-  box-sizing: border-box;
-}
-#codigo-colorido {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  pointer-events: none;
-  color: var(--ink);
-  background: #1c1b24;
-}
-#editor,
-#editor[readonly] {
-  position: relative;
-  display: block;
-  width: 100%;
-  height: 320px;
+.editor-codigo {
+  height: clamp(320px, 48dvh, 620px);
   min-height: 250px;
   resize: vertical;
-  background: none;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-  caret-color: var(--ink);
-  overflow: auto;
-  outline: 0;
+  overflow: hidden;
+  background: #22212c;
 }
-#editor:focus {
-  box-shadow: inset 2px 0 #9580ff55;
+.editor-codigo .cm-editor {
+  height: 100%;
 }
-#editor::selection {
-  background: #9580ff44;
+.editor-top #formatar-codigo {
+  font:
+    11px "Segoe UI",
+    sans-serif;
+  padding: 4px 9px;
 }
 .editor-actions {
   display: flex;
@@ -1096,23 +1041,6 @@ main {
     13px/1.9 Consolas,
     monospace;
   max-height: 600px;
-}
-.js-comentario {
-  color: #79708f;
-  font-style: italic;
-}
-.js-string {
-  color: #ffff80;
-}
-.js-numero,
-.js-literal {
-  color: #9580ff;
-}
-.js-palavra {
-  color: #ff80bf;
-}
-.js-funcao {
-  color: #8aff80;
 }
 .objetivos {
   font-size: 13px;
@@ -1717,9 +1645,6 @@ footer span:last-child {
     color: CanvasText;
     -webkit-text-fill-color: CanvasText;
   }
-  #codigo-colorido {
-    visibility: hidden;
-  }
 }
 @media (prefers-reduced-motion: reduce) {
   * {
@@ -2111,4 +2036,8 @@ body.resource-drawer-open #ambiente > .card:first-of-type h2 {
 .resource-drawer-open .schema-diagram {
   margin: 12px 0;
 }
-.curriculum-source{display:inline-block;margin-right:18px;margin-bottom:8px}
+.curriculum-source {
+  display: inline-block;
+  margin-right: 18px;
+  margin-bottom: 8px;
+}

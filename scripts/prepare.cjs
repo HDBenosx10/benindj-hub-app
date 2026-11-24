@@ -53,6 +53,7 @@ exports.preparar = async (perfil = "aluno", professorRoot) => {
   await fs.rm(base, { recursive: true, force: true });
   await fs.mkdir(backend, { recursive: true });
   await fs.cp(path.join(raiz, "engine"), backend, { recursive: true });
+  await require("./editor.cjs").gerarEditor(path.join(backend,"vendor"));
   await fs.mkdir(path.join(backend, "aulas"), { recursive: true });
   await fs.copyFile(
     path.join(raiz, "aulas", "aula-00.aula-hub"),

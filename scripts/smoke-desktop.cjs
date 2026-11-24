@@ -9,6 +9,8 @@ async function smoke() {
     process.argv[2] ?? "dist/win-unpacked/BeninDJ Hub Aluno.exe",
   );
   const perfil = process.env.HUB_PROFILE ?? "aluno";
+  const anterior = process.argv[3] ? path.resolve(process.argv[3]) : null;
+  let aberturas = 0;
   const temporaria = await fs.mkdtemp(path.join(os.tmpdir(), "benindj-smoke-"));
   const relatorio = path.join(temporaria, "processo.json");
   const dados = path.join(temporaria, "dados");
@@ -16,11 +18,15 @@ async function smoke() {
   const tempos = [];
   async function abrir() {
     await fs.rm(relatorio, { force: true });
-    processo = spawn(executavel, [], {
-      windowsHide: true,
-      stdio: "ignore",
-      env: { ...process.env, HUB_TEST_DATA: dados, HUB_QA_REPORT: relatorio },
-    });
+    processo = spawn(
+      anterior && aberturas++ === 0 ? anterior : executavel,
+      [],
+      {
+        windowsHide: true,
+        stdio: "ignore",
+        env: { ...process.env, HUB_TEST_DATA: dados, HUB_QA_REPORT: relatorio },
+      },
+    );
     const limite = Date.now() + 45000;
     while (Date.now() < limite) {
       try {
@@ -84,7 +90,10 @@ async function smoke() {
       );
     else assert.ok(inicio.aulas.length >= 46);
     const aula = await api(estado.endereco, "/api/aula?aula=aula-00");
-    const codigos = { "hello-world": 'console.log("Hello world!");' };
+    const codigos = {
+      "hello-world":
+        '// Resposta do aluno: ação e evolução.\nconsole.log("Hello world!");',
+    };
     const resultados = await api(estado.endereco, "/api/testar", {
       aulaId: "aula-00",
       codigos,
@@ -160,6 +169,10 @@ async function smoke() {
         ", execução, persistência e encerramento. Abertura do processo Electron (ms): " +
         tempos.join(", "),
     );
+    if (anterior)
+      console.log(
+        "Atualização entre versões aprovada: código com acentos, aulas, progresso e SQLite preservados.",
+      );
   } finally {
     if (processo && processo.exitCode === null && enderecoAtual) {
       await api(enderecoAtual, "/api/encerrar", {}).catch(() => {});

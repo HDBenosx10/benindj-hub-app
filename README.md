@@ -48,3 +48,9 @@ A primeira abertura permite escolher Back-end, Front-end ou IA. Hoje, JavaScript
 ## Releases oficiais
 
 Uma tag vX.Y.Z aciona testes, montagem e publicação oficial dos pacotes portátil e instalador. A ação manual continua disponível para rascunhos. A release publicada remove somente rascunhos antigos; o histórico Git e as releases publicadas anteriores são preservados.
+
+## Editor 0.10 e saves
+
+O laboratório usa CodeMirror com parser JavaScript, destaque para JSON/SQL e paleta consultada no Dracula Pro. **Formatar** ou **Shift+Alt+F** organiza JavaScript/JSON com Prettier offline. Ctrl+Z desfaz a operação; erros de sintaxe preservam o texto. [Guia do editor e das atualizações](docs/editor-e-atualizacoes.md).
+
+Portátil e instalador preservam respostas no perfil do usuário, fora do executável. A esteira de release testa a passagem da versão 0.9 para a nova versão usando um perfil temporário.

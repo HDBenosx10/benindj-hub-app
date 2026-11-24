@@ -1,6 +1,6 @@
 {
   "name": "benindj-hub-app",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "private": true,
   "description": "Ambiente de aprendizagem e autoria de programação",
   "author": "BeninDJ Hub",
@@ -12,8 +12,18 @@
     "build:dir": "node scripts/build.cjs --dir"
   },
   "devDependencies": {
+    "@codemirror/commands": "6.11.1",
+    "@codemirror/lang-javascript": "6.2.5",
+    "@codemirror/lang-json": "6.0.2",
+    "@codemirror/lang-sql": "6.10.0",
+    "@codemirror/language": "6.13.1",
+    "@codemirror/state": "6.7.6",
+    "@codemirror/view": "6.43.15",
+    "@lezer/highlight": "1.2.5",
+    "codemirror": "6.0.2",
     "electron": "45.4.1",
     "electron-builder": "26.18.0",
+    "esbuild": "0.28.2",
     "extract-zip": "2.0.1",
     "prettier": "3.10.1"
   }
