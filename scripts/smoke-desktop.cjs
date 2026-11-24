@@ -13,6 +13,7 @@ async function smoke() {
   const relatorio = path.join(temporaria, "processo.json");
   const dados = path.join(temporaria, "dados");
   let processo, enderecoAtual;
+  const tempos = [];
   async function abrir() {
     await fs.rm(relatorio, { force: true });
     processo = spawn(executavel, [], {
@@ -25,6 +26,7 @@ async function smoke() {
       try {
         const estado = JSON.parse(await fs.readFile(relatorio, "utf8"));
         enderecoAtual = estado.endereco;
+        tempos.push(estado.prontoEmMs);
         return estado;
       } catch {}
       if (processo.exitCode !== null)
@@ -67,6 +69,14 @@ async function smoke() {
     let estado = await abrir();
     const inicio = await api(estado.endereco, "/api/inicio");
     assert.equal(inicio.perfil, perfil);
+    assert.equal(
+      inicio.jornada.linguagens.find((l) => l.id === "go").disponivel,
+      false,
+    );
+    await api(estado.endereco, "/api/jornada", {
+      trilha: "backend",
+      linguagem: "javascript",
+    });
     if (perfil === "aluno")
       assert.deepEqual(
         inicio.aulas.map((a) => a.numero),
@@ -80,6 +90,7 @@ async function smoke() {
       codigos,
     });
     assert.ok(resultados.resultados.every((r) => r.passou));
+    assert.equal(resultados.progresso.completa, true);
     if (perfil === "aluno") {
       const importada = {
         ...aula.aula,
@@ -122,6 +133,11 @@ async function smoke() {
         reaberto.aulas.map((a) => a.numero),
         [0, 1],
       );
+      assert.equal(reaberto.jornada.escolha.trilha, "backend");
+      assert.equal(
+        reaberto.aulas.find((a) => a.numero === 0).progresso.completa,
+        true,
+      );
       const persistido = await api(estado.endereco, "/api/ambiente/operar", {
         aulaId: "aula-01",
         operacao: {
@@ -141,7 +157,8 @@ async function smoke() {
     console.log(
       "Smoke desktop aprovado: " +
         perfil +
-        ", execução, persistência e encerramento.",
+        ", execução, persistência e encerramento. Abertura do processo Electron (ms): " +
+        tempos.join(", "),
     );
   } finally {
     if (processo && processo.exitCode === null && enderecoAtual) {

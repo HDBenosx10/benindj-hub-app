@@ -4,6 +4,7 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 const { spawn } = require("node:child_process");
 let janela, backend, endereco, token;
+const inicioProcesso = performance.now();
 let fechando = false;
 const pendentes = [];
 const perfil =
@@ -330,6 +331,7 @@ async function iniciar() {
         perfil: config.perfil,
         pid: process.pid,
         backendPid: backend.pid,
+        prontoEmMs: Math.round(performance.now() - inicioProcesso),
       }),
     );
   }

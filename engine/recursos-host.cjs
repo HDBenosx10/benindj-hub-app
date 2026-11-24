@@ -48,13 +48,19 @@ function conferirFiltro(documento, filtro) {
     });
   });
 }
-function autorizarSql(banco, recurso) {
+function autorizarSql(banco, recurso, inspecao = false) {
   const ddl = new Set(
     Object.keys(C)
       .filter((k) => /^SQLITE_(CREATE|DROP|ALTER|REINDEX|ANALYZE)/.test(k))
       .map((k) => C[k]),
   );
   banco.setAuthorizer((acao, tabela, detalhe) => {
+    if (
+      inspecao &&
+      acao === C.SQLITE_PRAGMA &&
+      ["table_info", "foreign_key_list"].includes(tabela)
+    )
+      return C.SQLITE_OK;
     if (
       [C.SQLITE_ATTACH, C.SQLITE_DETACH, C.SQLITE_PRAGMA].includes(acao) ||
       (acao === C.SQLITE_FUNCTION &&
@@ -71,6 +77,27 @@ function autorizarSql(banco, recurso) {
       return C.SQLITE_DENY;
     return C.SQLITE_OK;
   });
+}
+function inspecionarTabelas(estado) {
+  const banco = estado.banco;
+  autorizarSql(banco, estado.config, true);
+  try {
+    return banco
+      .prepare(
+        "SELECT name, sql FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'",
+      )
+      .all()
+      .map((t) => {
+        const nome = '"' + t.name.replaceAll('"', '""') + '"';
+        return {
+          ...t,
+          colunas: banco.prepare(`PRAGMA table_info(${nome})`).all(),
+          relacoes: banco.prepare(`PRAGMA foreign_key_list(${nome})`).all(),
+        };
+      });
+  } finally {
+    autorizarSql(banco, estado.config);
+  }
 }
 async function abrir({ pasta, definicao }) {
   const ambiente = validarAmbiente(definicao);
@@ -176,11 +203,7 @@ async function abrir({ pasta, definicao }) {
           ...e.config,
           ...(e.banco
             ? {
-                tabelas: e.banco
-                  .prepare(
-                    "SELECT name, sql FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'",
-                  )
-                  .all(),
+                tabelas: inspecionarTabelas(e),
               }
             : {}),
           ...(e.colecoes

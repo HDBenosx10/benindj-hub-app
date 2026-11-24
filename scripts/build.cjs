@@ -12,7 +12,7 @@ process.env.ELECTRON_BUILDER_COMPRESSION_LEVEL ??= "3";
   const titulo = professor ? "Professor" : "Aluno";
   await build({
     targets: Platform.WINDOWS.createTarget(
-      process.argv.includes("--dir") ? ["dir"] : ["portable"],
+      process.argv.includes("--dir") ? ["dir"] : ["nsis", "portable"],
       Arch.x64,
     ),
     publish: "never",
@@ -44,10 +44,19 @@ process.env.ELECTRON_BUILDER_COMPRESSION_LEVEL ??= "3";
         signAndEditExecutable: true,
         signExecutable: false,
         icon: path.join(raiz, "assets", "app.ico"),
-        target: "portable",
+        target: ["nsis", "portable"],
       },
       portable: {
         artifactName: "BeninDJ-Hub-" + titulo + "-${version}-Windows-x64.exe",
+      },
+      nsis: {
+        artifactName:
+          "BeninDJ-Hub-" + titulo + "-${version}-Instalador-Windows-x64.exe",
+        oneClick: true,
+        perMachine: false,
+        createDesktopShortcut: true,
+        createStartMenuShortcut: true,
+        deleteAppDataOnUninstall: false,
       },
       fileAssociations: [
         {

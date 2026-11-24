@@ -181,12 +181,15 @@ function renderizarBiblioteca() {
   $("catalogo-vazio").hidden = encontrados !== 0;
 }
 function mostrarRota(rota) {
+  document.body.classList.remove("resource-drawer-open");
+  if (aba !== "ambiente") $("ambiente").hidden = true;
   const ids = {
     inicio: "inicio",
     aulas: "acervo",
     aula: "visao-aula",
     estudio: "estudio",
     coruja: "assistente",
+    jornada: "jornada",
   };
   for (const id of Object.values(ids)) $(id).hidden = id !== ids[rota];
   document.body.dataset.rota = rota;
@@ -197,6 +200,7 @@ function mostrarRota(rota) {
     aula: aula?.titulo ?? "Aula",
     estudio: "Criar aula",
     coruja: "DEV Coruja",
+    jornada: "Minha trilha",
   }[rota];
   document
     .querySelectorAll("[data-rota]")
@@ -223,7 +227,11 @@ function renderizarInicio() {
     if (professor) {
       rascunhoAula = undefined;
       await abrirEstudio();
-    } else await abrirAula(aula.id);
+    } else {
+      const proxima =
+        biblioteca.find((a) => !a.progresso?.completa) ?? biblioteca[0];
+      if (proxima) await abrirAula(proxima.id);
+    }
   });
   $("home-acervo").textContent = professor
     ? "Explorar acervo →"
@@ -242,6 +250,7 @@ function renderizarInicio() {
     ? "Você decide o ritmo. Somente a aula exportada é enviada ao aluno."
     : "Novas aulas aparecem aqui quando você importar um arquivo enviado pelo professor.";
   $("home-cards").replaceChildren();
+  renderizarJornada();
   const recentes = professor
     ? biblioteca.filter((a) => [0, 12, 35].includes(a.numero))
     : biblioteca.slice(-3);
@@ -260,7 +269,21 @@ function renderizarInicio() {
     );
     elemento(b, "h3", item.titulo);
     elemento(b, "p", item.foco);
-    elemento(b, "span", "Continuar →", "lesson-link");
+    if (item.progresso)
+      elemento(
+        b,
+        "span",
+        item.progresso.completa
+          ? "✓ Concluída"
+          : `${item.progresso.concluidos}/${item.progresso.total} desafios validados`,
+        "lesson-progress",
+      );
+    elemento(
+      b,
+      "span",
+      item.progresso?.completa ? "✓ Concluída · revisar →" : "Continuar →",
+      "lesson-link",
+    );
   }
 }
 
@@ -275,10 +298,15 @@ function mostrarAba(nome) {
   if ($("guia-professor").open) $("guia-professor").close();
   $("mensagem").hidden = true;
   aba = nome;
+  document.body.dataset.aba = nome;
   if (nome === "ambiente")
     carregarBancada().catch((e) => aviso(e.message, true));
   if (nome === "transferencia") renderizarTransferencia();
   mostrarRota("aula");
+  if (nome === "praticar")
+    requestAnimationFrame(() =>
+      $("praticar").scrollIntoView({ block: "start" }),
+    );
   for (const id of ["estudar", "praticar", "ambiente", "transferencia"])
     $(id).hidden = id !== nome;
   document
@@ -538,7 +566,10 @@ async function salvar() {
   const versao = revisao;
   const id = aula.id;
   $("salvo").textContent = "Salvando…";
-  await api("/api/salvar", comDados());
+  const salvo = await api("/api/salvar", comDados());
+  const item = biblioteca.find((a) => a.id === id);
+  if (item && salvo.progresso) item.progresso = salvo.progresso;
+  renderizarProgressoAula();
   if (id === aula.id && versao === revisao) {
     $("salvo").textContent = "Salvo localmente";
   }
@@ -628,6 +659,7 @@ function renderizarTestes() {
   $("concluido").hidden = passaram !== total;
 }
 function renderizarPratica() {
+  focarPratica("codigo");
   $("pratica-titulo").textContent =
     aula.modo === "funcoes" ? "Seu laboratório" : "Explore o projeto";
   $("pratica-descricao").textContent =
@@ -737,6 +769,10 @@ async function abrirAula(id) {
   $("estudio").hidden = true;
   const dados = await api("/api/aula?aula=" + encodeURIComponent(id));
   aula = dados.aula;
+  estadoBancada = undefined;
+  recursoSelecionado = null;
+  renderizarMapaRecursos();
+  renderizarProgressoAula();
   $("aba-ambiente").hidden = !aula.ambiente;
   respostas = dados.respostas;
   respostas.experimentos ??= {};
@@ -816,6 +852,13 @@ async function testar(todos = false) {
         : {};
     $("verificacoes").open = true;
     const retorno = await api("/api/testar", comDados(extras));
+    focarPratica("testes");
+    const itemAtual = biblioteca.find((a) => a.id === aula.id);
+    const antes = itemAtual?.progresso;
+    if (itemAtual) itemAtual.progresso = retorno.progresso;
+    renderizarProgressoAula();
+    celebrarProgresso(antes, retorno.progresso);
+    renderizarInicio();
     if (aula.modo === "funcoes" && !todos) {
       resultados = resultados
         .filter((item) => item.exercicioId !== extras.exercicioId)
@@ -844,6 +887,7 @@ async function iniciarProjeto(demonstracao = false) {
       comDados({ demonstracao }),
     );
     apiAtiva = true;
+    renderizarMapaRecursos();
     apiDesatualizada = false;
     modoDemo = demonstracao;
     $("retomar").hidden = !modoDemo;
@@ -856,6 +900,7 @@ async function iniciarProjeto(demonstracao = false) {
     $("logs").textContent =
       retorno.logs.join("\n") || "Nenhuma mensagem emitida pela aplicação.";
     mostrarAba("praticar");
+    focarPratica("execucao");
     aviso("Projeto iniciado. Envie uma requisição e acompanhe a resposta.");
   } catch (erro) {
     apiAtiva = false;
@@ -1176,7 +1221,15 @@ async function carregarInicio(preferida) {
       (previa ? "?aula=" + encodeURIComponent(parametros.get("aula")) : ""),
   );
   perfil = dados.perfil;
-  biblioteca = dados.aulas;
+  dadosJornada = dados.jornada;
+  bibliotecaCompleta = dados.aulas;
+  biblioteca = dados.aulas.filter(
+    (a) =>
+      perfil === "professor" ||
+      !dadosJornada?.escolha ||
+      a.trilha === "comum" ||
+      a.trilha === dadosJornada.escolha.trilha,
+  );
   $("versao-app").textContent = "v" + (dados.versaoApp ?? "0.7.0");
   $("perfil").textContent = perfil === "professor" ? "Professor" : "Aluno";
   $("importar").textContent =
@@ -1206,7 +1259,7 @@ async function carregarInicio(preferida) {
   if (!id) {
     throw new Error("Importe o arquivo de uma aula para começar.");
   }
-  await abrirAula(id);
+  if (preferida || previa) await abrirAula(id);
   $("filtro-modulo").replaceChildren();
   elemento($("filtro-modulo"), "option", "Todos os assuntos").value = "";
   for (const modulo of new Set(biblioteca.map((a) => a.modulo)))
@@ -1214,10 +1267,16 @@ async function carregarInicio(preferida) {
   renderizarBiblioteca();
   renderizarInicio();
   if (!preferida) mostrarRota("inicio");
+  if (perfil === "aluno" && !previa && !dadosJornada?.escolha)
+    abrirEscolhaJornada();
 }
-const inicioCarregado = carregarInicio().catch((erro) =>
-  aviso(erro.message + " Abra o laboratório pelo aplicativo.", true),
-);
+const inicioCarregado = new Promise((resolve) =>
+  document.addEventListener("DOMContentLoaded", resolve, { once: true }),
+)
+  .then(() => carregarInicio())
+  .catch((erro) =>
+    aviso(erro.message + " Abra o laboratório pelo aplicativo.", true),
+  );
 
 function renderizarBriefing(exercicio) {
   const missao = aula.missoes?.[missaoAtual];

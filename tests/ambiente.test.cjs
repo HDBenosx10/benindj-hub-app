@@ -311,3 +311,12 @@ test(
     );
   },
 );
+
+test("Inspeção visual expõe colunas e relações sem liberar PRAGMA ao aluno", async (t) => {
+  const {a,c} = await abrir(t,base([sql({ddl:'CREATE TABLE pais(id INTEGER PRIMARY KEY); CREATE TABLE filhos(id INTEGER PRIMARY KEY, pai_id INTEGER REFERENCES pais(id));',seed:''})]));
+  const estado=await a.operar({acao:'estado'});
+  const tabela=estado.recursos[0].tabelas.find(t=>t.name==='filhos');
+  assert.ok(tabela.colunas.some(c=>c.name==='pai_id'));
+  assert.equal(tabela.relacoes[0].table,'pais');
+  await assert.rejects(()=>c.sqlite('banco').consultar('PRAGMA table_info(filhos)'),/authoriz|autoriz/i);
+});

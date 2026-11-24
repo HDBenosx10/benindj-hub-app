@@ -1780,4 +1780,334 @@ footer span:last-child {
   flex-wrap: wrap;
 }
 
-#ambiente .table-wrap {max-height:360px;overflow:auto}
+#ambiente .table-wrap {
+  max-height: 360px;
+  overflow: auto;
+}
+/* Jornada e bancada com recursos próximos do código. */
+.journey-summary {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  background: var(--soft);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 15px 20px;
+  margin-bottom: 24px;
+}
+.journey-summary button {
+  margin-left: auto;
+}
+.journey-meter {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.journey-meter progress {
+  width: 180px;
+  height: 8px;
+  accent-color: var(--plum);
+}
+.journey-lesson {
+  display: flex;
+  width: 100%;
+  justify-content: flex-start;
+  margin: 8px 0;
+}
+.lesson-progress {
+  color: var(--cyan);
+  font-size: 11px;
+}
+.planning-note {
+  border-left: 3px solid var(--yellow);
+  padding: 12px;
+  color: var(--yellow);
+}
+.journey-dialog,
+.completion-dialog {
+  max-width: 680px;
+  width: calc(100% - 40px);
+  max-height: 90dvh;
+  overflow: auto;
+  padding: 30px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--ink);
+}
+.journey-dialog::backdrop,
+.completion-dialog::backdrop {
+  background: #111019b8;
+  backdrop-filter: blur(6px);
+}
+.journey-dialog fieldset {
+  border: 0;
+  padding: 0;
+  margin: 18px 0;
+}
+.track-choice {
+  display: flex;
+  gap: 14px;
+  border: 1px solid var(--line);
+  padding: 14px;
+  margin: 8px 0;
+  border-radius: 9px;
+  cursor: pointer;
+}
+.track-choice:has(input:checked) {
+  border-color: var(--plum);
+  background: var(--soft);
+}
+.track-choice input {
+  align-self: center;
+}
+.track-choice p {
+  margin: 3px 0;
+  font-size: 12px;
+}
+.completion-dialog {
+  text-align: center;
+  max-width: 520px;
+}
+.completion-dialog button {
+  margin: 6px;
+}
+.completion-symbol {
+  font-size: 38px;
+  color: var(--green);
+  margin-bottom: 12px;
+  animation: complete-enter 0.25s ease-out;
+}
+@keyframes complete-enter {
+  from {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+#nav-recursos {
+  border-top: 1px solid var(--line);
+  margin-top: 18px;
+  padding-top: 5px;
+}
+#nav-recursos button {
+  display: block;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  width: 100%;
+  font-size: 12px;
+  margin: 5px 0;
+  padding: 8px;
+}
+body:not([data-rota="aula"]) #nav-recursos {
+  display: none;
+}
+.hub-nav {
+  overflow-y: auto;
+}
+.nav-bottom {
+  margin-top: auto;
+}
+#mapa-recursos {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px;
+  margin: 12px 0 24px;
+  background: #262530;
+}
+.resource-map-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.resource-graph {
+  display: flex;
+  align-items: center;
+  gap: 34px;
+  padding-top: 18px;
+}
+.resource-dependencies {
+  position: relative;
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+.resource-dependencies::before {
+  content: "";
+  position: absolute;
+  width: 34px;
+  left: -34px;
+  top: 50%;
+  border-top: 1px solid var(--plum);
+}
+.resource-node {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+  min-width: 180px;
+  border: 1px solid #9580ff66;
+  background: var(--surface);
+  padding: 13px 16px;
+}
+.resource-node small,
+.resource-node span {
+  font-size: 10px;
+  color: var(--muted);
+  font-weight: 400;
+}
+.app-node {
+  border-color: #80ffea55;
+}
+body.resource-drawer-open #ambiente {
+  display: block;
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: min(680px, 75vw);
+  z-index: 25;
+  overflow: auto;
+  background: var(--bg);
+  box-shadow: -20px 0 70px #0008;
+  padding: 22px;
+  border-left: 1px solid var(--line);
+}
+.drawer-close {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin-bottom: 14px;
+  background: var(--raised);
+}
+.schema-diagram {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 16px 0;
+}
+.schema-table {
+  border: 1px solid #80ffea44;
+  border-radius: 8px;
+  min-width: 170px;
+  overflow: hidden;
+  font-size: 11px;
+}
+.schema-table strong {
+  display: block;
+  background: #80ffea12;
+  padding: 9px;
+}
+.schema-table div,
+.schema-table small {
+  display: block;
+  padding: 5px 9px;
+  border-top: 1px solid var(--line);
+}
+.schema-table small {
+  color: var(--cyan);
+}
+.schema-table button {
+  margin: 8px;
+  font-size: 10px;
+}
+body[data-rota="aula"][data-aba="praticar"] .lesson-header .lead {
+  display: none;
+}
+body[data-rota="aula"][data-aba="praticar"] #mapa-recursos {
+  display: none;
+}
+@media (min-width: 1150px) {
+  body[data-aba="praticar"] .bancada {
+    grid-template-columns: 230px minmax(0, 1fr);
+    gap: 18px;
+  }
+  body[data-aba="praticar"] #praticar {
+    scroll-margin-top: 15px;
+  }
+  body[data-aba="praticar"] #editor {
+    height: clamp(320px, 48dvh, 620px);
+  }
+}
+@media (max-width: 900px) {
+  .resource-graph {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .resource-dependencies::before {
+    display: none;
+  }
+  .resource-node {
+    min-width: 0;
+    flex: 1;
+  }
+  .resource-map-heading {
+    flex-direction: column;
+  }
+  .journey-summary button {
+    margin-left: 0;
+  }
+}
+#workspace-tabs {
+  margin: 0 0 16px;
+}
+body[data-foco="codigo"] #observatorio,
+body[data-foco="codigo"] #terminal,
+body[data-foco="codigo"] #verificacoes {
+  display: none;
+}
+body[data-foco="execucao"] .editor-shell,
+body[data-foco="execucao"] #arquivos,
+body[data-foco="execucao"] #verificacoes {
+  display: none;
+}
+body[data-foco="testes"] .editor-shell,
+body[data-foco="testes"] #arquivos,
+body[data-foco="testes"] #observatorio,
+body[data-foco="testes"] #terminal,
+body[data-foco="testes"] #exploracao {
+  display: none;
+}
+body[data-foco="execucao"] #observatorio,
+body[data-foco="execucao"] #terminal,
+body[data-foco="testes"] #verificacoes {
+  max-height: 67dvh;
+  overflow: auto;
+  margin-top: 0;
+}
+body[data-foco="codigo"] #exploracao #meus-experimentos {
+  display: none;
+}
+body.resource-drawer-open #ambiente > .card {
+  padding: 16px;
+  margin-bottom: 14px;
+}
+body.resource-drawer-open #ambiente > .card > p:not(.eyebrow) {
+  display: none;
+}
+body.resource-drawer-open #ambiente .resource-form textarea {
+  min-height: 90px;
+}
+body.resource-drawer-open #ambiente .campo textarea {
+  min-height: 90px;
+  max-height: 180px;
+}
+body.resource-drawer-open #ambiente > .card:first-of-type h2 {
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+.resource-drawer-open .schema-diagram {
+  margin: 12px 0;
+}

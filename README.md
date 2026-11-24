@@ -38,3 +38,9 @@ Paleta baseada no Dracula Pro do proprietário: fundo `#22212C`, navegação `#1
 Aulas podem trazer SQLite em memória ou arquivo, documentos JSON locais e mocks HTTP com atraso e sequência de respostas. A aba Ambiente permite consultar e alterar esses recursos, respeitando as permissões da aula. O aluno pode criar recursos adicionais quando autorizado. Fora do Hub exporta código e ambiente para Node, sem gabaritos.
 
 Veja o [guia da bancada](docs/ambientes/README.md) para contratos, limites, testes e execução fora da plataforma. O aplicativo inicial continua incluindo somente Hello World; infraestrutura aparece nas aulas que o professor liberar.
+
+## Trilhas e bancada visual · 0.8
+
+A primeira abertura permite escolher Back-end, Front-end ou IA. Hoje, JavaScript é a linguagem executável; Front-end/IA têm o núcleo comum, com especialização em preparação. Java/Go ficam indisponíveis até a V2. Minha trilha mostra progresso somente das aulas liberadas. O professor continua controlando a distribuição.
+
+[Guia de jornada, recursos e abertura](docs/jornada.md). Para uso diário, prefira o instalador por usuário. A versão portátil continua disponível, com extração a cada abertura. Os arquivos de dados são mantidos fora da instalação.

@@ -293,6 +293,7 @@ function formularioRecurso(
 async function carregarBancada() {
   if (!aula.ambiente) return;
   estadoBancada = await api("/api/ambiente/estado", { aulaId: aula.id });
+  renderizarMapaRecursos();
   desenharBancada();
 }
 function mostrarTabela(parent, linhas) {
@@ -321,6 +322,17 @@ function mostrarTabela(parent, linhas) {
 function desenharBancada() {
   const raiz = $("ambiente");
   raiz.replaceChildren();
+  if (document.body.classList.contains("resource-drawer-open")) {
+    botao(
+      raiz,
+      "Fechar painel de recursos ×",
+      () => {
+        document.body.classList.remove("resource-drawer-open");
+        raiz.hidden = aba !== "ambiente";
+      },
+      "drawer-close",
+    );
+  }
   const topo = card(raiz, "Ambiente desta aula");
   elemento(
     topo,
@@ -364,13 +376,16 @@ function desenharBancada() {
     if (id !== "visao" && !estadoBancada.recursos.some((r) => r.tipo === id))
       continue;
     const b = botao(nav, nome, () => {
+      recursoSelecionado = null;
       abaBancada = id;
       desenharBancada();
     });
     b.setAttribute("aria-selected", String(abaBancada === id));
   }
   const recursos = estadoBancada.recursos.filter(
-    (r) => abaBancada === "visao" || r.tipo === abaBancada,
+    (r) =>
+      (!recursoSelecionado || r.id === recursoSelecionado) &&
+      (abaBancada === "visao" || r.tipo === abaBancada),
   );
   if (!recursos.length)
     elemento(
@@ -422,6 +437,34 @@ function desenharBancada() {
       continue;
     }
     if (abaBancada === "sqlite") {
+      const tabelas = elemento(bloco, "div", undefined, "schema-diagram");
+      for (const tabela of recurso.tabelas ?? []) {
+        const tabelaCard = elemento(
+          tabelas,
+          "section",
+          undefined,
+          "schema-table",
+        );
+        elemento(tabelaCard, "strong", "▤ " + tabela.name);
+        for (const coluna of tabela.colunas ?? [])
+          elemento(
+            tabelaCard,
+            "div",
+            `${coluna.pk ? "⚿ " : ""}${coluna.name} · ${coluna.type || "sem tipo"}${coluna.notnull ? " · obrigatório" : ""}`,
+          );
+        for (const fk of tabela.relacoes ?? [])
+          elemento(
+            tabelaCard,
+            "small",
+            `${fk.from} → ${fk.table}.${fk.to ?? "chave primária"}`,
+          );
+        botao(tabelaCard, "Consultar " + tabela.name, () => {
+          sql.value =
+            'SELECT * FROM "' +
+            tabela.name.replaceAll('"', '""') +
+            '" LIMIT 100;';
+        });
+      }
       elemento(
         bloco,
         "p",
@@ -534,7 +577,38 @@ function desenharBancada() {
           recurso.id +
           '"). Os registros abaixo mostram chamadas reais, inclusive tentativas e atrasos.',
       );
-      elemento(bloco, "pre", fmt(recurso.rotas), "console");
+      for (const rota of recurso.rotas) {
+        const c = card(bloco, `${rota.metodo} ${rota.caminho}`);
+        elemento(
+          c,
+          "p",
+          `HTTP ${rota.status ?? 200} · atraso ${rota.atrasoMs ?? 0} ms${rota.sequencia ? " · sequência de respostas" : ""}`,
+        );
+        elemento(c, "pre", fmt(rota.corpo), "console");
+        const retorno = elemento(
+          c,
+          "pre",
+          "Experimente esta rota sem alterar o código do desafio.",
+          "console",
+        );
+        botao(c, "Enviar chamada ao mock", async () => {
+          const url = recurso.url + rota.caminho;
+          const opcoes = { method: rota.metodo };
+          if (!["GET", "HEAD"].includes(rota.metodo))
+            Object.assign(opcoes, {
+              headers: { "Content-Type": "application/json" },
+              body: "{}",
+            });
+          const codigo = `const r = await fetch(${JSON.stringify(url)}, ${JSON.stringify(opcoes)}); console.log("HTTP", r.status); console.log(await r.text());`;
+          const resultado = await api("/api/executar", {
+            aulaId: aula.id,
+            codigo,
+          });
+          retorno.textContent = [...resultado.saida, resultado.erro ?? ""].join(
+            "\n",
+          );
+        });
+      }
       botao(bloco, "Atualizar requisições", carregarBancada);
       elemento(
         bloco,

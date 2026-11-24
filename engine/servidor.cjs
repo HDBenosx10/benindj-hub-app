@@ -138,6 +138,17 @@ async function iniciar() {
     }
   }
   let gravacao = Promise.resolve();
+  const jornada = require("./jornada.cjs");
+  async function persistir() {
+    const texto = JSON.stringify(respostas, null, 2);
+    gravacao = gravacao
+      .catch(() => {})
+      .then(async () => {
+        await fs.writeFile(caminhoRespostas + ".tmp", texto, "utf8");
+        await fs.rename(caminhoRespostas + ".tmp", caminhoRespostas);
+      });
+    await gravacao;
+  }
   const ativos = new Map();
   const ambientes = require("./ambiente-gerenciador.cjs").criarGerenciador(
     path.join(pastaDados, "ambientes"),
@@ -186,7 +197,12 @@ async function iniciar() {
         ? (salvo.arquivos?.[arquivo.nome] ?? arquivo.codigo)
         : arquivo.codigo;
     }
-    return { codigos, arquivos, experimentos: salvo.experimentos ?? {} };
+    return {
+      codigos,
+      arquivos,
+      experimentos: salvo.experimentos ?? {},
+      progresso: salvo.progresso ?? {},
+    };
   }
   async function salvar(req, aula, dado) {
     const anterior = dadosDaAula(req, aula);
@@ -219,14 +235,7 @@ async function iniciar() {
       }
     }
     respostas[chave(req, aula)] = anterior;
-    const texto = JSON.stringify(respostas, null, 2);
-    gravacao = gravacao
-      .catch(() => {})
-      .then(async () => {
-        await fs.writeFile(caminhoRespostas + ".tmp", texto, "utf8");
-        await fs.rename(caminhoRespostas + ".tmp", caminhoRespostas);
-      });
-    await gravacao;
+    await persistir();
     return anterior;
   }
   function json(res, status, dado) {
@@ -276,6 +285,7 @@ async function iniciar() {
         "/": "index.html",
         "/interface.js": "interface.js",
         "/ambiente-ui.js": "ambiente-ui.js",
+        "/jornada-ui.js": "jornada-ui.js",
         "/estilo.css": "estilo.css",
         ...(professor
           ? {
@@ -317,6 +327,12 @@ async function iniciar() {
           erro: "Abra o aplicativo BeninDJ Hub novamente.",
         });
       }
+      if (req.method === "POST" && url.pathname === "/api/jornada") {
+        const escolha = jornada.validarEscolha(await corpo(req));
+        respostas["jornada:" + visao(req)] = escolha;
+        await persistir();
+        return json(res, 200, { escolha });
+      }
       if (req.method === "GET" && url.pathname === "/api/inicio") {
         let mapa = lista(req);
         if (
@@ -330,6 +346,11 @@ async function iniciar() {
         return json(res, 200, {
           perfil: visao(req),
           versaoApp: config.versaoApp,
+          jornada: {
+            escolha: respostas["jornada:" + visao(req)] ?? null,
+            trilhas: jornada.trilhas,
+            linguagens: jornada.linguagens,
+          },
           aulas: [...mapa.values()].map((aula) => ({
             id: aula.id,
             numero: aula.numero,
@@ -337,6 +358,8 @@ async function iniciar() {
             foco: aula.foco,
             modo: aula.modo,
             modulo: aula.modulo,
+            trilha: jornada.trilhaDaAula(aula),
+            progresso: jornada.resumo(aula, dadosDaAula(req, aula)),
           })),
           versao: 3,
         });
@@ -471,9 +494,11 @@ async function iniciar() {
         return;
       }
       if (req.method === "POST" && url.pathname === "/api/salvar") {
+        const salvo = await salvar(req, aula, dado);
         return json(res, 200, {
           salvo: true,
-          respostas: await salvar(req, aula, dado),
+          respostas: salvo,
+          progresso: jornada.resumo(aula, salvo),
         });
       }
       if (req.method === "POST" && url.pathname === "/api/executar") {
@@ -532,7 +557,15 @@ async function iniciar() {
                     pastaProjeto(req, aula),
                   );
           }
-          return json(res, 200, { resultados });
+          const progresso = jornada.registrar(
+            aula,
+            salvo,
+            resultados,
+            dado.exercicioId,
+          );
+          respostas[chave(req, aula)] = salvo;
+          await persistir();
+          return json(res, 200, { resultados, progresso });
         } finally {
           conferindo = false;
         }

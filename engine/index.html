@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/estilo.css" />
     <script src="/interface.js" defer></script>
     <script src="/ambiente-ui.js" defer></script>
+    <script src="/jornada-ui.js" defer></script>
     __ESTUDIO__
   </head>
   <body>
@@ -23,12 +24,14 @@
         ><button data-rota="aulas">
           <span>▦</span><span id="nav-acervo-texto">Minhas aulas</span>
         </button>
+        <button data-rota="jornada"><span>◇</span>Minha trilha</button>
         <div id="nav-professor" hidden>
           <p class="nav-caption">ESTÚDIO DO PROFESSOR</p>
           <button id="painel-professor"><span>＋</span>Criar aula</button
           ><button id="nav-coruja"><span>✧</span>DEV Coruja</button>
         </div>
       </nav>
+      <section id="nav-recursos" hidden aria-label="Recursos da aula"></section>
       <div class="nav-bottom">
         <div class="profile-card">
           <span class="profile-avatar">B</span>
@@ -54,6 +57,7 @@
       <main>
         <div id="mensagem" role="status" aria-live="polite" hidden></div>
         <section id="inicio">
+          <div id="resumo-jornada"></div>
           <div class="home-hero">
             <div>
               <p class="eyebrow">BENINDJ HUB</p>
@@ -91,6 +95,7 @@
             </p>
           </div>
         </section>
+        <section id="jornada" hidden></section>
         <section id="acervo" hidden>
           <div class="page-heading">
             <div>
@@ -148,6 +153,8 @@
               Material do professor ↗
             </button>
           </div>
+          <div id="progresso-aula" aria-live="polite"></div>
+          <div id="mapa-recursos" hidden></div>
           <section id="ambiente" class="painel" hidden></section>
           <section id="transferencia" class="painel" hidden></section>
           <section id="estudar" class="painel"></section>
@@ -163,6 +170,15 @@
               </div>
               <div id="exercicios" class="activity-picker"></div>
             </div>
+            <nav
+              id="workspace-tabs"
+              class="abas"
+              aria-label="Painéis da prática"
+            >
+              <button data-foco="codigo" aria-selected="true">Editor</button>
+              <button data-foco="execucao">Execução e console</button>
+              <button data-foco="testes">Verificação</button>
+            </nav>
             <div class="bancada">
               <aside id="briefing" class="briefing">
                 <p class="eyebrow">SUA ATIVIDADE</p>
