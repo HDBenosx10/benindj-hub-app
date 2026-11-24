@@ -1,4 +1,4 @@
-# BeninDJ Hub 0.11.0
+# BeninDJ Hub 0.11.1
 
 - Painel Debug recolhível à direita do editor, com controles sempre acessíveis durante a inspeção.
 - Breakpoints na margem ou por número de linha, confirmação da instrução executável e destaque da próxima linha.
