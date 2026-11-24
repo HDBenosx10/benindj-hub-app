@@ -59,6 +59,13 @@ function validarConfiguracao(pontos = {}, observacoes = []) {
 }
 
 async function criarSessao(opcoes) {
+  // O V8 usa o caminho físico completo. No Windows, TEMP pode conter
+  // nomes 8.3 ou junctions, enquanto require resolve os módulos pelo nome longo.
+  if (opcoes.pasta)
+    opcoes = {
+      ...opcoes,
+      pasta: require("node:fs").realpathSync.native(opcoes.pasta),
+    };
   validarConfiguracao(opcoes.breakpoints, opcoes.observacoes);
   const id = randomUUID();
   const arquivo = opcoes.arquivo ?? "atividade.js";

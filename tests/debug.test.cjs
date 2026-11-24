@@ -113,8 +113,14 @@ test("Projeto CommonJS mantém a linha dos arquivos e conclui sem deixar process
     path.join(pasta, "calculo.cjs"),
     "exports.dobro = function dobro(n) {\n  return n * 2;\n};",
   );
-  const sessao = await criarSessao({
+  const alias = pasta + "-atalho";
+  await fs.symlink(
     pasta,
+    alias,
+    process.platform === "win32" ? "junction" : "dir",
+  );
+  const sessao = await criarSessao({
+    pasta: alias,
     arquivo: "main.cjs",
     arquivos: ["main.cjs", "calculo.cjs"],
     breakpoints: { "calculo.cjs": [2] },
@@ -122,6 +128,7 @@ test("Projeto CommonJS mantém a linha dos arquivos e conclui sem deixar process
   });
   t.after(async () => {
     await sessao.parar();
+    await fs.unlink(alias);
     await fs.rm(pasta, { recursive: true, force: true });
   });
   await aguardar(sessao, (e) => e.status === "pausado" && e.linha === 1);
