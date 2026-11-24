@@ -3,7 +3,7 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 const os = require("node:os");
 const crypto = require("node:crypto");
-const { Worker } = require("node:worker_threads");
+const { Worker } = require("./execucao-isolada.cjs");
 const { inspect, isDeepStrictEqual } = require("node:util");
 
 async function conferirEntrada(pasta) {

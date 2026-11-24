@@ -290,3 +290,24 @@ test(
     }
   },
 );
+
+test(
+  "Um servidor preso em SQL nativo pode ser parado pelo supervisor",
+  { timeout: 8000 },
+  async (t) => {
+    const p = await pasta(t);
+    const projeto = await require("../engine/projetos.cjs").abrirProjeto(p, {
+      "app.cjs": `const http=require('node:http');const {DatabaseSync}=require('node:sqlite');exports.criarServidor=()=>http.createServer((req,res)=>{new DatabaseSync(':memory:').prepare('WITH RECURSIVE n(x) AS (VALUES(1) UNION ALL SELECT x+1 FROM n) SELECT sum(x) FROM n').get();res.end('fim');});`,
+    });
+    try {
+      await assert.rejects(
+        fetch(projeto.base, { signal: AbortSignal.timeout(150) }),
+      );
+    } finally {
+      await projeto.parar();
+    }
+    await assert.rejects(
+      fetch(projeto.base, { signal: AbortSignal.timeout(500) }),
+    );
+  },
+);

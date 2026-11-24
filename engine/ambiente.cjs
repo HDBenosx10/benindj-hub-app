@@ -16,15 +16,13 @@ async function abrirAmbiente(pasta, definicao) {
     windowsHide: true,
   });
   let fechado = false;
+  const encerrado = new Promise((resolve) => worker.once("close", resolve));
   worker.once("exit", () => {
     fechado = true;
   });
   async function parar() {
-    if (fechado) return;
-    await new Promise((resolve) => {
-      worker.once("exit", resolve);
-      worker.kill();
-    });
+    if (!fechado) worker.kill();
+    await encerrado;
     fechado = true;
   }
   try {

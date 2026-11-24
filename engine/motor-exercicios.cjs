@@ -5,7 +5,7 @@ const {
   isMainThread,
   parentPort,
   workerData,
-} = require("node:worker_threads");
+} = require("./execucao-isolada.cjs");
 
 async function executarNoWorker() {
   const { isDeepStrictEqual, inspect } = require("node:util");
@@ -107,13 +107,13 @@ function avaliar(codigo, testes, prazoMs = 5000, conexao) {
       resourceLimits: { maxOldGenerationSizeMb: 96 },
     });
 
-    function concluir(mensagem) {
+    async function concluir(mensagem) {
       if (finalizado) {
         return;
       }
       finalizado = true;
       clearTimeout(prazo);
-      worker.terminate();
+      await worker.terminate();
 
       for (let indice = resultados.length; indice < testes.length; indice++) {
         resultados.push({

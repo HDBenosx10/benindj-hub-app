@@ -143,6 +143,7 @@ async function iniciar() {
     path.join(pastaDados, "ambientes"),
   );
   let conferindo = false;
+  let encerrando = false;
 
   function visao(req) {
     return professor && req.headers["x-lab-visao"] !== "aluno"
@@ -264,6 +265,10 @@ async function iniciar() {
   const servidor = http.createServer((req, res) => {
     async function atender() {
       const url = new URL(req.url, "http://localhost");
+      if (encerrando) {
+        res.setHeader("Connection", "close");
+        return json(res, 503, { erro: "O aplicativo está encerrando." });
+      }
       if (req.method === "GET" && url.pathname === "/api/identidade") {
         return json(res, 200, { identidade, versao: 3 });
       }
@@ -366,14 +371,17 @@ async function iniciar() {
         return json(res, 200, { id: aula.id, titulo: aula.titulo });
       }
       if (req.method === "POST" && url.pathname === "/api/encerrar") {
+        encerrando = true;
+        const enviada = new Promise((resolve) => res.once("finish", resolve));
         json(res, 200, { ok: true });
+        await enviada;
         for (const id of [...ativos.keys()]) {
           await pararChave(id);
         }
         await ambientes.encerrar();
         await gravacao;
         servidor.close(() => process.exit(0));
-        servidor.closeIdleConnections();
+        servidor.closeAllConnections();
         return;
       }
       const dado = req.method === "POST" ? await corpo(req) : {};

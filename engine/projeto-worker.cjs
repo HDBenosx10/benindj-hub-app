@@ -1,5 +1,5 @@
 "use strict";
-const { parentPort, workerData } = require("node:worker_threads");
+const { parentPort, workerData } = require("./execucao-isolada.cjs");
 const path = require("node:path");
 const { inspect } = require("node:util");
 

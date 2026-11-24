@@ -54,6 +54,14 @@ async function smoke() {
         setTimeout(() => rej(Error("O processo não encerrou.")), 8000),
       ),
     ]);
+    const saidas = (await fs.readFile(relatorio + ".log", "utf8"))
+      .trim()
+      .split(/\r?\n/)
+      .map(JSON.parse);
+    assert.ok(
+      saidas.every((s) => s.codigo === 0),
+      JSON.stringify(saidas),
+    );
   }
   try {
     let estado = await abrir();

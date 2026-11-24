@@ -103,6 +103,8 @@ exports.exportar = async function exportar(aula, respostas, ambiente) {
   };
   for (const nome of [
     "ambiente-schema.cjs",
+    "execucao-isolada.cjs",
+    "executor-bootstrap.cjs",
     "ambiente.cjs",
     "ambiente-processo.cjs",
     "recursos-host.cjs",

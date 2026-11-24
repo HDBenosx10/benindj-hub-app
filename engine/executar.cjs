@@ -4,7 +4,7 @@ const {
   isMainThread,
   parentPort,
   workerData,
-} = require("node:worker_threads");
+} = require("./execucao-isolada.cjs");
 if (!isMainThread) {
   const { inspect } = require("node:util");
   const consoleLivre = {};
@@ -53,13 +53,13 @@ if (!isMainThread) {
         workerData: { codigo, conexao },
         resourceLimits: { maxOldGenerationSizeMb: 96 },
       });
-      function fim(erro) {
+      async function fim(erro) {
         if (encerrou) {
           return;
         }
         encerrou = true;
         clearTimeout(timer);
-        worker.terminate();
+        await worker.terminate();
         resolve({ saida, erro: erro ?? null, duracao: Date.now() - inicio });
       }
       const timer = setTimeout(

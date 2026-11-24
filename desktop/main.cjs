@@ -71,6 +71,10 @@ async function encerrarBackend() {
   }
   const processo = backend;
   backend = null;
+  const fim =
+    processo.exitCode === null
+      ? new Promise((resolve) => processo.once("exit", resolve))
+      : Promise.resolve();
   try {
     if (endereco && token) {
       await fetch(endereco + "/api/encerrar", {
@@ -81,6 +85,14 @@ async function encerrarBackend() {
       });
     }
   } catch {}
+  let prazo;
+  await Promise.race([
+    fim,
+    new Promise((resolve) => {
+      prazo = setTimeout(resolve, 4000);
+    }),
+  ]);
+  clearTimeout(prazo);
   if (processo.exitCode === null) {
     processo.kill();
   }
@@ -285,6 +297,16 @@ async function iniciar() {
   });
   janela.once("ready-to-show", () => janela.show());
   backend.once("exit", (codigo) => {
+    if (process.env.HUB_QA_REPORT)
+      require("node:fs").appendFileSync(
+        process.env.HUB_QA_REPORT + ".log",
+        JSON.stringify({
+          codigo,
+          erros,
+          fechando,
+          janelaFechada: janela?.isDestroyed(),
+        }) + "\n",
+      );
     if (!fechando && janela && !janela.isDestroyed()) {
       if (codigo !== 0) {
         dialog.showErrorBox(
