@@ -277,6 +277,9 @@ async function iniciar() {
         "sqlite.org",
         "developers.openai.com",
         "github.com",
+        "cs50.harvard.edu",
+        "fullstackopen.com",
+        "www.theodinproject.com",
       ].includes(alvo.hostname)
     ) {
       shell.openExternal(url);

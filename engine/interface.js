@@ -95,6 +95,8 @@ function fmt(valor) {
   return JSON.stringify(valor, null, 2);
 }
 async function api(caminho, dado, binario = false) {
+  if (dado && caminho.startsWith("/api/ambiente/"))
+    dado = { ...dado, demonstracao: modoDemo };
   const opcoes = {
     headers: {
       "X-Lab-Token": TOKEN,
@@ -383,6 +385,13 @@ function renderizarPreparacao() {
     }
   }
   const fecho = card(raiz, "Evidência para avançar");
+  if (aula.professor.curadoria) {
+    const curadoria = card(raiz, "Diagnóstico e transferência");
+    for (const [nome, texto] of Object.entries(aula.professor.curadoria)) {
+      elemento(curadoria, "h3", nome);
+      elemento(curadoria, "p", texto);
+    }
+  }
   elemento(fecho, "p", aula.professor.criterio);
   botao(fecho, "Começar a explicação", () => mostrarAba("estudar"), "primary");
 }

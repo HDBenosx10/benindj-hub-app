@@ -30,7 +30,8 @@ const args = [
   sha,
   "--title",
   `BeninDJ Hub ${perfil} v${versao}`,
-  "--generate-notes",
+  "--notes-file",
+  path.resolve(__dirname, "../RELEASE-NOTES.md"),
 ];
 if (process.env.HUB_PUBLISH !== "true") args.push("--draft");
 if (process.env.HUB_PRERELEASE === "true" || versao.includes("-"))

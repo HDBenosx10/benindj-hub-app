@@ -1,11 +1,13 @@
 name: Gerar versão Windows
 on:
+  push:
+    tags: ['v*']
   workflow_dispatch:
     inputs:
       versao:
         description: 'Versão nova (ex.: 0.7.0 ou 0.8.0-beta.1)'
         required: true
-        default: '0.8.0'
+        default: '0.9.0'
         type: string
       publicar:
         description: 'Publicar imediatamente? Desmarcado cria rascunho.'
@@ -18,7 +20,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: release-${{ github.repository }}-${{ inputs.versao }}
+  group: release-${{ github.repository }}-${{ inputs.versao || github.ref_name }}
   cancel-in-progress: false
 jobs:
   release:
@@ -27,9 +29,9 @@ jobs:
     permissions:
       contents: write
     env:
-      HUB_RELEASE_VERSION: ${{ inputs.versao }}
-      HUB_PUBLISH: ${{ inputs.publicar }}
-      HUB_PRERELEASE: ${{ inputs.prerelease }}
+      HUB_RELEASE_VERSION: ${{ inputs.versao || github.ref_name }}
+      HUB_PUBLISH: ${{ github.event_name == 'push' || inputs.publicar }}
+      HUB_PRERELEASE: ${{ inputs.prerelease || false }}
       HUB_PROFILE: aluno
     steps:
       - uses: actions/checkout@v7
@@ -59,7 +61,7 @@ jobs:
         working-directory: .
       - uses: actions/upload-artifact@v7
         with:
-          name: benindj-hub-aluno-${{ inputs.versao }}
+          name: benindj-hub-aluno-${{ inputs.versao || github.ref_name }}
           path: |
             dist/*.exe
             dist/SHA256SUMS.txt
@@ -68,5 +70,11 @@ jobs:
       - name: Criar release com a versão escolhida
         run: node scripts/publish-release.cjs
         working-directory: .
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Remover rascunhos antigos após publicação
+        if: env.HUB_PUBLISH == 'true'
+        run: node scripts/limpar-rascunhos.cjs
         env:
           GH_TOKEN: ${{ github.token }}

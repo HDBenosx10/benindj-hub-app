@@ -47,6 +47,14 @@ function renderizarJornada() {
       renderizarEstudio();
       agendarRascunho();
     });
+    const aulaComBanco = biblioteca.find((a) => a.numero === 40);
+    if (aulaComBanco)
+      botao(
+        exemplo,
+        "Abrir aula 40: banco e mock",
+        () => abrirAula(aulaComBanco.id),
+        "primary",
+      );
   }
   const lista = biblioteca;
   const feitas = lista.filter((a) => a.progresso?.completa).length;
@@ -97,6 +105,14 @@ function renderizarJornada() {
     `${feitas} de ${lista.length} aulas liberadas concluídas · este número não representa toda a trilha`,
   );
   const grupos = new Map();
+  for (const m of dadosJornada.curriculo?.modulos ?? []) {
+    if (m.trilha === "comum" || m.trilha === (escolha?.trilha ?? "backend"))
+      grupos.set(
+        (m.trilha === "comum" ? "Núcleo comum · " : "Especialização · ") +
+          m.nome,
+        [],
+      );
+  }
   for (const a of lista) {
     const modulo =
       (a.trilha === "comum" ? "Núcleo comum · " : "Especialização · ") +
@@ -106,6 +122,24 @@ function renderizarJornada() {
   }
   for (const [nome, aulas] of grupos) {
     const bloco = card(raiz, nome);
+    const modulo = dadosJornada.curriculo?.modulos.find((m) =>
+      nome.endsWith("· " + m.nome),
+    );
+    if (modulo) {
+      const competencias = elemento(bloco, "ul");
+      modulo.competencias.forEach((c) => elemento(competencias, "li", c));
+    }
+    if (!aulas.length) {
+      elemento(
+        bloco,
+        "p",
+        modulo?.planejado
+          ? "Em preparação · ainda sem aulas executáveis"
+          : "Aguardando liberação do professor · nenhuma aula recebida",
+        "secondary",
+      );
+      continue;
+    }
     const concluidas = aulas.filter((a) => a.progresso?.completa).length;
     barraProgresso(
       bloco,
@@ -119,6 +153,14 @@ function renderizarJornada() {
         () => abrirAula(a.id),
         "journey-lesson",
       );
+  }
+  const referencias = card(raiz, "Referências do percurso");
+  elemento(referencias, "p", dadosJornada.curriculo?.limites ?? "");
+  for (const ref of dadosJornada.curriculo?.referencias ?? []) {
+    const link = elemento(referencias, "a", ref.titulo, "curriculum-source");
+    link.href = ref.url;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
   }
 }
 function abrirEscolhaJornada() {

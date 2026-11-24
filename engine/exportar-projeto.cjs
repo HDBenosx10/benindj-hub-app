@@ -58,7 +58,9 @@ const fs=require('node:fs/promises');const path=require('node:path');
  const recursos=require('./.hub/recursos-cliente.cjs').criarCliente(host.conexao);
  const fechar=async()=>{await host.parar();process.exit(0);};process.on('SIGINT',fechar);process.on('SIGTERM',fechar);
  if(aula.modo==='projeto' && aula.projeto.tipo==='http'){
-  const servidor=await require('./app.cjs').criarServidor({caminhoBanco:path.join(__dirname,'hub.sqlite'),recursos});
+  const compartilhado=host.conexao.recursos.some(r=>r.id==='banco'&&r.tipo==='sqlite'&&r.modo==='arquivo');
+  const caminhoBanco=compartilhado?await recursos.sqlite('banco').caminhoArquivo():path.join(__dirname,'hub.sqlite');
+  const servidor=await require('./app.cjs').criarServidor({caminhoBanco,recursos});
   servidor.listen(Number(process.env.PORT??3000),'127.0.0.1',()=>console.log('Seu servidor: http://127.0.0.1:'+servidor.address().port));
   process.on('SIGINT',()=>servidor.closeAllConnections());
  }else if(aula.modo==='projeto'){

@@ -8,7 +8,7 @@ As respostas ficam salvas automaticamente no computador, fora do executável. A 
 
 ## Gerar uma versão
 
-No GitHub, abra **Actions → Gerar versão Windows → Run workflow**. Informe uma versão inédita, como `0.7.0`. O padrão cria uma release em rascunho; marque **publicar** para disponibilizá-la ao terminar.
+No GitHub, abra **Actions → Gerar versão Windows → Run workflow**. Informe uma versão inédita, como `0.9.0`. O padrão cria uma release em rascunho; marque **publicar** para disponibilizá-la ao terminar.
 
 A esteira executa testes, monta o aplicativo, confere que apenas a aula 0 está incluída, abre o executável e verifica execução, importação e persistência. A release contém o `.exe`, `SHA256SUMS.txt` e `BUILD-INFO.json` com os commits de origem. Para corrigir uma versão, gere outra.
 
@@ -44,3 +44,7 @@ Veja o [guia da bancada](docs/ambientes/README.md) para contratos, limites, test
 A primeira abertura permite escolher Back-end, Front-end ou IA. Hoje, JavaScript é a linguagem executável; Front-end/IA têm o núcleo comum, com especialização em preparação. Java/Go ficam indisponíveis até a V2. Minha trilha mostra progresso somente das aulas liberadas. O professor continua controlando a distribuição.
 
 [Guia de jornada, recursos e abertura](docs/jornada.md). Para uso diário, prefira o instalador por usuário. A versão portátil continua disponível, com extração a cada abertura. Os arquivos de dados são mantidos fora da instalação.
+
+## Releases oficiais
+
+Uma tag vX.Y.Z aciona testes, montagem e publicação oficial dos pacotes portátil e instalador. A ação manual continua disponível para rascunhos. A release publicada remove somente rascunhos antigos; o histórico Git e as releases publicadas anteriores são preservados.

@@ -32,7 +32,7 @@ if (require.main === module) {
     const refs = execFileSync("git", ["tag", "--list", "v" + versao], {
       encoding: "utf8",
     }).trim();
-    if (refs)
+    if (refs && process.env.GITHUB_REF !== "refs/tags/v" + versao)
       throw Error(
         "A versão v" + versao + " já existe. Escolha uma versão nova.",
       );

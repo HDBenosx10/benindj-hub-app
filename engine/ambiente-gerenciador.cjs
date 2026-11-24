@@ -66,6 +66,7 @@ exports.criarGerenciador = function criarGerenciador(raiz) {
       ativo.conexao.recursos = nova.recursos.map((r) => ({
         id: r.id,
         tipo: r.tipo,
+        modo: r.modo,
       }));
       await fs.writeFile(
         path.join(pasta(chave), "config.json"),

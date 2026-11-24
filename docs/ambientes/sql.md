@@ -60,3 +60,7 @@ Para avaliar DDL feito no painel, transforme o SQL produzido em código entregá
 DDL e DML têm permissões independentes. O banco inicial pode conter tabelas mesmo com DDL desabilitado para o aluno. `ATTACH`, `DETACH`, PRAGMAs e carregamento de extensões são bloqueados pelo adaptador da bancada. Não há suporte a PostgreSQL/MySQL nem equivalência total entre seus dialetos e SQLite.
 
 Fora do Hub, leia a [API SQLite do Node](https://nodejs.org/download/release/v24.13.0/docs/api/sqlite.html), substitua o adaptador por uma conexão `DatabaseSync` recebida por parâmetro e escreva testes com banco temporário. Explique quais partes do código são SQL e quais pertencem ao driver.
+
+## Banco nativo e painel da mesma aplicação
+
+Nas aulas 40–45 revisadas, o recurso SQLite em arquivo com id banco é compartilhado com o servidor. caminhoBanco aponta para esse recurso. Antes de iniciar a aplicação, pode não haver tabelas; o código de inicialização do projeto aplica o schema e os dados. O painel permite observar e modificar o mesmo arquivo. Mocks e bancos de demonstração ficam separados do trabalho do aluno.

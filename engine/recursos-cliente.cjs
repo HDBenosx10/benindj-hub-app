@@ -25,6 +25,7 @@ function criarCliente(conexao) {
     },
     sqlite(id) {
       return {
+        caminhoArquivo: async () => (await operar(id, "arquivo-sqlite")).caminho,
         consultar: async (sql, parametros = []) =>
           (await operar(id, "sql", { sql, parametros })).linhas,
         executar: (sql, parametros = []) =>

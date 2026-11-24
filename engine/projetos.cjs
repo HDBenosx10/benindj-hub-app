@@ -146,7 +146,16 @@ async function abrirProjeto(pasta, arquivos, opcoes = {}) {
           opcoes.ambiente,
         )
       : null;
-  const banco = path.join(pasta, "hub.sqlite");
+  const conexao = opcoes.conexao ?? ambienteProprio?.conexao;
+  const bancoCompartilhado = conexao?.recursos.find(
+    (r) => r.id === "banco" && r.tipo === "sqlite" && r.modo === "arquivo",
+  );
+  const banco = bancoCompartilhado
+    ? await require("./recursos-cliente.cjs")
+        .criarCliente(conexao)
+        .sqlite("banco")
+        .caminhoArquivo()
+    : path.join(pasta, "hub.sqlite");
   const logs = [];
   const requisicoes = [];
   const pendentes = new Map();
@@ -154,7 +163,7 @@ async function abrirProjeto(pasta, arquivos, opcoes = {}) {
     workerData: {
       pasta,
       banco,
-      conexao: opcoes.conexao ?? ambienteProprio?.conexao,
+      conexao,
     },
     execArgv: ["--disable-warning=ExperimentalWarning"],
     resourceLimits: { maxOldGenerationSizeMb: 128 },

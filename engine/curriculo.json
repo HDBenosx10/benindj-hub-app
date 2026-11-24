@@ -1,0 +1,167 @@
+{
+  "versao": "2026.11",
+  "referencias": [
+    { "titulo": "Harvard CS50x", "url": "https://cs50.harvard.edu/x/" },
+    { "titulo": "Harvard CS50 SQL", "url": "https://cs50.harvard.edu/sql/" },
+    { "titulo": "Full Stack Open", "url": "https://fullstackopen.com/en/" },
+    {
+      "titulo": "The Odin Project",
+      "url": "https://www.theodinproject.com/paths/full-stack-javascript"
+    },
+    {
+      "titulo": "MDN Curriculum",
+      "url": "https://developer.mozilla.org/en-US/curriculum/"
+    }
+  ],
+  "modulos": [
+    {
+      "trilha": "comum",
+      "nome": "Primeiros passos",
+      "competencias": [
+        "Executar e observar",
+        "Prever resultados",
+        "Aprender a investigar erros"
+      ]
+    },
+    {
+      "trilha": "comum",
+      "nome": "Base",
+      "competencias": [
+        "Valores e tipos",
+        "Decisões e repetição",
+        "Arrays, buscas e agregação"
+      ]
+    },
+    {
+      "trilha": "comum",
+      "nome": "Funções",
+      "competencias": [
+        "Parâmetros, retorno e escopo",
+        "Closures e callbacks",
+        "Decomposição e composição"
+      ]
+    },
+    {
+      "trilha": "comum",
+      "nome": "Objetos",
+      "competencias": [
+        "Identidade e referências",
+        "Arrays de objetos e CRUD",
+        "Classes, instâncias e estado"
+      ]
+    },
+    {
+      "trilha": "comum",
+      "nome": "Transformar dados",
+      "competencias": [
+        "Normalização, busca e projeção",
+        "JSON e validação",
+        "Dinheiro e datas"
+      ]
+    },
+    {
+      "trilha": "comum",
+      "nome": "Organização",
+      "competencias": [
+        "Módulos e contratos",
+        "Erros, depuração e testes",
+        "Recursão, busca binária, Map e Set"
+      ]
+    },
+    {
+      "trilha": "comum",
+      "nome": "Ferramentas",
+      "competencias": [
+        "Terminal, Node e npm",
+        "Git e revisão de mudanças",
+        "Configuração e segredos"
+      ]
+    },
+    {
+      "trilha": "comum",
+      "nome": "Assincronismo",
+      "competencias": [
+        "Promises e microtarefas",
+        "async/await e concorrência",
+        "Arquivos e persistência"
+      ]
+    },
+    {
+      "trilha": "backend",
+      "nome": "HTTP",
+      "competencias": [
+        "Servidores e contratos de API",
+        "Validação e cliente fetch",
+        "Mocks, atrasos e falhas reais"
+      ]
+    },
+    {
+      "trilha": "backend",
+      "nome": "Banco SQL",
+      "competencias": [
+        "SQLite e SQL parametrizado",
+        "Chaves, relações e JOIN",
+        "Transações e idempotência"
+      ]
+    },
+    {
+      "trilha": "backend",
+      "nome": "Segurança",
+      "competencias": [
+        "Hash e autenticação",
+        "Sessões e autorização",
+        "Casos negativos e proteção de dados"
+      ]
+    },
+    {
+      "trilha": "backend",
+      "nome": "Operação",
+      "competencias": [
+        "Configuração e logs",
+        "Testes integrados e exportação",
+        "Projeto reproduzível fora do Hub"
+      ]
+    },
+    {
+      "trilha": "frontend",
+      "nome": "Fundamentos da interface",
+      "planejado": true,
+      "competencias": [
+        "HTML semântico",
+        "CSS e layout responsivo",
+        "Acessibilidade desde o início"
+      ]
+    },
+    {
+      "trilha": "frontend",
+      "nome": "Aplicações no navegador",
+      "planejado": true,
+      "competencias": [
+        "DOM, eventos e formulários",
+        "Estado e consumo de API",
+        "Testes, desempenho e publicação"
+      ]
+    },
+    {
+      "trilha": "ia",
+      "nome": "Fundamentos de IA",
+      "planejado": true,
+      "competencias": [
+        "Dados, busca e representação",
+        "Probabilidade e avaliação",
+        "Limites e erros dos modelos"
+      ]
+    },
+    {
+      "trilha": "ia",
+      "nome": "Integrações com modelos",
+      "planejado": true,
+      "competencias": [
+        "Contratos e APIs de modelos",
+        "Experimentos e métricas",
+        "Custo, privacidade e reprodutibilidade"
+      ]
+    }
+  ],
+  "limites": "Currículo autoral orientado por referências, sem equivalência a certificados desses cursos. Os módulos de front-end e IA são planejados; não há runtime Java/Go/Python. Frameworks, containers, índices e bancos distribuídos são aprofundamentos posteriores ao percurso inicial."
+}

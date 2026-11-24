@@ -2111,3 +2111,4 @@ body.resource-drawer-open #ambiente > .card:first-of-type h2 {
 .resource-drawer-open .schema-diagram {
   margin: 12px 0;
 }
+.curriculum-source{display:inline-block;margin-right:18px;margin-bottom:8px}

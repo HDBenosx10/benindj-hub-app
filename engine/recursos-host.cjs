@@ -223,6 +223,11 @@ async function abrir({ pasta, definicao }) {
     const estado = estados.get(dado.recurso);
     if (!estado) throw Error("Recurso inexistente.");
     const r = estado.config;
+    if (dado.acao === "arquivo-sqlite") {
+      if (r.tipo !== "sqlite" || r.modo !== "arquivo")
+        throw Error("Este recurso não usa SQLite em arquivo.");
+      return { caminho: path.join(pasta, r.id + ".sqlite") };
+    }
     if (r.tipo === "sqlite") {
       if (
         typeof dado.sql !== "string" ||
@@ -408,7 +413,11 @@ async function abrir({ pasta, definicao }) {
     conexao: {
       base: "http://127.0.0.1:" + servidor.address().port,
       chave,
-      recursos: ambiente.recursos.map((r) => ({ id: r.id, tipo: r.tipo })),
+      recursos: ambiente.recursos.map((r) => ({
+        id: r.id,
+        tipo: r.tipo,
+        modo: r.modo,
+      })),
     },
     async parar() {
       for (const t of timers) clearTimeout(t);

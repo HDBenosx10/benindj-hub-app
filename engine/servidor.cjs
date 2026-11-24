@@ -350,6 +350,7 @@ async function iniciar() {
             escolha: respostas["jornada:" + visao(req)] ?? null,
             trilhas: jornada.trilhas,
             linguagens: jornada.linguagens,
+            curriculo: require("./curriculo.json"),
           },
           aulas: [...mapa.values()].map((aula) => ({
             id: aula.id,
@@ -447,26 +448,33 @@ async function iniciar() {
         if (!aula.ambiente)
           throw Error("O professor não habilitou recursos nesta aula.");
         let ambiente;
+        if (dado.demonstracao && visao(req) !== "professor")
+          throw Error("Demonstração exclusiva do professor.");
+        const ambienteId = id + (dado.demonstracao ? "-demo" : "");
         if (url.pathname === "/api/ambiente/configurar") {
           await pararChave(id);
-          ambiente = await ambientes.configurar(id, aula, dado.definicao);
+          ambiente = await ambientes.configurar(
+            ambienteId,
+            aula,
+            dado.definicao,
+          );
         } else if (url.pathname === "/api/ambiente/restaurar") {
           await pararChave(id);
-          ambiente = await ambientes.restaurar(id, aula);
+          ambiente = await ambientes.restaurar(ambienteId, aula);
         } else if (url.pathname === "/api/ambiente/reiniciar") {
           await pararChave(id);
-          await ambientes.parar(id);
-          ambiente = await ambientes.obter(id, aula);
+          await ambientes.parar(ambienteId);
+          ambiente = await ambientes.obter(ambienteId, aula);
         } else if (url.pathname === "/api/ambiente/parar") {
           await pararChave(id);
           await ambientes.parar(id);
           await ambientes.parar(id + "-demo");
           return json(res, 200, { parado: true });
         } else if (url.pathname === "/api/ambiente/operar") {
-          ambiente = await ambientes.obter(id, aula);
+          ambiente = await ambientes.obter(ambienteId, aula);
           return json(res, 200, await ambiente.operar(dado.operacao));
         } else if (url.pathname === "/api/ambiente/estado")
-          ambiente = await ambientes.obter(id, aula);
+          ambiente = await ambientes.obter(ambienteId, aula);
         else throw Error("Operação de ambiente desconhecida.");
         const estado = await ambiente.operar({ acao: "estado" });
         return json(res, 200, {

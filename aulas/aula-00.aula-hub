@@ -16,7 +16,9 @@
   "conceitos": [
     "JavaScript executa as instruções que você escreve. console.log mostra um valor no console.",
     "Textos ficam entre aspas. Por exemplo, console.log(\"Olá!\") mostra a mensagem Olá!.",
-    "Executar deixa você experimentar. Verificar confere o objetivo combinado para esta atividade."
+    "Executar deixa você experimentar. Verificar confere o objetivo combinado para esta atividade.",
+    "Modelo mental: Expressar uma instrução observável.",
+    "Investigue este erro: Confundir o texto do programa com sua saída. Preveja o comportamento, execute um caso mínimo e explique a evidência."
   ],
   "exemplo": "console.log(\"Meu primeiro programa\");\n",
   "exemploExplicado": [
@@ -51,7 +53,16 @@
       "acao": "Compare código escrito, saída e verificação."
     }
   ],
-  "fontes": [],
+  "fontes": [
+    {
+      "titulo": "Harvard CS50x",
+      "url": "https://cs50.harvard.edu/x/"
+    },
+    {
+      "titulo": "The Odin Project — Full Stack JavaScript",
+      "url": "https://www.theodinproject.com/paths/full-stack-javascript"
+    }
+  ],
   "exercicios": [
     {
       "id": "hello-world",
@@ -72,5 +83,37 @@
       ]
     }
   ],
-  "versaoConteudo": "2026-11-23-hub"
+  "versaoConteudo": "2026-11-23-hub",
+  "trilha": "comum",
+  "curadoria": {
+    "versao": "2026.11",
+    "modeloMental": "Expressar uma instrução observável",
+    "erroAlvo": "Confundir o texto do programa com sua saída",
+    "transferencia": "Troque a mensagem, preveja a saída e execute um arquivo fora do Hub",
+    "referencias": [
+      {
+        "titulo": "Harvard CS50x",
+        "url": "https://cs50.harvard.edu/x/"
+      },
+      {
+        "titulo": "The Odin Project — Full Stack JavaScript",
+        "url": "https://www.theodinproject.com/paths/full-stack-javascript"
+      }
+    ]
+  },
+  "materiaisComplementares": {
+    "guia": "Objetivo: Expressar uma instrução observável.\nPré-requisitos: nenhum.\nLeia o contrato da atividade antes de codificar. Preveja um caso normal, um caso vazio e uma entrada inválida.\nErro para investigar: Confundir o texto do programa com sua saída.\nApós os testes verdes, explique uma decisão sem consultar a solução.",
+    "foraDoHub": "Exporte o projeto em Fora do Hub e extraia o ZIP em uma pasta nova. Instale Node 24.13 ou superior e execute node iniciar.cjs. Para verificar os critérios, use node verificar.cjs. Leia o LEIA-ME. Registre dependências, comandos e hipóteses em um README. A configuração inicial é exportada; o estado experimental do banco não é.\nTransferência: Troque a mensagem, preveja a saída e execute um arquivo fora do Hub.",
+    "desafiosTransferencia": "Troque a mensagem, preveja a saída e execute um arquivo fora do Hub.\nCritério de passagem: a solução cobre os casos combinados; o aluno explica entradas, saídas e efeitos; consegue adaptar o problema sem copiar o gabarito.",
+    "referencias": [
+      {
+        "titulo": "Harvard CS50x",
+        "url": "https://cs50.harvard.edu/x/"
+      },
+      {
+        "titulo": "The Odin Project — Full Stack JavaScript",
+        "url": "https://www.theodinproject.com/paths/full-stack-javascript"
+      }
+    ]
+  }
 }

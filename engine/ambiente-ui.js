@@ -333,7 +333,10 @@ function desenharBancada() {
       "drawer-close",
     );
   }
-  const topo = card(raiz, "Ambiente desta aula");
+  const topo = card(
+    raiz,
+    modoDemo ? "Ambiente da demonstração" : "Ambiente desta aula",
+  );
   elemento(
     topo,
     "p",
