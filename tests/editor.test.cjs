@@ -1,5 +1,23 @@
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
+test("Dracula Pro usa rosa sem itálico em const e laranja nos parâmetros", async () => {
+  const { colorirJS, regras } = await import("../editor/sintaxe.js");
+  const regra = (classe) => regras.find((r) => r.class === classe);
+  assert.equal(regra("hl-definition").color, "#ff80bf");
+  assert.equal(regra("hl-definition").fontStyle, undefined);
+  assert.equal(regra("hl-comment").fontStyle, undefined);
+  assert.equal(regra("hl-parameter").color, "#ffca80");
+  assert.equal(regra("hl-parameter").fontStyle, "italic");
+  const html = colorirJS(
+    "const dobro = n => n * 2; function somar(a, b) { return a + b; }",
+  );
+  assert.match(html, /hl-definition">const</);
+  assert.match(html, /hl-parameter">n</);
+  assert.match(html, /hl-parameter">a</);
+  assert.match(html, /hl-parameter">b</);
+  assert.match(html, /hl-operator">=&gt;</);
+  assert.match(html, /hl-function">somar</);
+});
 test("Parser diferencia divisão, regex, comentários e interpolação JavaScript", async () => {
   const { colorirJS } = await import("../editor/sintaxe.js");
   const html = colorirJS(

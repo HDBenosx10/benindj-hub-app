@@ -2,11 +2,15 @@ import { basicSetup } from "codemirror";
 import { EditorState, Compartment, Transaction, Prec } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
 import { indentWithTab, isolateHistory } from "@codemirror/commands";
-import { syntaxHighlighting, indentUnit } from "@codemirror/language";
+import {
+  syntaxHighlighting,
+  indentUnit,
+  LanguageSupport,
+} from "@codemirror/language";
 import { javascript } from "@codemirror/lang-javascript";
 import { json } from "@codemirror/lang-json";
 import { sql, SQLite } from "@codemirror/lang-sql";
-import { cores, destaque } from "./sintaxe.js";
+import { cores, destaque, linguagemJavaScript } from "./sintaxe.js";
 import { formatarTexto, podeFormatar } from "./formatacao.js";
 export { colorirJS } from "./sintaxe.js";
 
@@ -57,7 +61,7 @@ export function criar(parent, opcoes = {}) {
       ? sql({ dialect: SQLite })
       : /\.json$/i.test(arquivo)
         ? json()
-        : javascript();
+        : new LanguageSupport(linguagemJavaScript, javascript().support);
   const extensoes = () => [
     basicSetup,
     tema,

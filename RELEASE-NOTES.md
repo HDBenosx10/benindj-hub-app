@@ -1,4 +1,8 @@
-# BeninDJ Hub 0.10.0
+# BeninDJ Hub 0.10.1
+
+- Corrige o mapeamento Dracula Pro: const, let, var e function em rosa, sem itálico; comentários sem itálico e parâmetros em laranja itálico.
+- Editor, exemplos e gabaritos usam as mesmas regras corrigidas. A referência consultada foi a extensão VS Code do repositório Dracula Pro do usuário.
+
 
 - Novo editor CodeMirror, com parser JavaScript e paleta consultada no Dracula Pro.
 - Destaque coerente de funções, strings, regex, comentários e interpolações; linguagens próprias para arquivos JSON e SQL.
