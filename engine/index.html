@@ -4,283 +4,410 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="lab-token" content="__TOKEN__" />
-    <title>Ateliê Açaí · Laboratório de JavaScript</title>
+    <title>BeninDJ Hub</title>
     <link rel="stylesheet" href="/estilo.css" />
     <script src="/interface.js" defer></script>
     __ESTUDIO__
   </head>
   <body>
-    <header class="top">
-      <div class="brand">
-        <span class="logo">JS</span>
-        <div>Ateliê Açaí<small>JavaScript que vira uma aplicação</small></div>
-      </div>
-      <div class="top-actions">
-        <span id="perfil" class="tag">Abrindo…</span
-        ><button id="importar" class="subtle">Importar arquivo</button
-        ><button id="painel-professor" hidden>Painel do professor</button
-        ><button id="motor" class="subtle" hidden>Aplicativo do aluno</button
-        ><button id="ajuda" class="subtle">Ajuda</button
-        ><button id="encerrar" class="subtle">Encerrar</button>
-      </div>
-    </header>
-    <div class="layout">
-      <aside id="sidebar">
-        <div class="side-title">Sua biblioteca</div>
-        <p id="nota-biblioteca"></p>
-        <label class="sr" for="busca">Buscar aula</label
-        ><input id="busca" type="search" placeholder="Buscar assunto…" />
-        <nav id="aulas" aria-label="Aulas disponíveis"></nav>
-      </aside>
-      <main>
-        <section id="estudio" hidden></section>
-        <div class="compacta">
-          <label for="aula-compacta">Aulas disponíveis</label
-          ><select id="aula-compacta"></select>
+    <aside class="hub-nav">
+      <a class="brand" href="#inicio" id="marca-inicio"
+        ><span class="brand-mark">B<span>↗</span></span
+        ><span>BeninDJ<span class="brand-hub">Hub</span></span></a
+      >
+      <p class="nav-caption">SEU ESPAÇO DE APRENDIZAGEM</p>
+      <nav aria-label="Navegação principal">
+        <button data-rota="inicio" aria-current="page">
+          <span>⌂</span>Início</button
+        ><button data-rota="aulas">
+          <span>▦</span><span id="nav-acervo-texto">Minhas aulas</span>
+        </button>
+        <div id="nav-professor" hidden>
+          <p class="nav-caption">ESTÚDIO DO PROFESSOR</p>
+          <button id="painel-professor"><span>＋</span>Criar aula</button
+          ><button id="nav-coruja"><span>✧</span>DEV Coruja</button>
         </div>
-        <section class="hero">
+      </nav>
+      <div class="nav-bottom">
+        <div class="profile-card">
+          <span class="profile-avatar">B</span>
           <div>
-            <p class="eyebrow" id="etiqueta"></p>
-            <h1 id="titulo">Abrindo o laboratório…</h1>
-            <p id="contexto" class="lead"></p>
+            <strong id="perfil">Abrindo…</strong><small>Workspace local</small>
           </div>
-          <div id="acoes-professor" class="hero-actions" hidden>
-            <button id="previa">Prévia do aluno</button
-            ><button id="liberar" class="primary">Baixar esta aula</button>
+        </div>
+        <button id="ajuda" class="nav-quiet">Ajuda e informações</button
+        ><button id="encerrar" class="nav-quiet">Fechar aplicativo</button>
+      </div>
+    </aside>
+    <div class="hub-layout">
+      <header class="top">
+        <div class="breadcrumb">
+          <span>Workspace</span><span>/</span
+          ><strong id="rota-titulo">Início</strong>
+        </div>
+        <div class="top-actions">
+          <button id="importar" class="secondary-button">↓ Importar aula</button
+          ><span class="local-indicator">● Salvo neste computador</span>
+        </div>
+      </header>
+      <main>
+        <div id="mensagem" role="status" aria-live="polite" hidden></div>
+        <section id="inicio">
+          <div class="home-hero">
+            <div>
+              <p class="eyebrow">BENINDJ HUB</p>
+              <h1 id="inicio-titulo">Seu próximo passo começa aqui.</h1>
+              <p id="inicio-descricao" class="lead"></p>
+              <div class="grupo">
+                <button id="continuar-aula" class="primary">
+                  Continuar aprendendo <span>↗</span></button
+                ><button id="home-acervo" class="text-button">
+                  Ver minhas aulas →
+                </button>
+              </div>
+            </div>
+            <div class="hero-code" aria-hidden="true">
+              <div class="code-dots">
+                <i></i><i></i><i></i><span>primeiro-passo.js</span>
+              </div>
+              <p><span>console</span>.log(<em>"Olá, mundo!"</em>);</p>
+              <div class="hero-output">↳ Um passo de cada vez.</div>
+            </div>
+          </div>
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow" id="home-label">CONTINUE DE ONDE PAROU</p>
+              <h2 id="home-heading">Sua jornada</h2>
+            </div>
+            <span id="home-total" class="pill"></span>
+          </div>
+          <div id="home-cards" class="home-cards"></div>
+          <div class="home-note">
+            <span>✦</span>
+            <p id="home-nota">
+              Novas aulas aparecem aqui quando você importar um arquivo enviado
+              pelo professor.
+            </p>
           </div>
         </section>
-        <div id="mensagem" role="status" aria-live="polite">
-          O motor está pronto. Suas respostas ficam salvas nesta pasta.
-        </div>
-        <nav class="abas" aria-label="Etapas da aula">
-          <button data-aba="preparar" id="aba-preparar" hidden>Preparar aula</button
-          ><button data-aba="estudar">Estudar</button
-          ><button data-aba="praticar">Desafios e código</button
-          ><button data-aba="corrigir" id="aba-corrigir" hidden>
-            Gabarito do professor
-          </button>
-        </nav>
-        <section id="preparar" class="painel" hidden></section>
-        <section id="estudar" class="painel" hidden></section>
-        <section id="corrigir" class="painel" hidden></section>
-        <section id="praticar" class="painel" hidden>
-          <div id="concluido" class="sucesso" hidden>
-            <strong>Os cenários desta aula passaram.</strong>Agora explique o caminho
-            dos dados e uma situação de falha ao professor.
-          </div>
-          <div class="practice-head">
+        <section id="acervo" hidden>
+          <div class="page-heading">
             <div>
-              <h2 id="pratica-titulo"></h2>
-              <p id="pratica-descricao"></p>
+              <p class="eyebrow">BIBLIOTECA</p>
+              <h1 id="catalogo-titulo">Minhas aulas</h1>
+              <p id="nota-biblioteca" class="lead"></p>
             </div>
-            <button id="baixar-respostas">Baixar respostas</button>
           </div>
-          <div id="exercicios" class="escolhas"></div>
-          <div id="arquivos" class="arquivos" hidden>
-            <label for="arquivo">Arquivo do projeto</label
-            ><select id="arquivo"></select
-            ><span id="permissao"></span>
+          <div class="catalog-toolbar">
+            <label class="search-field"
+              ><span>⌕</span
+              ><input
+                id="busca"
+                type="search"
+                placeholder="Buscar por assunto…"
+                aria-label="Buscar aula" /></label
+            ><label class="sr" for="filtro-modulo">Filtrar por assunto</label
+            ><select id="filtro-modulo">
+              <option value="">Todos os assuntos</option>
+            </select>
           </div>
-          <div class="bancada">
-            <aside id="briefing" class="card briefing">
-              <p class="eyebrow">SEU DESAFIO</p>
-              <h3 id="desafio-nome"></h3>
-              <p id="enunciado"></p>
-              <div id="dados-desafio"></div>
-              <details>
-                <summary>Preciso de um ponto de partida</summary>
-                <div id="pistas-desafio"></div>
-              </details>
-              <button id="voltar-conceito" class="subtle">
-                Rever explicação da aula
-              </button>
-            </aside>
-            <div class="bancada-codigo">
-              <div class="editor-shell">
-                <div class="editor-top">
-                  <span id="nome-editor"></span
-                  ><span id="salvo">Pronto para editar</span>
-                </div>
-                <div class="editor-corpo">
-                  <pre id="linhas" aria-hidden="true">1</pre>
-                  <div class="codigo-camadas">
-                    <pre id="codigo-colorido" aria-hidden="true"></pre>
-                    <textarea
-                      id="editor"
-                      spellcheck="false"
-                      autocorrect="off"
-                      autocapitalize="off"
-                      aria-label="Código da atividade"
-                    ></textarea>
-                  </div>
-                </div>
+          <div id="aulas" class="lesson-grid"></div>
+          <p id="catalogo-vazio" class="empty-state" hidden>
+            Nenhuma aula corresponde à busca.
+          </p>
+        </section>
+        <section id="visao-aula" hidden>
+          <div class="lesson-header">
+            <button id="voltar-acervo" class="text-button">
+              ← Voltar às aulas
+            </button>
+            <div class="hero">
+              <div>
+                <p id="etiqueta" class="eyebrow"></p>
+                <h1 id="titulo">Abrindo aula…</h1>
+                <p id="contexto" class="lead"></p>
               </div>
-              <div class="barra">
-                <div class="grupo">
-                  <button id="testar" class="primary">Verificar implementação</button
-                  ><button id="testar-tudo">Testar aula</button
-                  ><button id="executar-projeto" hidden>Executar projeto</button
-                  ><button id="parar-projeto" hidden>Parar projeto</button
-                  ><button id="retomar" hidden>Retomar atividade</button>
-                </div>
-                <div class="grupo">
-                  <button id="abrir-js" class="subtle">Abrir meu .js</button
-                  ><button id="recomecar" class="subtle">Código inicial</button>
-                </div>
+              <div id="acoes-professor" class="hero-actions" hidden>
+                <button id="previa">Visão do aluno</button
+                ><button id="liberar" class="primary">Liberar aula ↗</button>
               </div>
-              <section id="exploracao" class="card exploracao">
-                <div class="card-head">
-                  <div>
-                    <h3>Experimente sua ideia</h3>
-                    <p id="dica-experimento">
-                      Escreva chamadas e console.log. Executar não roda os testes.
-                    </p>
-                  </div>
-                  <span class="tag">Sem nota</span>
-                </div>
-                <label for="modo-experimento">O que executar</label
-                ><select id="modo-experimento">
-                  <option value="desafio">
-                    Meu código do desafio + minhas chamadas abaixo
-                  </option>
-                  <option value="livre">
-                    Só o rascunho abaixo · JavaScript livre
-                  </option></select
-                ><label for="rascunho">Chamadas, dados e hipóteses</label
-                ><textarea
-                  id="rascunho"
-                  class="small-code"
-                  spellcheck="false"
-                ></textarea>
-                <div class="grupo">
-                  <button id="run-livre" class="primary">▶ Executar meu código</button
-                  ><button id="limpar-console">Limpar console</button>
-                </div>
-                <pre id="console-livre" class="console" role="status">
-Seu console aparecerá aqui. Os testes só rodam quando você pedir.</pre
-                >
-              </section>
-              <details id="verificacoes" class="card">
-                <summary>Conferir os critérios do desafio</summary>
-                <p>
-                  Depois de explorar, verifique se sua solução atende aos casos
-                  combinados.
-                </p>
-                <div class="resumo-testes">
-                  <h3>Verificação do comportamento</h3>
-                  <span id="placar"></span>
-                </div>
-                <div id="testes"></div>
-              </details>
-              <section id="terminal" class="card" hidden>
-                <div class="card-head">
-                  <div>
-                    <h3>Terminal de treino</h3>
-                    <p>
-                      O comando executa o projeto e usa os arquivos que você está
-                      editando.
-                    </p>
-                  </div>
-                </div>
-                <div class="grupo">
-                  <label class="sr" for="comando">Comando da aula</label
-                  ><select id="comando"></select
-                  ><button id="executar-comando">Executar comando</button>
-                </div>
-                <pre id="saida-terminal" class="console">
-Escolha um comando para observar o programa.</pre
-                >
-                <details id="arquivo-gerado" hidden>
-                  <summary>Arquivo gravado pelo programa · .data/estado.json</summary>
-                  <pre></pre>
+            </div>
+          </div>
+          <div class="lesson-nav">
+            <nav class="abas" aria-label="Etapas da aula">
+              <button data-aba="estudar" aria-selected="true">
+                01 · Entender</button
+              ><button data-aba="praticar">02 · Praticar</button>
+            </nav>
+            <button id="abrir-guia" hidden class="text-button">
+              Material do professor ↗
+            </button>
+          </div>
+          <section id="estudar" class="painel"></section>
+          <section id="praticar" class="painel" hidden>
+            <div id="concluido" class="sucesso" hidden>
+              <strong>Objetivos da aula concluídos.</strong> Mostre ao professor
+              como você chegou à solução.
+            </div>
+            <div class="practice-head">
+              <div>
+                <h2 id="pratica-titulo"></h2>
+                <p id="pratica-descricao"></p>
+              </div>
+              <div id="exercicios" class="activity-picker"></div>
+            </div>
+            <div class="bancada">
+              <aside id="briefing" class="briefing">
+                <p class="eyebrow">SUA ATIVIDADE</p>
+                <h3 id="desafio-nome"></h3>
+                <p id="enunciado"></p>
+                <details id="detalhes-desafio">
+                  <summary>Contexto, exemplo e critérios</summary>
+                  <div id="dados-desafio"></div>
                 </details>
-              </section>
-              <section id="observatorio" class="card" hidden>
-                <div class="card-head">
-                  <div>
-                    <h3>Aplicação em execução</h3>
-                    <p id="estado-projeto">
-                      Clique em Executar projeto para abrir sua API local.
-                    </p>
+                <details>
+                  <summary>Uma pista para começar</summary>
+                  <div id="pistas-desafio"></div>
+                </details>
+                <button id="voltar-conceito" class="text-button">
+                  Rever explicação →
+                </button>
+              </aside>
+              <div class="bancada-codigo">
+                <div id="arquivos" class="arquivos" hidden>
+                  <label for="arquivo">Arquivo</label
+                  ><select id="arquivo"></select
+                  ><span id="permissao"></span>
+                </div>
+                <div class="editor-shell">
+                  <div class="editor-top">
+                    <span id="nome-editor"></span><span id="salvo">Pronto</span>
+                    <details class="file-menu">
+                      <summary>Arquivo ···</summary>
+                      <div>
+                        <button id="abrir-js">Importar .js</button
+                        ><button id="baixar-respostas">
+                          Exportar respostas</button
+                        ><button id="recomecar">
+                          Restaurar código inicial
+                        </button>
+                      </div>
+                    </details>
                   </div>
-                  <span id="badge-projeto" class="tag">Parado</span>
-                </div>
-                <div class="abas pequenas">
-                  <button data-observar="http">Requisições</button
-                  ><button data-observar="banco" id="ver-banco" hidden>
-                    Banco SQLite</button
-                  ><button data-observar="log">Console da aplicação</button>
-                </div>
-                <div id="observar-http">
-                  <label for="modelo-request">Experimento previsto na aula</label
-                  ><select id="modelo-request"></select>
-                  <div class="request-line">
-                    <label class="sr" for="metodo">Método HTTP</label
-                    ><select id="metodo">
-                      <option>GET</option>
-                      <option>POST</option>
-                      <option>PATCH</option>
-                      <option>DELETE</option></select
-                    ><label class="sr" for="caminho">Caminho da API</label
-                    ><input id="caminho" value="/saude" /><button
-                      id="enviar-request"
-                      class="primary"
-                    >
-                      Enviar requisição
+                  <div class="editor-corpo">
+                    <pre id="linhas" aria-hidden="true">1</pre>
+                    <div class="codigo-camadas">
+                      <pre id="codigo-colorido" aria-hidden="true"></pre>
+                      <textarea
+                        id="editor"
+                        spellcheck="false"
+                        autocorrect="off"
+                        autocapitalize="off"
+                        aria-label="Código da atividade"
+                      ></textarea>
+                    </div>
+                  </div>
+                  <div class="editor-actions">
+                    <div class="grupo">
+                      <button id="run-livre" class="primary">▶ Executar</button
+                      ><button id="executar-projeto" class="primary" hidden>
+                        ▶ Executar projeto</button
+                      ><button id="parar-projeto" hidden>Parar</button
+                      ><button id="retomar" hidden>Retomar atividade</button>
+                    </div>
+                    <button id="testar" class="verify-button">
+                      ✓ Verificar
                     </button>
                   </div>
-                  <label for="corpo">Corpo JSON, quando necessário</label
-                  ><textarea
-                    id="corpo"
-                    class="small-code"
-                    spellcheck="false"
-                  ></textarea>
-                  <div class="grupo">
-                    <span id="sessao" class="secondary">Sem sessão de login</span
-                    ><button id="limpar-sessao" class="subtle">Limpar sessão</button
-                    ><button id="executar-cliente" hidden>Executar cliente.cjs</button>
+                </div>
+                <section id="exploracao" class="exploracao">
+                  <details id="meus-experimentos">
+                    <summary>
+                      Meus experimentos <span>Chamadas e rascunho livre</span>
+                    </summary>
+                    <label for="modo-experimento">Executar</label
+                    ><select id="modo-experimento">
+                      <option value="desafio">
+                        Meu código + minhas chamadas
+                      </option>
+                      <option value="livre">
+                        Somente o rascunho abaixo
+                      </option></select
+                    ><label for="rascunho">Chamadas, dados e hipóteses</label
+                    ><textarea
+                      id="rascunho"
+                      class="small-code"
+                      spellcheck="false"
+                    ></textarea>
+                    <p id="dica-experimento">
+                      Experimente outra entrada antes de verificar.
+                    </p>
+                  </details>
+                  <div class="output-heading">
+                    <strong>Console</strong
+                    ><span class="pill">Execução livre</span
+                    ><button id="limpar-console" class="text-button">
+                      Limpar
+                    </button>
                   </div>
-                  <div id="status-http" class="secondary"></div>
-                  <pre id="resposta-http" class="console">
-A resposta virá do servidor que está executando seus arquivos.</pre
-                  >
-                </div>
-                <div id="observar-banco" hidden>
-                  <p>
-                    Consulte o arquivo <code>loja.sqlite</code> usado pela API. Parar e
-                    reabrir o projeto preserva esse arquivo. Os testes usam seus
-                    próprios bancos para não alterar os experimentos.
-                  </p>
-                  <label for="consulta">Consulta de observação · somente SELECT</label
-                  ><textarea id="consulta" class="small-code" spellcheck="false">
+                  <pre id="console-livre" class="console" role="status">
+Execute seu código para ver a saída.</pre>
+                </section>
+                <details id="verificacoes" class="verification-panel">
+                  <summary>
+                    Resultado da verificação <span id="placar"></span>
+                  </summary>
+                  <p>Estes são os critérios combinados para a atividade.</p>
+                  <div id="testes"></div>
+                  <button id="testar-tudo" class="text-button">
+                    Verificar todas as atividades
+                  </button>
+                </details>
+                <section id="terminal" class="card" hidden>
+                  <div class="card-head">
+                    <div>
+                      <h3>Terminal de treino</h3>
+                      <p>
+                        O comando executa o projeto e usa os arquivos que você
+                        está editando.
+                      </p>
+                    </div>
+                  </div>
+                  <div class="grupo">
+                    <label class="sr" for="comando">Comando da aula</label
+                    ><select id="comando"></select
+                    ><button id="executar-comando">Executar comando</button>
+                  </div>
+                  <pre id="saida-terminal" class="console">
+Escolha um comando para observar o programa.</pre>
+                  <details id="arquivo-gerado" hidden>
+                    <summary>
+                      Arquivo gravado pelo programa · .data/estado.json
+                    </summary>
+                    <pre></pre>
+                  </details>
+                </section>
+                <section id="observatorio" class="card" hidden>
+                  <div class="card-head">
+                    <div>
+                      <h3>Aplicação em execução</h3>
+                      <p id="estado-projeto">
+                        Clique em Executar projeto para abrir sua API local.
+                      </p>
+                    </div>
+                    <span id="badge-projeto" class="tag">Parado</span>
+                  </div>
+                  <div class="abas pequenas">
+                    <button data-observar="http">Requisições</button
+                    ><button data-observar="banco" id="ver-banco" hidden>
+                      Banco SQLite</button
+                    ><button data-observar="log">Console da aplicação</button>
+                  </div>
+                  <div id="observar-http">
+                    <label for="modelo-request"
+                      >Experimento previsto na aula</label
+                    ><select id="modelo-request"></select>
+                    <div class="request-line">
+                      <label class="sr" for="metodo">Método HTTP</label
+                      ><select id="metodo">
+                        <option>GET</option>
+                        <option>POST</option>
+                        <option>PATCH</option>
+                        <option>DELETE</option></select
+                      ><label class="sr" for="caminho">Caminho da API</label
+                      ><input id="caminho" value="/saude" /><button
+                        id="enviar-request"
+                        class="primary"
+                      >
+                        Enviar requisição
+                      </button>
+                    </div>
+                    <label for="corpo">Corpo JSON, quando necessário</label
+                    ><textarea
+                      id="corpo"
+                      class="small-code"
+                      spellcheck="false"
+                    ></textarea>
+                    <div class="grupo">
+                      <span id="sessao" class="secondary"
+                        >Sem sessão de login</span
+                      ><button id="limpar-sessao" class="subtle">
+                        Limpar sessão</button
+                      ><button id="executar-cliente" hidden>
+                        Executar cliente.cjs
+                      </button>
+                    </div>
+                    <div id="status-http" class="secondary"></div>
+                    <pre id="resposta-http" class="console">
+A resposta virá do servidor que está executando seus arquivos.</pre>
+                  </div>
+                  <div id="observar-banco" hidden>
+                    <p>
+                      Consulte o arquivo <code>hub.sqlite</code> usado pela API.
+                      Parar e reabrir o projeto preserva esse arquivo. Os testes
+                      usam seus próprios bancos para não alterar os
+                      experimentos.
+                    </p>
+                    <label for="consulta"
+                      >Consulta de observação · somente SELECT</label
+                    ><textarea
+                      id="consulta"
+                      class="small-code"
+                      spellcheck="false"
+                    >
 SELECT id, nome, preco_centavos, estoque FROM produtos ORDER BY id</textarea
-                  ><button id="consultar-banco">Executar SELECT</button>
-                  <div id="tabela-banco" class="table-wrap"></div>
-                </div>
-                <div id="observar-log" hidden>
-                  <pre id="logs" class="console">
-Nenhuma mensagem emitida pela aplicação.</pre
-                  >
-                </div>
-              </section>
+                    ><button id="consultar-banco">Executar SELECT</button>
+                    <div id="tabela-banco" class="table-wrap"></div>
+                  </div>
+                  <div id="observar-log" hidden>
+                    <pre id="logs" class="console">
+Nenhuma mensagem emitida pela aplicação.</pre>
+                  </div>
+                </section>
+              </div>
             </div>
-          </div>
+          </section>
         </section>
+        <section id="estudio" hidden></section>
+        <section id="assistente" hidden></section>
         <footer>
-          Conteúdo e respostas locais · UTF-8 · Aplicativo desktop · Windows x64
+          BeninDJ Hub <span>Aprenda. Crie. Evolua.</span><span>v0.6.0</span>
         </footer>
       </main>
     </div>
-    <input id="arquivo-importado" type="file" accept=".json,.aula-acai" hidden /><input
-      id="js-importado"
-      type="file"
-      accept=".js,.cjs,.mjs"
-      hidden
-    />
-    <dialog id="dialog-ajuda">
-      <h2 id="ajuda-titulo">Um fluxo para a aula</h2>
-      <div id="ajuda-texto"></div>
-      <button id="fechar-ajuda" class="primary">Entendi</button>
+    <dialog id="guia-professor" class="guide-dialog">
+      <div class="dialog-heading">
+        <div>
+          <p class="eyebrow">MATERIAL PRIVADO</p>
+          <h2>Referência do professor</h2>
+        </div>
+        <button id="fechar-guia" aria-label="Fechar material do professor">
+          ✕
+        </button>
+      </div>
+      <nav class="abas">
+        <button id="aba-preparar" data-aba="preparar">Condução da aula</button
+        ><button id="aba-corrigir" data-aba="corrigir">Gabarito</button>
+      </nav>
+      <section id="preparar" hidden></section>
+      <section id="corrigir" hidden></section>
     </dialog>
+    <dialog id="dialog-ajuda">
+      <div class="dialog-heading">
+        <h2 id="ajuda-titulo">Sobre o Hub</h2>
+        <button id="fechar-ajuda" aria-label="Fechar ajuda">✕</button>
+      </div>
+      <div id="ajuda-texto"></div>
+      <button id="motor" class="text-button" hidden>
+        Aplicativo do aluno ↗
+      </button>
+    </dialog>
+    <select id="aula-compacta" hidden aria-label="Aula selecionada"></select
+    ><input
+      id="arquivo-importado"
+      type="file"
+      accept=".json,.aula-hub,.aula-acai"
+      hidden
+    /><input id="js-importado" type="file" accept=".js,.cjs,.mjs" hidden />
   </body>
 </html>

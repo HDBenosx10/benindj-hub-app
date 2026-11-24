@@ -29,7 +29,8 @@ async function conferirEntrada(pasta) {
   try {
     await new Promise((resolve, reject) => {
       const prazo = setTimeout(
-        () => reject(new Error("A entrada iniciar.cjs não ficou pronta. " + erros)),
+        () =>
+          reject(new Error("A entrada iniciar.cjs não ficou pronta. " + erros)),
         5000,
       );
       filho.stdout.on("data", (dados) => {
@@ -56,7 +57,9 @@ async function conferirEntrada(pasta) {
     });
     const dado = await resposta.json();
     if (resposta.status !== 200 || dado.ok !== true) {
-      throw new Error("A entrada normal não atendeu a saúde na porta configurada.");
+      throw new Error(
+        "A entrada normal não atendeu a saúde na porta configurada.",
+      );
     }
   } finally {
     if (filho.exitCode === null) {
@@ -136,7 +139,7 @@ async function prepararPasta(pasta, arquivos) {
 
 async function abrirProjeto(pasta, arquivos) {
   await prepararPasta(pasta, arquivos);
-  const banco = path.join(pasta, "loja.sqlite");
+  const banco = path.join(pasta, "hub.sqlite");
   const logs = [];
   const requisicoes = [];
   const pendentes = new Map();
@@ -177,7 +180,8 @@ async function abrirProjeto(pasta, arquivos) {
       clearTimeout(prazo);
       reject(
         new Error(
-          falha ?? `O projeto encerrou antes de ficar pronto (código ${codigo}).`,
+          falha ??
+            `O projeto encerrou antes de ficar pronto (código ${codigo}).`,
         ),
       );
     });
@@ -239,7 +243,13 @@ async function abrirProjeto(pasta, arquivos) {
             reject(new Error("A função do cliente não terminou."));
           }, 5000);
           pendentes.set(id, { resolve, reject, prazo });
-          worker.postMessage({ tipo: "modulo", id, arquivo, funcao, argumentos });
+          worker.postMessage({
+            tipo: "modulo",
+            id,
+            arquivo,
+            funcao,
+            argumentos,
+          });
         });
       },
     };
@@ -302,7 +312,7 @@ function acessarBanco(caminho, acao) {
 async function testarProjeto(aula, arquivos) {
   const resultados = [];
   for (const teste of aula.projeto.testes) {
-    const pasta = await fs.mkdtemp(path.join(os.tmpdir(), "acai-v3-teste-"));
+    const pasta = await fs.mkdtemp(path.join(os.tmpdir(), "hub-teste-"));
     let projeto;
     const trilha = [];
     let esperado = "";
@@ -311,7 +321,8 @@ async function testarProjeto(aula, arquivos) {
       let token;
       if (teste.cliente) {
         const cliente = teste.cliente;
-        esperado = cliente.erroContem ?? inspect(cliente.esperado, { depth: 5 });
+        esperado =
+          cliente.erroContem ?? inspect(cliente.esperado, { depth: 5 });
         if (cliente.erroContem) {
           let erroRecebido;
           try {
@@ -340,28 +351,36 @@ async function testarProjeto(aula, arquivos) {
           }
         }
         await projeto.modulo(null, null, []);
-        const metodoEsperado = cliente.funcao === "criarProduto" ? "POST" : "GET";
+        const metodoEsperado =
+          cliente.funcao === "criarProduto" ? "POST" : "GET";
         if (
           !projeto.requisicoes.some(
-            (item) => item.metodo === metodoEsperado && item.caminho === "/produtos",
+            (item) =>
+              item.metodo === metodoEsperado && item.caminho === "/produtos",
           )
         ) {
           throw new Error(
             "O cliente precisa enviar uma requisição real à API do projeto.",
           );
         }
-        trilha.push("Requisição recebida pela API: " + metodoEsperado + " /produtos.");
+        trilha.push(
+          "Requisição recebida pela API: " + metodoEsperado + " /produtos.",
+        );
       }
       for (const acao of teste.acoes) {
         if (acao.reiniciar) {
           await projeto.parar();
           projeto = await abrirProjeto(pasta, arquivos);
-          trilha.push("Servidor encerrado e reaberto usando o mesmo arquivo SQLite.");
+          trilha.push(
+            "Servidor encerrado e reaberto usando o mesmo arquivo SQLite.",
+          );
           continue;
         }
         if (acao.sql) {
           acessarBanco(projeto.banco, (banco) => banco.exec(acao.sql));
-          trilha.push("Condição de banco preparada para verificar a integridade.");
+          trilha.push(
+            "Condição de banco preparada para verificar a integridade.",
+          );
           continue;
         }
         if (acao.paralelo) {
@@ -372,13 +391,17 @@ async function testarProjeto(aula, arquivos) {
           esperado = inspect(acao.statuses);
           trilha.push("Respostas concorrentes: " + inspect(statuses));
           if (!isDeepStrictEqual(statuses, acao.statuses)) {
-            throw new Error("As vendas concorrentes não respeitaram o estoque.");
+            throw new Error(
+              "As vendas concorrentes não respeitaram o estoque.",
+            );
           }
           continue;
         }
         esperado =
           `${acao.metodo} ${acao.caminho} deve responder ${acao.status}` +
-          (acao.json !== undefined ? "\n" + inspect(acao.json, { depth: 5 }) : "");
+          (acao.json !== undefined
+            ? "\n" + inspect(acao.json, { depth: 5 })
+            : "");
         const resposta = await requisitar(projeto, acao, token);
         trilha.push(
           `${acao.metodo} ${acao.caminho} → ${resposta.status}\n${inspect(resposta.json, { depth: 5 })}`,
@@ -404,13 +427,16 @@ async function testarProjeto(aula, arquivos) {
         const quantidade = acessarBanco(
           projeto.banco,
           (banco) =>
-            banco.prepare(`SELECT COUNT(*) AS total FROM ${teste.banco.tabela}`).get()
-              .total,
+            banco
+              .prepare(`SELECT COUNT(*) AS total FROM ${teste.banco.tabela}`)
+              .get().total,
         );
         if (quantidade !== teste.banco.quantidade) {
           throw new Error("Quantidade inesperada de registros persistidos.");
         }
-        trilha.push(`SQLite: ${quantidade} registro(s) em ${teste.banco.tabela}.`);
+        trilha.push(
+          `SQLite: ${quantidade} registro(s) em ${teste.banco.tabela}.`,
+        );
       }
       if (teste.verificarSenhas) {
         const linhas = acessarBanco(projeto.banco, (banco) =>
@@ -425,7 +451,9 @@ async function testarProjeto(aula, arquivos) {
             "Verifique salt independente e hash de 64 bytes em hexadecimal.",
           );
         }
-        trilha.push("Dois salts independentes e hashes derivados, sem senha em texto.");
+        trilha.push(
+          "Dois salts independentes e hashes derivados, sem senha em texto.",
+        );
       }
       if (teste.verificarLogs) {
         await projeto.modulo(null, null, []);
@@ -438,7 +466,7 @@ async function testarProjeto(aula, arquivos) {
         });
         if (
           logs.length < 2 ||
-          logs.join("").includes("acai-laboratorio-2026") ||
+          logs.join("").includes("hub-laboratorio-2026") ||
           logs.join("").includes("nao-registrar") ||
           logs.some((linha) => JSON.parse(linha).caminho.includes("?"))
         ) {
@@ -480,7 +508,8 @@ async function testarProjeto(aula, arquivos) {
         nome: teste.nome,
         passou: false,
         esperado: esperado || "Projeto iniciando e atendendo o cenário",
-        recebido: erro.message + (trilha.length ? "\n\n" + trilha.join("\n\n") : ""),
+        recebido:
+          erro.message + (trilha.length ? "\n\n" + trilha.join("\n\n") : ""),
         registros: projeto?.logs ?? [],
       });
     } finally {
@@ -491,7 +520,7 @@ async function testarProjeto(aula, arquivos) {
       const raiz = path.resolve(os.tmpdir()) + path.sep;
       if (
         !destino.startsWith(raiz) ||
-        !path.basename(destino).startsWith("acai-v3-teste-")
+        !path.basename(destino).startsWith("hub-teste-")
       ) {
         throw new Error("Pasta de teste inesperada.");
       }

@@ -4,11 +4,14 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const { executar } = require("../engine/executar.cjs");
-test("o aluno recebe seis desafios e nenhum campo privado", async () => {
+test("o aluno recebe somente o Hello World e nenhum campo privado", async () => {
   const aula = JSON.parse(
-    await fs.readFile(path.join(__dirname, "../aulas/aula-12.aula-acai"), "utf8"),
+    await fs.readFile(
+      path.join(__dirname, "../aulas/aula-00.aula-hub"),
+      "utf8",
+    ),
   );
-  assert.equal(aula.exercicios.length, 6);
+  assert.equal(aula.exercicios.length, 1);
   assert.equal(aula.professor, undefined);
   assert.ok(!JSON.stringify(aula).includes("gabaritos"));
 });

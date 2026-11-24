@@ -51,14 +51,22 @@ parentPort.on("message", async (mensagem) => {
   if (mensagem.tipo === "modulo") {
     try {
       if (mensagem.arquivo === null) {
-        parentPort.postMessage({ tipo: "modulo", id: mensagem.id, valor: true });
+        parentPort.postMessage({
+          tipo: "modulo",
+          id: mensagem.id,
+          valor: true,
+        });
         return;
       }
       const modulo = require(path.join(workerData.pasta, mensagem.arquivo));
       const valor = await modulo[mensagem.funcao](...mensagem.argumentos);
       parentPort.postMessage({ tipo: "modulo", id: mensagem.id, valor });
     } catch (erro) {
-      parentPort.postMessage({ tipo: "modulo", id: mensagem.id, erro: erro.message });
+      parentPort.postMessage({
+        tipo: "modulo",
+        id: mensagem.id,
+        erro: erro.message,
+      });
     }
   }
 });

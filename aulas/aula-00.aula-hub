@@ -1,0 +1,76 @@
+{
+  "schema": 3,
+  "id": "aula-00",
+  "numero": 0,
+  "titulo": "Hello world!",
+  "modulo": "Primeiros passos",
+  "modo": "funcoes",
+  "foco": "Seu primeiro programa",
+  "contexto": "Escreva uma mensagem e veja o JavaScript responder no console.",
+  "desafio": "Exiba Hello world! no console.",
+  "objetivos": [
+    "Encontrar o editor e executar um programa.",
+    "Usar console.log para mostrar uma mensagem.",
+    "Distinguir executar de verificar uma atividade."
+  ],
+  "conceitos": [
+    "JavaScript executa as instruções que você escreve. console.log mostra um valor no console.",
+    "Textos ficam entre aspas. Por exemplo, console.log(\"Olá!\") mostra a mensagem Olá!.",
+    "Executar deixa você experimentar. Verificar confere o objetivo combinado para esta atividade."
+  ],
+  "exemplo": "console.log(\"Meu primeiro programa\");\n",
+  "exemploExplicado": [
+    "console.log é uma chamada que mostra uma mensagem.",
+    "O texto está entre aspas; elas não aparecem no console.",
+    "Troque a mensagem para observar outra saída."
+  ],
+  "prerequisitos": [],
+  "construcao": [
+    {
+      "titulo": "Escreva",
+      "texto": "No editor, use console.log com um texto entre aspas."
+    },
+    {
+      "titulo": "Execute",
+      "texto": "Clique em Executar e leia a mensagem no console."
+    },
+    {
+      "titulo": "Confira",
+      "texto": "Escreva exatamente Hello world! e clique em Verificar."
+    }
+  ],
+  "roteiro": [
+    {
+      "tempo": "5 min",
+      "titulo": "Explorar",
+      "acao": "Mostre o editor, peça uma mensagem e execute."
+    },
+    {
+      "tempo": "5 min",
+      "titulo": "Explicar",
+      "acao": "Compare código escrito, saída e verificação."
+    }
+  ],
+  "fontes": [],
+  "exercicios": [
+    {
+      "id": "hello-world",
+      "titulo": "Sua primeira mensagem",
+      "tipoExecucao": "script",
+      "enunciado": "Escreva um programa que mostre exatamente Hello world! no console. Use console.log e coloque o texto entre aspas. Primeiro experimente com Executar; depois confira com Verificar.",
+      "codigoInicial": "// Escreva sua primeira mensagem aqui.\n",
+      "experimento": "",
+      "nivel": "Primeiro contato",
+      "testes": [
+        {
+          "nome": "Mostra Hello world! no console",
+          "executar": "return apoio.lerSaida();",
+          "esperado": [
+            "Hello world!"
+          ]
+        }
+      ]
+    }
+  ],
+  "versaoConteudo": "2026-11-23-hub"
+}

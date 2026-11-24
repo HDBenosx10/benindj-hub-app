@@ -1,5 +1,10 @@
 "use strict";
-const { Worker, isMainThread, parentPort, workerData } = require("node:worker_threads");
+const {
+  Worker,
+  isMainThread,
+  parentPort,
+  workerData,
+} = require("node:worker_threads");
 if (!isMainThread) {
   const { inspect } = require("node:util");
   const consoleLivre = {};
@@ -23,7 +28,10 @@ if (!isMainThread) {
   const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
   Promise.resolve()
     .then(() =>
-      new AsyncFunction("console", "require", workerData.codigo)(consoleLivre, require),
+      new AsyncFunction("console", "require", workerData.codigo)(
+        consoleLivre,
+        require,
+      ),
     )
     .then(() => parentPort.postMessage({ fim: true }))
     .catch((erro) =>

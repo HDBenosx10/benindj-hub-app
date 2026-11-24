@@ -9,7 +9,9 @@ const { createHash } = require("node:crypto");
     .filter((n) => n.endsWith(".exe"))
     .sort()) {
     const conteudo = await fs.readFile(path.join(pasta, nome));
-    linhas.push(createHash("sha256").update(conteudo).digest("hex") + "  " + nome);
+    linhas.push(
+      createHash("sha256").update(conteudo).digest("hex") + "  " + nome,
+    );
   }
   if (!linhas.length) {
     throw Error("Nenhum executável para conferir.");

@@ -6,7 +6,7 @@ process.env.ELECTRON_BUILDER_COMPRESSION_LEVEL ??= "3";
 (async () => {
   const professor = process.argv.includes("--professor");
   const perfil = professor ? "professor" : "aluno";
-  const privado = path.resolve(__dirname, "../../atelie-acai-professor");
+  const privado = path.resolve(__dirname, "../../benindj-hub-professor");
   const raiz = path.resolve(__dirname, "..");
   const base = await preparar(perfil, privado);
   const titulo = professor ? "Professor" : "Aluno";
@@ -17,21 +17,28 @@ process.env.ELECTRON_BUILDER_COMPRESSION_LEVEL ??= "3";
     ),
     publish: "never",
     config: {
-      appId: "br.atelieacai." + perfil,
-      productName: "Atelie Acai " + titulo,
+      appId: "br.benindj.hub." + perfil,
+      productName: "BeninDJ Hub " + titulo,
       electronVersion: require("../package.json").devDependencies.electron,
       asar: true,
       files: ["desktop/**/*", "package.json"],
-      directories: { app: raiz, output: path.join(professor ? privado : raiz, "dist") },
+      directories: {
+        app: raiz,
+        output: path.join(professor ? privado : raiz, "dist"),
+      },
       extraResources: [
         { from: path.join(base, "backend"), to: "backend" },
         { from: path.join(base, "runtime"), to: "runtime" },
       ],
       extraMetadata: {
-        acaiPerfil: perfil,
-        version: professor
-          ? require(path.join(privado, "package.json")).version
-          : require("../package.json").version,
+        hubPerfil: perfil,
+        version: process.env.HUB_RELEASE_VERSION
+          ? require("./release-version.cjs").validarVersao(
+              process.env.HUB_RELEASE_VERSION,
+            )
+          : professor
+            ? require(path.join(privado, "package.json")).version
+            : require("../package.json").version,
       },
       win: {
         signAndEditExecutable: true,
@@ -40,12 +47,12 @@ process.env.ELECTRON_BUILDER_COMPRESSION_LEVEL ??= "3";
         target: "portable",
       },
       portable: {
-        artifactName: "Atelie-Acai-" + titulo + "-${version}-Windows-x64.exe",
+        artifactName: "BeninDJ-Hub-" + titulo + "-${version}-Windows-x64.exe",
       },
       fileAssociations: [
         {
-          ext: "aula-acai",
-          name: "Aula do Ateliê Açaí",
+          ext: "aula-hub",
+          name: "Aula do BeninDJ Hub",
           description: "Aula liberada pelo professor",
           role: "Editor",
         },

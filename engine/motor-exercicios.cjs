@@ -1,6 +1,11 @@
 "use strict";
 
-const { Worker, isMainThread, parentPort, workerData } = require("node:worker_threads");
+const {
+  Worker,
+  isMainThread,
+  parentPort,
+  workerData,
+} = require("node:worker_threads");
 
 async function executarNoWorker() {
   const { isDeepStrictEqual, inspect } = require("node:util");
@@ -20,12 +25,20 @@ async function executarNoWorker() {
   for (let indice = 0; indice < workerData.testes.length; indice++) {
     const teste = workerData.testes[indice];
     const registros = [];
+    apoio.lerSaida = () => [...registros];
     const consoleDaAula = {};
 
     for (const metodo of ["log", "info", "warn", "error", "table"]) {
       consoleDaAula[metodo] = (...valores) => {
         if (registros.length < 20) {
-          registros.push(valores.map(mostrar).join(" ").slice(0, 1500));
+          registros.push(
+            valores
+              .map((valor) =>
+                typeof valor === "string" ? valor : mostrar(valor),
+              )
+              .join(" ")
+              .slice(0, 1500),
+          );
         }
       };
     }
@@ -59,7 +72,9 @@ async function executarNoWorker() {
       resultado = {
         indice,
         nome: teste.nome,
-        passou: Object.hasOwn(teste, "erroEsperado") && mensagem === teste.erroEsperado,
+        passou:
+          Object.hasOwn(teste, "erroEsperado") &&
+          mensagem === teste.erroEsperado,
         esperado: Object.hasOwn(teste, "erroEsperado")
           ? `Erro: ${teste.erroEsperado}`
           : mostrar(teste.esperado),
@@ -106,7 +121,9 @@ function avaliar(codigo, testes, prazoMs = 5000) {
     }
 
     const prazo = setTimeout(() => {
-      concluir("Tempo esgotado. Confira laços sem fim e Promises que não terminam.");
+      concluir(
+        "Tempo esgotado. Confira laços sem fim e Promises que não terminam.",
+      );
     }, prazoMs);
 
     worker.on("message", (mensagem) => {
@@ -117,10 +134,14 @@ function avaliar(codigo, testes, prazoMs = 5000) {
         concluir();
       }
     });
-    worker.on("error", (erro) => concluir(`Falha ao executar: ${erro.message}`));
+    worker.on("error", (erro) =>
+      concluir(`Falha ao executar: ${erro.message}`),
+    );
     worker.on("exit", (codigoSaida) => {
       if (!finalizado) {
-        concluir(`O executor encerrou antes de concluir (código ${codigoSaida}).`);
+        concluir(
+          `O executor encerrou antes de concluir (código ${codigoSaida}).`,
+        );
       }
     });
   });

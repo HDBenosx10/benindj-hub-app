@@ -90,7 +90,7 @@ async function testarOficina(aula, arquivos, pastaGit) {
   for (const teste of aula.projeto.testes) {
     const temporaria = aula.projeto.tipo !== "git";
     const pasta = temporaria
-      ? await fs.mkdtemp(path.join(os.tmpdir(), "acai-v3-oficina-"))
+      ? await fs.mkdtemp(path.join(os.tmpdir(), "hub-oficina-"))
       : pastaGit;
     let esperado = inspect(teste.esperado, { depth: 5 });
     let recebido = "";
@@ -98,18 +98,27 @@ async function testarOficina(aula, arquivos, pastaGit) {
       await prepararPasta(pasta, arquivos);
       if (teste.git) {
         if (teste.git === "inicial") {
-          esperado = "Histórico com uma primeira versão contendo Relatório inicial.";
-          const log = await executar("git", ["log", "--reverse", "--format=%H"], {
-            cwd: pasta,
-            encoding: "utf8",
-            windowsHide: true,
-          });
+          esperado =
+            "Histórico com uma primeira versão contendo Relatório inicial.";
+          const log = await executar(
+            "git",
+            ["log", "--reverse", "--format=%H"],
+            {
+              cwd: pasta,
+              encoding: "utf8",
+              windowsHide: true,
+            },
+          );
           const primeiro = log.stdout.trim().split(/\r?\n/)[0];
-          const arquivo = await executar("git", ["show", primeiro + ":main.cjs"], {
-            cwd: pasta,
-            encoding: "utf8",
-            windowsHide: true,
-          });
+          const arquivo = await executar(
+            "git",
+            ["show", primeiro + ":main.cjs"],
+            {
+              cwd: pasta,
+              encoding: "utf8",
+              windowsHide: true,
+            },
+          );
           if (!arquivo.stdout.includes("Relatório inicial")) {
             throw new Error(
               "A primeira versão precisa representar o relatório inicial.",
@@ -139,7 +148,9 @@ async function testarOficina(aula, arquivos, pastaGit) {
             Number(total.stdout.trim()) < 2 ||
             !head.stdout.includes("Relatório atualizado")
           ) {
-            throw new Error("Registre a melhoria na branch depois da primeira versão.");
+            throw new Error(
+              "Registre a melhoria na branch depois da primeira versão.",
+            );
           }
           recebido = branch.stdout + total.stdout + head.stdout;
         }
@@ -167,9 +178,13 @@ async function testarOficina(aula, arquivos, pastaGit) {
           throw new Error("A saída do programa não corresponde ao contrato.");
         }
         if (teste.arquivo) {
-          const conteudo = await fs.readFile(path.join(pasta, teste.arquivo), "utf8");
+          const conteudo = await fs.readFile(
+            path.join(pasta, teste.arquivo),
+            "utf8",
+          );
           JSON.parse(conteudo);
-          recebido += "\n\nArquivo real gravado: " + teste.arquivo + "\n" + conteudo;
+          recebido +=
+            "\n\nArquivo real gravado: " + teste.arquivo + "\n" + conteudo;
         }
       }
       resultados.push({
@@ -192,7 +207,7 @@ async function testarOficina(aula, arquivos, pastaGit) {
         const destino = path.resolve(pasta);
         if (
           !destino.startsWith(path.resolve(os.tmpdir()) + path.sep) ||
-          !path.basename(destino).startsWith("acai-v3-oficina-")
+          !path.basename(destino).startsWith("hub-oficina-")
         ) {
           throw new Error("Diretório de teste inesperado.");
         }

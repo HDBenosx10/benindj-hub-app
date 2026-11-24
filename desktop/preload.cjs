@@ -7,7 +7,10 @@ contextBridge.exposeInMainWorld("laboratorioDesktop", {
         await salvar();
         ipcRenderer.send("respostas-salvas", { ok: true });
       } catch (erro) {
-        ipcRenderer.send("respostas-salvas", { ok: false, erro: String(erro.message) });
+        ipcRenderer.send("respostas-salvas", {
+          ok: false,
+          erro: String(erro.message),
+        });
       }
     });
   },

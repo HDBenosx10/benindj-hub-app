@@ -8,7 +8,9 @@ const projetos = require("./projetos.cjs");
 const oficinas = require("./oficinas.cjs");
 
 async function lerJson(caminho) {
-  return JSON.parse((await fs.readFile(caminho, "utf8")).replace(/^\uFEFF/, ""));
+  return JSON.parse(
+    (await fs.readFile(caminho, "utf8")).replace(/^\uFEFF/, ""),
+  );
 }
 function publico(aula) {
   return Object.fromEntries(
@@ -23,7 +25,7 @@ function validarAula(aula) {
     Object.hasOwn(aula, "professor")
   ) {
     throw new Error(
-      "Escolha um arquivo de aula liberado pelo professor, com extensão .acai.json.",
+      "Escolha um arquivo de aula liberado pelo professor, com extensão .aula-hub.",
     );
   }
   if (!["funcoes", "projeto"].includes(aula.modo)) {
@@ -34,7 +36,8 @@ function validarAula(aula) {
   }
   if (
     aula.modo === "projeto" &&
-    (!Array.isArray(aula.projeto?.arquivos) || !Array.isArray(aula.projeto?.testes))
+    (!Array.isArray(aula.projeto?.arquivos) ||
+      !Array.isArray(aula.projeto?.testes))
   ) {
     throw new Error("Projeto sem arquivos e cenários.");
   }
@@ -43,10 +46,14 @@ function validarAula(aula) {
 
 function abrirNavegador(endereco) {
   if (process.platform === "win32" && process.env.LAB_NAO_ABRIR !== "1") {
-    const app = require("node:child_process").spawn("explorer.exe", [endereco], {
-      stdio: "ignore",
-      windowsHide: true,
-    });
+    const app = require("node:child_process").spawn(
+      "explorer.exe",
+      [endereco],
+      {
+        stdio: "ignore",
+        windowsHide: true,
+      },
+    );
     app.on("error", () => {});
   }
 }
@@ -58,13 +65,15 @@ async function iniciar() {
   const catalogo = new Map();
   const liberadas = new Map();
   if (professor) {
-    for (const aula of await lerJson(path.join(raiz, "conteudo", "aulas.json"))) {
+    for (const aula of await lerJson(
+      path.join(raiz, "conteudo", "aulas.json"),
+    )) {
       catalogo.set(aula.id, aula);
     }
   }
   await fs.mkdir(path.join(raiz, "aulas"), { recursive: true });
   for (const nome of await fs.readdir(path.join(raiz, "aulas"))) {
-    if (/^aula-\d{2}\.acai\.json$/.test(nome)) {
+    if (/^aula-\d{2}\.(?:hub|acai)\.json$/.test(nome)) {
       const aula = validarAula(await lerJson(path.join(raiz, "aulas", nome)));
       liberadas.set(aula.id, aula);
     }
@@ -115,7 +124,9 @@ async function iniciar() {
   let conferindo = false;
 
   function visao(req) {
-    return professor && req.headers["x-lab-visao"] !== "aluno" ? "professor" : "aluno";
+    return professor && req.headers["x-lab-visao"] !== "aluno"
+      ? "professor"
+      : "aluno";
   }
   function lista(req) {
     return visao(req) === "professor" ? catalogo : liberadas;
@@ -144,7 +155,8 @@ async function iniciar() {
     const salvo = respostas[chave(req, aula)] ?? {};
     const codigos = {};
     for (const exercicio of aula.exercicios ?? []) {
-      codigos[exercicio.id] = salvo.codigos?.[exercicio.id] ?? exercicio.codigoInicial;
+      codigos[exercicio.id] =
+        salvo.codigos?.[exercicio.id] ?? exercicio.codigoInicial;
     }
     const arquivos = {};
     for (const arquivo of aula.projeto?.arquivos ?? []) {
@@ -264,7 +276,8 @@ async function iniciar() {
       }
       if (
         req.headers["x-lab-token"] !== token ||
-        (req.headers.origin && req.headers.origin !== `http://${req.headers.host}`)
+        (req.headers.origin &&
+          req.headers.origin !== `http://${req.headers.host}`)
       ) {
         return json(res, 403, {
           erro: "Abra o laboratório pelo atalho ABRIR.cmd.",
@@ -272,7 +285,11 @@ async function iniciar() {
       }
       if (req.method === "GET" && url.pathname === "/api/inicio") {
         let mapa = lista(req);
-        if (professor && visao(req) === "aluno" && url.searchParams.has("aula")) {
+        if (
+          professor &&
+          visao(req) === "aluno" &&
+          url.searchParams.has("aula")
+        ) {
           const aula = catalogo.get(url.searchParams.get("aula"));
           mapa = new Map(aula ? [[aula.id, aula]] : []);
         }
@@ -296,7 +313,7 @@ async function iniciar() {
         return json(res, 200, {
           url: config.urlReleases ?? null,
           instrucoes:
-            "Envie o executável Atelie-Acai-Aluno da release uma vez. Depois envie somente cada arquivo .aula-acai. O aplicativo já contém seu próprio motor.",
+            "Envie o executável BeninDJ-Hub-Aluno da release uma vez. Depois envie somente cada arquivo .aula-hub. O aplicativo já contém seu próprio motor.",
         });
         return;
       }
@@ -308,7 +325,7 @@ async function iniciar() {
         }
         const aula = validarAula(await corpo(req));
         await fs.writeFile(
-          path.join(raiz, "aulas", aula.id + ".acai.json"),
+          path.join(raiz, "aulas", aula.id + ".hub.json"),
           "\uFEFF" + JSON.stringify(aula, null, 2),
           "utf8",
         );
@@ -353,7 +370,7 @@ async function iniciar() {
         }
         res.writeHead(200, {
           "Content-Type": "application/json; charset=utf-8",
-          "Content-Disposition": `attachment; filename="${aula.id}.aula-acai"`,
+          "Content-Disposition": `attachment; filename="${aula.id}.aula-hub"`,
         });
         res.end("\uFEFF" + JSON.stringify(publico(aula), null, 2));
         return;
@@ -368,7 +385,11 @@ async function iniciar() {
         if (typeof dado.codigo !== "string" || dado.codigo.length > 200000) {
           throw new Error("Programa ausente ou muito grande.");
         }
-        return json(res, 200, await require("./executar.cjs").executar(dado.codigo));
+        return json(
+          res,
+          200,
+          await require("./executar.cjs").executar(dado.codigo),
+        );
       }
       if (req.method === "POST" && url.pathname === "/api/testar") {
         if (conferindo) {
@@ -405,7 +426,11 @@ async function iniciar() {
             resultados =
               aula.projeto.tipo === "http"
                 ? await projetos.testarProjeto(aula, arquivos)
-                : await oficinas.testarOficina(aula, arquivos, pastaProjeto(req, aula));
+                : await oficinas.testarOficina(
+                    aula,
+                    arquivos,
+                    pastaProjeto(req, aula),
+                  );
           }
           return json(res, 200, { resultados });
         } finally {
@@ -423,7 +448,9 @@ async function iniciar() {
       }
       if (req.method === "POST" && url.pathname === "/api/projeto/iniciar") {
         if (aula.projeto?.tipo !== "http") {
-          throw new Error("Esta aula executa um programa pelo terminal integrado.");
+          throw new Error(
+            "Esta aula executa um programa pelo terminal integrado.",
+          );
         }
         if (dado.demonstracao && visao(req) !== "professor") {
           return json(res, 403, {
@@ -455,21 +482,30 @@ async function iniciar() {
       if (req.method === "POST" && url.pathname === "/api/projeto/requisitar") {
         const ativo = ativos.get(id);
         if (!ativo) {
-          throw new Error("Clique em Executar projeto antes de enviar uma requisição.");
+          throw new Error(
+            "Clique em Executar projeto antes de enviar uma requisição.",
+          );
         }
-        const resposta = await projetos.requisitar(ativo.projeto, dado.requisicao);
+        const resposta = await projetos.requisitar(
+          ativo.projeto,
+          dado.requisicao,
+        );
         await ativo.projeto.modulo(null, null, []);
         return json(res, 200, { ...resposta, logs: ativo.projeto.logs });
       }
       if (req.method === "POST" && url.pathname === "/api/projeto/cliente") {
         const ativo = ativos.get(id);
-        if (!ativo || !aula.projeto.arquivos.some((f) => f.nome === "cliente.cjs")) {
+        if (
+          !ativo ||
+          !aula.projeto.arquivos.some((f) => f.nome === "cliente.cjs")
+        ) {
           throw new Error("Inicie o projeto que contém cliente.cjs.");
         }
-        const valor = await ativo.projeto.modulo("cliente.cjs", "consultarProdutos", [
-          ativo.projeto.base,
-          dado.token,
-        ]);
+        const valor = await ativo.projeto.modulo(
+          "cliente.cjs",
+          "consultarProdutos",
+          [ativo.projeto.base, dado.token],
+        );
         return json(res, 200, { valor, logs: ativo.projeto.logs });
       }
       if (req.method === "POST" && url.pathname === "/api/projeto/sql") {
@@ -509,7 +545,11 @@ async function iniciar() {
         const pasta = pastaProjeto(req, aula, Boolean(dado.demonstracao));
         await projetos.prepararPasta(
           pasta,
-          projetos.montarArquivos(aula, salvo.arquivos, Boolean(dado.demonstracao)),
+          projetos.montarArquivos(
+            aula,
+            salvo.arquivos,
+            Boolean(dado.demonstracao),
+          ),
         );
         const retorno = await oficinas.comando(pasta, definicao);
         let arquivoGerado;
@@ -543,9 +583,12 @@ async function iniciar() {
         return reject(erro);
       }
       try {
-        const resposta = await fetch(`http://127.0.0.1:${porta}/api/identidade`, {
-          signal: AbortSignal.timeout(1000),
-        });
+        const resposta = await fetch(
+          `http://127.0.0.1:${porta}/api/identidade`,
+          {
+            signal: AbortSignal.timeout(1000),
+          },
+        );
         const dado = await resposta.json();
         if (dado.identidade === identidade) {
           existente = `http://127.0.0.1:${porta}`;
@@ -565,7 +608,9 @@ async function iniciar() {
       "utf8",
     );
   }
-  console.log(JSON.stringify({ endereco, perfil: config.perfil, pid: process.pid }));
+  console.log(
+    JSON.stringify({ endereco, perfil: config.perfil, pid: process.pid }),
+  );
   abrirNavegador(endereco);
   if (existente) {
     return;
@@ -585,9 +630,12 @@ if (require.main === module) {
   iniciar().catch(async (erro) => {
     console.error(erro);
     try {
-      await fs.mkdir(path.join(process.env.LAB_DATA_DIR ?? __dirname, ".dados"), {
-        recursive: true,
-      });
+      await fs.mkdir(
+        path.join(process.env.LAB_DATA_DIR ?? __dirname, ".dados"),
+        {
+          recursive: true,
+        },
+      );
       await fs.appendFile(
         path.join(process.env.LAB_DATA_DIR ?? __dirname, ".dados", "erro.log"),
         new Date().toISOString() + " " + erro.stack + "\n",

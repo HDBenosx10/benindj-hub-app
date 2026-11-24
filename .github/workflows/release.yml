@@ -1,48 +1,72 @@
-name: Verificar e montar aplicativo do aluno
+name: Gerar versão Windows
 on:
-  push:
-    branches: [main]
-    tags: ['v*.*.*']
-  pull_request:
   workflow_dispatch:
+    inputs:
+      versao:
+        description: 'Versão nova (ex.: 0.6.0 ou 0.7.0-beta.1)'
+        required: true
+        default: '0.6.0'
+        type: string
+      publicar:
+        description: 'Publicar imediatamente? Desmarcado cria rascunho.'
+        default: false
+        type: boolean
+      prerelease:
+        description: 'Marcar como pré-release'
+        default: false
+        type: boolean
 permissions:
   contents: read
+concurrency:
+  group: release-${{ github.repository }}-${{ inputs.versao }}
+  cancel-in-progress: false
 jobs:
-  windows:
+  release:
     runs-on: windows-latest
+    timeout-minutes: 35
     permissions:
       contents: write
+    env:
+      HUB_RELEASE_VERSION: ${{ inputs.versao }}
+      HUB_PUBLISH: ${{ inputs.publicar }}
+      HUB_PRERELEASE: ${{ inputs.prerelease }}
+      HUB_PROFILE: aluno
     steps:
       - uses: actions/checkout@v7
         with:
+          fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@v7
         with:
           node-version: '24.13.0'
           cache: npm
       - run: npm ci
-      - run: node scripts/check-version.cjs
+      - name: Validar versão ainda não utilizada
+        run: node scripts/release-version.cjs
+        working-directory: .
       - run: npm test
-      - run: npm run build
-      - run: node scripts/check-package.cjs
+      - name: Montar executável
+        run: npm run build
+        working-directory: .
+      - name: Garantir pacote com apenas Hello World
+        run: node scripts/check-package.cjs
+      - name: Abrir executável e conferir execução e persistência
+        run: node scripts/smoke-desktop.cjs "dist/win-unpacked/BeninDJ Hub Aluno.exe"
+        working-directory: .
       - run: node scripts/checksum.cjs
+        working-directory: .
+      - run: node scripts/build-info.cjs
+        working-directory: .
       - uses: actions/upload-artifact@v7
         with:
-          name: aplicativo-aluno-windows
+          name: benindj-hub-aluno-${{ inputs.versao }}
           path: |
             dist/*.exe
             dist/SHA256SUMS.txt
+            dist/BUILD-INFO.json
           if-no-files-found: error
-      - name: Criar rascunho da release
-        if: startsWith(github.ref, 'refs/tags/')
-        shell: pwsh
+      - name: Criar release com a versão escolhida
+        run: node scripts/publish-release.cjs
+        working-directory: .
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          $arquivos = @(Get-ChildItem -LiteralPath dist -File | Where-Object { $_.Extension -eq '.exe' -or $_.Name -eq 'SHA256SUMS.txt' } | ForEach-Object FullName)
-          gh release view $env:GITHUB_REF_NAME --repo $env:GITHUB_REPOSITORY 2>$null
-          if ($LASTEXITCODE -eq 0) {
-            gh release upload $env:GITHUB_REF_NAME @arquivos --clobber --repo $env:GITHUB_REPOSITORY
-          } else {
-            gh release create $env:GITHUB_REF_NAME @arquivos --draft --verify-tag --generate-notes --repo $env:GITHUB_REPOSITORY
-          }

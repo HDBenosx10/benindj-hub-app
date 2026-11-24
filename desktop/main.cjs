@@ -7,14 +7,17 @@ let janela, backend, endereco, token;
 let fechando = false;
 const pendentes = [];
 const perfil =
-  (require("../package.json").acaiPerfil ?? process.env.ACAI_PROFILE) === "professor"
+  (require("../package.json").hubPerfil ?? process.env.HUB_PROFILE) ===
+  "professor"
     ? "professor"
     : "aluno";
 // Cada edição tem seu armazenamento; uma atualização não apaga respostas.
-app.setName(perfil === "professor" ? "Ateliê Açaí Professor" : "Ateliê Açaí Aluno");
+app.setName(
+  perfil === "professor" ? "BeninDJ Hub Professor" : "BeninDJ Hub Aluno",
+);
 app.setPath(
   "userData",
-  process.env.ACAI_TEST_DATA ?? path.join(app.getPath("appData"), app.getName()),
+  process.env.HUB_TEST_DATA ?? path.join(app.getPath("appData"), app.getName()),
 );
 const somenteUma = app.requestSingleInstanceLock();
 if (!somenteUma) {
@@ -22,7 +25,7 @@ if (!somenteUma) {
 }
 function receberArquivos(args) {
   for (const arquivo of args) {
-    if (/\.aula-acai$/i.test(arquivo)) {
+    if (/\.(?:aula-hub|aula-acai)$/i.test(arquivo)) {
       pendentes.push(path.resolve(arquivo));
     }
   }
@@ -90,7 +93,9 @@ async function salvarAntesDeSair() {
     const prazo = setTimeout(() => {
       ipcMain.removeListener("respostas-salvas", receber);
       reject(
-        new Error("O salvamento não respondeu. Aguarde e tente fechar novamente."),
+        new Error(
+          "O salvamento não respondeu. Aguarde e tente fechar novamente.",
+        ),
       );
     }, 4000);
     function receber(evento, resultado) {
@@ -102,7 +107,9 @@ async function salvarAntesDeSair() {
       if (resultado?.ok) {
         resolve();
       } else {
-        reject(new Error(resultado?.erro ?? "Não foi possível salvar as respostas."));
+        reject(
+          new Error(resultado?.erro ?? "Não foi possível salvar as respostas."),
+        );
       }
     }
     ipcMain.on("respostas-salvas", receber);
@@ -121,8 +128,17 @@ async function iniciar() {
     ),
   );
   const dados = app.getPath("userData");
+  if (!process.env.HUB_TEST_DATA)
+    await require("./migrate-profile.cjs").migrarPerfil(
+      app.getPath("appData"),
+      perfil,
+      dados,
+    );
   await fs.mkdir(path.join(dados, "aulas"), { recursive: true });
-  await fs.copyFile(path.join(origem, "config.json"), path.join(dados, "config.json"));
+  await fs.copyFile(
+    path.join(origem, "config.json"),
+    path.join(dados, "config.json"),
+  );
   for (const nome of await fs.readdir(path.join(origem, "aulas"))) {
     try {
       await fs.copyFile(
@@ -199,8 +215,10 @@ async function iniciar() {
     minHeight: 650,
     show: true,
     title:
-      config.perfil === "professor" ? "Ateliê Açaí · Professor" : "Ateliê Açaí · Aluno",
-    backgroundColor: "#f5f7fa",
+      config.perfil === "professor"
+        ? "BeninDJ Hub · Professor"
+        : "BeninDJ Hub · Aluno",
+    backgroundColor: "#22212c",
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
@@ -210,12 +228,15 @@ async function iniciar() {
       webSecurity: true,
     },
   });
-  janela.webContents.session.setPermissionRequestHandler((_wc, _permissao, callback) =>
-    callback(false),
+  janela.webContents.session.setPermissionRequestHandler(
+    (_wc, _permissao, callback) => callback(false),
   );
   janela.webContents.setWindowOpenHandler(({ url }) => {
     const alvo = new URL(url);
-    if (alvo.origin === endereco && alvo.searchParams.get("visao") === "aluno") {
+    if (
+      alvo.origin === endereco &&
+      alvo.searchParams.get("visao") === "aluno"
+    ) {
       const previa = new BrowserWindow({
         width: 1280,
         height: 900,
@@ -263,20 +284,6 @@ async function iniciar() {
     app.quit();
   });
   janela.once("ready-to-show", () => janela.show());
-  if (process.env.ACAI_QA_REPORT) {
-    await fs.writeFile(
-      process.env.ACAI_QA_REPORT,
-      JSON.stringify({
-        endereco,
-        dados,
-        perfil: config.perfil,
-        pid: process.pid,
-        backendPid: backend.pid,
-      }),
-    );
-  }
-  await janela.loadURL(endereco);
-  receberArquivos(process.argv);
   backend.once("exit", (codigo) => {
     if (!fechando && janela && !janela.isDestroyed()) {
       if (codigo !== 0) {
@@ -290,9 +297,11 @@ async function iniciar() {
       app.quit();
     }
   });
-  if (process.env.ACAI_QA_REPORT) {
+  await janela.loadURL(endereco);
+  receberArquivos(process.argv);
+  if (process.env.HUB_QA_REPORT) {
     await fs.writeFile(
-      process.env.ACAI_QA_REPORT,
+      process.env.HUB_QA_REPORT,
       JSON.stringify({
         endereco,
         dados,
@@ -314,7 +323,10 @@ app.on("before-quit", (e) => {
     .then(() => app.quit())
     .catch((erro) => {
       fechando = false;
-      dialog.showErrorBox("Não foi possível concluir o salvamento", erro.message);
+      dialog.showErrorBox(
+        "Não foi possível concluir o salvamento",
+        erro.message,
+      );
     });
 });
 app.on("window-all-closed", () => app.quit());
@@ -323,7 +335,7 @@ if (somenteUma) {
     .whenReady()
     .then(iniciar)
     .catch(async (e) => {
-      dialog.showErrorBox("Não foi possível abrir o Ateliê Açaí", e.message);
+      dialog.showErrorBox("Não foi possível abrir o BeninDJ Hub", e.message);
       await encerrarBackend();
       app.exit(1);
     });

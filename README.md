@@ -1,61 +1,34 @@
-# Ateliê Açaí — aplicativo
+# BeninDJ Hub · Aluno
 
-Aplicativo Electron para aprender JavaScript com explicações, código colorido, execução livre e verificações de comportamento. Windows x64. A edição do aluno recebe somente as aulas liberadas.
+Laboratório de JavaScript para Windows. Abra o executável e entre na aula. **Executar** permite explorar seu código; **Verificar** confere os critérios da atividade.
 
-## Usar como aluno
+O aplicativo começa somente com a **aula 0 — Hello world!**. Para receber outra aula, use **Importar aula** com o arquivo `.aula-hub` enviado pelo professor. O aluno não instala Node nem usa terminal para abrir o aplicativo.
 
-Baixe `Atelie-Acai-Aluno-0.5.0-Windows-x64.exe` na release e abra com dois cliques. Não precisa instalar Node, npm ou Electron, nem abrir terminal. A aula inicial de arrays de objetos contém seis desafios. Use **Importar arquivo** para receber novas aulas `.aula-acai` ou arquivos antigos `.acai.json`.
+As respostas ficam salvas automaticamente no computador, fora do executável. A atualização migra os dados do perfil anterior sem sobrescrever respostas existentes.
 
-As respostas ficam em `%APPDATA%/Ateliê Açaí Aluno`, fora do executável. Substituir o `.exe` por uma versão nova preserva esse diretório. **Baixar respostas** exporta uma cópia para entregar ao professor.
+## Gerar uma versão
 
-O executável portátil não registra uma extensão no Windows. Importe a aula pelo aplicativo ou arraste o arquivo `.aula-acai` sobre o executável. Se o sistema já associar a extensão ao app, a abertura também é tratada. Não se associa a extensão genérica `.json`.
+No GitHub, abra **Actions → Gerar versão Windows → Run workflow**. Informe uma versão inédita, como `0.6.0`. O padrão cria uma release em rascunho; marque **publicar** para disponibilizá-la ao terminar.
 
-## Estrutura e separação
+A esteira executa testes, monta o aplicativo, confere que apenas a aula 0 está incluída, abre o executável e verifica execução, importação e persistência. A release contém o `.exe`, `SHA256SUMS.txt` e `BUILD-INFO.json` com os commits de origem. Para corrigir uma versão, gere outra.
 
-- `desktop/`: janela Electron, processo principal e preload restrito.
-- `engine/`: motor comum e interface; execução das atividades em workers.
-- `aulas/aula-12.aula-acai`: única aula pública inicial, sem gabaritos.
-- `scripts/`: preparação, montagem, conferência do pacote e checksums.
-- `tests/`: testes do motor e da projeção pública.
-- `.github/workflows/release.yml`: teste, build Windows e rascunho de release por tag.
+Pushes e pull requests verificam o código sem criar releases. A publicação usa o `GITHUB_TOKEN` fornecido pelo GitHub Actions.
 
-O acervo completo, gabaritos e autoria por GPT pertencem ao repositório separado **atelie-acai-professor**, que deve ser privado. O build do aluno usa uma lista de arquivos públicos, e `check-package.cjs` confere a separação depois da montagem.
+## Desenvolvimento
 
-## Desenvolver
-
-Somente quem desenvolve o app precisa de Node 24 e Git. O aluno e o professor que usam os executáveis não precisam desse setup.
+Requer Windows, Git e Node 24.13 ou superior.
 
 ```sh
 npm ci
-npm test
 npm start
+npm test
 npm run build
 ```
 
-`npm run build` gera o executável portátil em `dist/`. `npm run build:dir` gera a pasta de diagnóstico. O runtime Node é obtido do site oficial durante a preparação e acompanha a aplicação, inclusive npm para as oficinas. A oficina de Git continua exigindo Git no computador do aluno; isso não é necessário para abrir o aplicativo.
+O build baixa o runtime oficial do Node. O executável inclui Node e npm para as oficinas. `.build`, `.cache`, `dist` e `node_modules` são gerados e não entram no Git.
 
-O build requer Windows x64. As dependências estão fixadas no `package-lock.json`; o Node embarcado está fixado em `scripts/prepare.cjs`. Não versione `.cache`, `.build`, `dist`, respostas nem credenciais.
+O acervo, os gabaritos e a autoria com DEV Coruja pertencem ao [repositório privado do professor](https://github.com/HDBenosx10/benindj-hub-professor).
 
-## Publicar no GitHub
+## Interface
 
-Crie um repositório vazio, preferencialmente com este nome, e envie os arquivos desta pasta. Não inclua a pasta do professor.
-
-```sh
-git init -b main
-git add .
-git commit -m "Aplicativo Electron e laboratório inicial"
-git remote add origin https://github.com/HDBenosx10/atelie-acai-app.git
-git push -u origin main
-git tag v0.5.0
-git push origin v0.5.0
-```
-
-O workflow confere se a tag corresponde à versão de `package.json`, executa os testes, monta o `.exe`, verifica a ausência do conteúdo privado e cria **um rascunho de release** com o executável e `SHA256SUMS.txt`. Revise os arquivos e publique o rascunho pelo GitHub. Antes de uma nova tag, atualize a versão com `npm version patch --no-git-tag-version`, teste e faça o commit.
-
-Os executáveis desta entrega não têm assinatura digital. A assinatura de código e a atualização automática não estão configuradas. O fluxo atual é baixar uma nova release e substituir o `.exe`, mantendo os dados. Veja [a orientação oficial de distribuição do Electron](https://www.electronjs.org/docs/latest/tutorial/tutorial-packaging).
-
-## Limites importantes
-
-O programa executa JavaScript local do aluno com recursos do Node para permitir arquivos, módulos, HTTP e SQLite. Workers limitam duração e separam a execução da interface, mas não são uma barreira de segurança para código hostil. O motor escuta somente em loopback. A janela usa `nodeIntegration: false`, isolamento de contexto, sandbox do renderer, CSP e navegação restrita.
-
-O acervo continua no schema 3 para aceitar aulas e respostas anteriores. O aplicativo é versão 0.5.0. Os diretórios de dados das duas edições são distintos.
+Paleta baseada no Dracula Pro do proprietário: fundo `#22212C`, navegação `#17161D` e roxo `#9580FF`. Organização inspirada na referência [Northflank](https://www.behance.net/gallery/174352873/Northflank-Cloud-Platform). Os componentes e ícones são próprios; nenhum pacote do tema privado é distribuído.

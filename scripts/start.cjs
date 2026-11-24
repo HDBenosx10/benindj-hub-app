@@ -7,7 +7,7 @@ const { preparar } = require("./prepare.cjs");
   await preparar(perfil);
   const filho = spawn(require("electron"), [path.resolve(__dirname, "..")], {
     stdio: "inherit",
-    env: { ...process.env, ACAI_PROFILE: perfil },
+    env: { ...process.env, HUB_PROFILE: perfil },
     windowsHide: true,
   });
   filho.on("exit", (c) => process.exit(c ?? 1));

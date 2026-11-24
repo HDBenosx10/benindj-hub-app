@@ -1,12 +1,10 @@
 "use strict";
 const fs = require("node:fs/promises");
 const path = require("node:path");
-const https = require("node:https");
-const { pipeline } = require("node:stream/promises");
 const raiz = path.resolve(__dirname, "..");
 const versaoNode = "24.13.0";
 async function obterRuntime(destino) {
-  const copia = process.env.ACAI_RUNTIME_SOURCE;
+  const copia = process.env.HUB_RUNTIME_SOURCE;
   if (copia) {
     await fs.cp(path.resolve(copia), destino, { recursive: true });
     return;
@@ -29,14 +27,21 @@ async function obterRuntime(destino) {
     await extrair(arquivo, { dir: cache });
   }
   await fs.mkdir(destino, { recursive: true });
-  await fs.copyFile(path.join(extraido, "node.exe"), path.join(destino, "node.exe"));
+  await fs.copyFile(
+    path.join(extraido, "node.exe"),
+    path.join(destino, "node.exe"),
+  );
   await fs.copyFile(
     path.join(extraido, "LICENSE"),
     path.join(destino, "LICENSE-Node.txt"),
   );
-  await fs.cp(path.join(extraido, "node_modules", "npm"), path.join(destino, "npm"), {
-    recursive: true,
-  });
+  await fs.cp(
+    path.join(extraido, "node_modules", "npm"),
+    path.join(destino, "npm"),
+    {
+      recursive: true,
+    },
+  );
 }
 exports.preparar = async (perfil = "aluno", professorRoot) => {
   const base = path.join(raiz, ".build", "payload");
@@ -50,12 +55,12 @@ exports.preparar = async (perfil = "aluno", professorRoot) => {
   await fs.cp(path.join(raiz, "engine"), backend, { recursive: true });
   await fs.mkdir(path.join(backend, "aulas"), { recursive: true });
   await fs.copyFile(
-    path.join(raiz, "aulas", "aula-12.aula-acai"),
-    path.join(backend, "aulas", "aula-12.acai.json"),
+    path.join(raiz, "aulas", "aula-00.aula-hub"),
+    path.join(backend, "aulas", "aula-00.hub.json"),
   );
   if (perfil === "professor") {
     const privado = path.resolve(
-      professorRoot ?? path.join(raiz, "..", "atelie-acai-professor"),
+      professorRoot ?? path.join(raiz, "..", "benindj-hub-professor"),
     );
     await fs.cp(path.join(privado, "professor"), backend, { recursive: true });
     const aulas = [];
@@ -64,15 +69,16 @@ exports.preparar = async (perfil = "aluno", professorRoot) => {
       .sort()) {
       aulas.push(
         JSON.parse(
-          (await fs.readFile(path.join(privado, "aulas", nome), "utf8")).replace(
-            /^\uFEFF/,
-            "",
-          ),
+          (
+            await fs.readFile(path.join(privado, "aulas", nome), "utf8")
+          ).replace(/^\uFEFF/, ""),
         ),
       );
     }
     if (aulas.length < 45) {
-      throw Error("As 45 aulas iniciais precisam estar presentes no acervo privado.");
+      throw Error(
+        "As 45 aulas iniciais precisam estar presentes no acervo privado.",
+      );
     }
     await fs.mkdir(path.join(backend, "conteudo"), { recursive: true });
     await fs.writeFile(
@@ -85,8 +91,8 @@ exports.preparar = async (perfil = "aluno", professorRoot) => {
     path.join(backend, "config.json"),
     JSON.stringify({
       perfil,
-      versao: 5,
-      urlReleases: process.env.ACAI_RELEASES_URL ?? null,
+      versao: 6,
+      urlReleases: process.env.HUB_RELEASES_URL ?? null,
     }),
     "utf8",
   );

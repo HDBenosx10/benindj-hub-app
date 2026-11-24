@@ -84,6 +84,7 @@ function elemento(parent, tag, texto, classe) {
 }
 function aviso(texto, erro = false) {
   $("mensagem").textContent = texto;
+  $("mensagem").hidden = false;
   if (document.body.classList.contains("no-estudio") && $("studio-status")) {
     $("studio-status").textContent = texto;
     $("studio-status").classList.toggle("erro", erro);
@@ -146,47 +147,139 @@ function card(parent, titulo) {
 }
 
 function renderizarBiblioteca() {
-  const busca = $("busca").value.trim().toLowerCase();
+  const busca = $("busca").value.trim().toLocaleLowerCase("pt-BR");
+  const modulo = $("filtro-modulo").value;
   $("aulas").replaceChildren();
   $("aula-compacta").replaceChildren();
-  let grupo;
+  let encontrados = 0;
   for (const item of biblioteca) {
-    const opcao = elemento(
-      $("aula-compacta"),
-      "option",
-      `${String(item.numero).padStart(2, "0")} · ${item.titulo}`,
-    );
+    const opcao = elemento($("aula-compacta"), "option", item.titulo);
     opcao.value = item.id;
     opcao.selected = item.id === aula?.id;
+    if (modulo && item.modulo !== modulo) continue;
     if (
       busca &&
-      !(item.titulo + " " + item.foco + " " + item.modulo).toLowerCase().includes(busca)
-    ) {
+      !(item.titulo + " " + item.foco + " " + item.modulo)
+        .toLocaleLowerCase("pt-BR")
+        .includes(busca)
+    )
       continue;
-    }
-    if (item.modulo !== grupo) {
-      grupo = item.modulo;
-      elemento($("aulas"), "div", grupo, "section-title");
-    }
-    const b = botao(
-      $("aulas"),
-      `${String(item.numero).padStart(2, "0")} · ${item.titulo}`,
-      () => abrirAula(item.id),
+    const b = botao($("aulas"), "", () => abrirAula(item.id), "lesson-card");
+    elemento(
+      b,
+      "span",
+      "AULA " + String(item.numero).padStart(2, "0"),
+      "lesson-number",
     );
-    b.setAttribute("aria-current", String(item.id === aula?.id));
+    elemento(b, "span", item.modulo, "lesson-module");
+    elemento(b, "h3", item.titulo);
+    elemento(b, "p", item.foco);
+    elemento(b, "span", "Abrir aula ↗", "lesson-link");
+    encontrados++;
+  }
+  $("catalogo-vazio").hidden = encontrados !== 0;
+}
+function mostrarRota(rota) {
+  const ids = {
+    inicio: "inicio",
+    aulas: "acervo",
+    aula: "visao-aula",
+    estudio: "estudio",
+    coruja: "assistente",
+  };
+  for (const id of Object.values(ids)) $(id).hidden = id !== ids[rota];
+  document.body.dataset.rota = rota;
+  document.body.classList.remove("no-estudio");
+  $("rota-titulo").textContent = {
+    inicio: "Início",
+    aulas: perfil === "professor" ? "Acervo" : "Minhas aulas",
+    aula: aula?.titulo ?? "Aula",
+    estudio: "Criar aula",
+    coruja: "DEV Coruja",
+  }[rota];
+  document
+    .querySelectorAll("[data-rota]")
+    .forEach((b) =>
+      b.setAttribute(
+        "aria-current",
+        b.dataset.rota === rota ? "page" : "false",
+      ),
+    );
+  window.scrollTo({ top: 0, behavior: "instant" });
+}
+function renderizarInicio() {
+  const professor = perfil === "professor";
+  $("inicio-titulo").textContent = professor
+    ? "Seu espaço para ensinar."
+    : "Seu próximo passo começa aqui.";
+  $("inicio-descricao").textContent = professor
+    ? "Prepare uma aula, crie com a DEV Coruja e compartilhe quando estiver pronto."
+    : "Explore uma ideia, escreva seu código e aprenda fazendo. Um passo de cada vez.";
+  $("continuar-aula").textContent = professor
+    ? "＋ Criar uma aula"
+    : "Começar a aprender ↗";
+  $("continuar-aula").onclick = tratar(async () => {
+    if (professor) {
+      rascunhoAula = undefined;
+      await abrirEstudio();
+    } else await abrirAula(aula.id);
+  });
+  $("home-acervo").textContent = professor
+    ? "Explorar acervo →"
+    : "Ver minhas aulas →";
+  $("home-label").textContent = professor
+    ? "SEU ACERVO"
+    : "SEU PONTO DE PARTIDA";
+  $("home-heading").textContent = professor
+    ? "Ensinar começa com uma boa aula."
+    : "Sua jornada";
+  $("home-total").textContent =
+    biblioteca.length +
+    " " +
+    (biblioteca.length === 1 ? "aula disponível" : "aulas disponíveis");
+  $("home-nota").textContent = professor
+    ? "Você decide o ritmo. Somente a aula exportada é enviada ao aluno."
+    : "Novas aulas aparecem aqui quando você importar um arquivo enviado pelo professor.";
+  $("home-cards").replaceChildren();
+  const recentes = professor
+    ? biblioteca.filter((a) => [0, 12, 35].includes(a.numero))
+    : biblioteca.slice(-3);
+  for (const item of recentes) {
+    const b = botao(
+      $("home-cards"),
+      "",
+      () => abrirAula(item.id),
+      "continue-card",
+    );
+    elemento(
+      b,
+      "span",
+      "AULA " + String(item.numero).padStart(2, "0"),
+      "eyebrow",
+    );
+    elemento(b, "h3", item.titulo);
+    elemento(b, "p", item.foco);
+    elemento(b, "span", "Continuar →", "lesson-link");
   }
 }
 
 function mostrarAba(nome) {
-  document.body.classList.remove("no-estudio");
-  $("estudio").hidden = true;
-  aba = nome;
-  for (const id of ["preparar", "estudar", "praticar", "corrigir"]) {
-    $(id).hidden = id !== nome;
+  if (nome === "preparar" || nome === "corrigir") {
+    if (perfil !== "professor") return;
+    $("preparar").hidden = nome !== "preparar";
+    $("corrigir").hidden = nome !== "corrigir";
+    if (!$("guia-professor").open) $("guia-professor").showModal();
+    return;
   }
+  if ($("guia-professor").open) $("guia-professor").close();
+  aba = nome;
+  mostrarRota("aula");
+  for (const id of ["estudar", "praticar"]) $(id).hidden = id !== nome;
   document
-    .querySelectorAll("[data-aba]")
-    .forEach((b) => b.setAttribute("aria-selected", String(b.dataset.aba === nome)));
+    .querySelectorAll(".lesson-nav [data-aba]")
+    .forEach((b) =>
+      b.setAttribute("aria-selected", String(b.dataset.aba === nome)),
+    );
 }
 
 function renderizarPreparacao() {
@@ -197,7 +290,7 @@ function renderizarPreparacao() {
   elemento(
     liberar,
     "p",
-    "Envie o aplicativo do aluno uma vez. Nas próximas aulas, envie apenas o arquivo pequeno da aula escolhida. O aluno usa Importar arquivo para abri-lo.",
+    "Envie o aplicativo do aluno uma vez. Nas próximas aulas, envie apenas o arquivo pequeno da aula escolhida. O aluno usa Importar aula para abri-lo.",
   );
   const acoes = elemento(liberar, "div", undefined, "grupo");
   botao(acoes, "Aplicativo do aluno", baixarMotor);
@@ -292,7 +385,9 @@ function renderizarEstudo() {
       const retorno = await api("/api/exemplo", comDados());
       saida.textContent =
         retorno.resultados
-          .flatMap((teste) => (teste.passou ? teste.registros : [teste.recebido]))
+          .flatMap((teste) =>
+            teste.passou ? teste.registros : [teste.recebido],
+          )
           .join("\n") || "Exemplo concluído.";
     });
   } else if (perfil === "professor" && aula.projeto.tipo === "http") {
@@ -301,7 +396,9 @@ function renderizarEstudo() {
       "p",
       "Na demonstração, execute a implementação de referência e envie as requisições da aula. Depois volte aos arquivos iniciais para construir a solução com o aluno.",
     );
-    botao(exemplo, "Executar demonstração da etapa", () => iniciarProjeto(true));
+    botao(exemplo, "Executar demonstração da etapa", () =>
+      iniciarProjeto(true),
+    );
   }
   const construindo = card(raiz, "Construção guiada");
   const passos = elemento(construindo, "div", undefined, "steps");
@@ -313,10 +410,15 @@ function renderizarEstudo() {
   elemento(
     construindo,
     "p",
-    "Após cada passo, peça uma previsão e observe o resultado antes da próxima mudança.",
+    "Após cada passo, preveja e observe o resultado antes da próxima mudança.",
     "callout",
   );
-  botao(construindo, "Ir para a prática", () => mostrarAba("praticar"), "primary");
+  botao(
+    construindo,
+    "Ir para a prática",
+    () => mostrarAba("praticar"),
+    "primary",
+  );
   if (aula.tarefas) {
     const contrato = card(raiz, "Contrato da implementação");
     for (const tarefa of aula.tarefas) {
@@ -406,7 +508,9 @@ function sincronizarEditor() {
   if (aula.modo === "funcoes") {
     respostas.codigos[aula.exercicios[exercicioAtual].id] = $("editor").value;
   } else {
-    const arquivo = aula.projeto.arquivos.find((item) => item.nome === arquivoAtual);
+    const arquivo = aula.projeto.arquivos.find(
+      (item) => item.nome === arquivoAtual,
+    );
     if (arquivo.editavel) {
       respostas.arquivos[arquivoAtual] = $("editor").value;
     }
@@ -435,7 +539,9 @@ function renderizarEditor() {
     $("enunciado").textContent = exercicio.enunciado;
     renderizarBriefing(exercicio);
   } else {
-    const arquivo = aula.projeto.arquivos.find((item) => item.nome === arquivoAtual);
+    const arquivo = aula.projeto.arquivos.find(
+      (item) => item.nome === arquivoAtual,
+    );
     $("arquivo").value = arquivoAtual;
     $("editor").value = modoDemo
       ? aula.professor.solucaoProjeto[arquivoAtual]
@@ -451,7 +557,7 @@ function renderizarEditor() {
         : "Apoio disponível para leitura";
   }
   $("editor").scrollTop = 0;
-  $("salvo").textContent = "Pronto para editar";
+  $("salvo").textContent = "Salvo automaticamente";
   contagemLinhas();
 }
 function renderizarTestes() {
@@ -484,7 +590,11 @@ function renderizarTestes() {
     );
     const detalhe = elemento(item, "div", undefined, "detalhe-teste");
     if (!resultado) {
-      elemento(detalhe, "p", "Execute a verificação para observar o comportamento.");
+      elemento(
+        detalhe,
+        "p",
+        "Execute a verificação para observar o comportamento.",
+      );
       return;
     }
     elemento(detalhe, "strong", "Esperado");
@@ -506,57 +616,33 @@ function renderizarTestes() {
 }
 function renderizarPratica() {
   $("pratica-titulo").textContent =
-    aula.modo === "funcoes"
-      ? "Resolva um desafio de cada vez"
-      : "Sua missão nesta etapa da loja";
+    aula.modo === "funcoes" ? "Seu laboratório" : "Explore o projeto";
   $("pratica-descricao").textContent =
     aula.modo === "funcoes"
-      ? "Leia o desafio ao lado, construa sua ideia e execute com seus próprios dados. Verifique os critérios quando estiver pronto."
+      ? "Escreva. Execute. Observe. Verifique quando estiver pronto."
       : "Edite os pontos desta etapa e observe o programa executando seus próprios arquivos.";
-  let contrato = $("contrato-pratica");
-  if (!contrato) {
-    contrato = document.createElement("details");
-    contrato.id = "contrato-pratica";
-    contrato.className = "card";
-    $("arquivos").before(contrato);
-  }
-  contrato.hidden = true;
-  contrato.replaceChildren();
-  if (aula.tarefas) {
-    elemento(contrato, "summary", "O que implementar nesta etapa");
-    for (const tarefa of aula.tarefas) {
-      elemento(contrato, "h3", tarefa.titulo);
-      elemento(contrato, "p", tarefa.texto);
-    }
-  }
   $("exercicios").replaceChildren();
-  if (aula.modo === "funcoes") {
-    aula.exercicios.forEach((exercicio, indice) => {
-      const b = botao(
-        $("exercicios"),
-        `${indice + 1}. ${exercicio.nivel ? exercicio.nivel + " · " : ""}${exercicio.titulo}`,
-        async () => {
-          await salvar();
-          exercicioAtual = indice;
-          renderizarPratica();
-        },
+  const atividades =
+    aula.modo === "funcoes" ? aula.exercicios : (aula.missoes ?? []);
+  if (atividades.length > 1) {
+    const label = elemento($("exercicios"), "label", "Atividade");
+    const select = elemento(label, "select");
+    select.setAttribute("aria-label", "Atividade da aula");
+    atividades.forEach((e, i) => {
+      const o = elemento(
+        select,
+        "option",
+        `${i + 1} de ${atividades.length} · ${e.titulo}`,
       );
-      b.setAttribute("aria-current", String(indice === exercicioAtual));
+      o.value = i;
+      o.selected =
+        i === (aula.modo === "funcoes" ? exercicioAtual : missaoAtual);
     });
-  }
-  if (aula.missoes?.length) {
-    aula.missoes.forEach((missao, indice) => {
-      const observado = respostas.experimentos?.[missao.id] === "observado";
-      const b = botao(
-        $("exercicios"),
-        `${indice + 1}. ${missao.nivel} · ${missao.titulo}${observado ? " · observado" : ""}`,
-        async () => {
-          await salvar();
-          missaoAtual = indice;
-          renderizarPratica();
-        },
-      );
-      b.setAttribute("aria-current", String(indice === missaoAtual));
+    select.onchange = tratar(async () => {
+      await salvar();
+      if (aula.modo === "funcoes") exercicioAtual = Number(select.value);
+      else missaoAtual = Number(select.value);
+      renderizarPratica();
     });
   }
   const projeto = aula.modo === "projeto";
@@ -573,7 +659,8 @@ function renderizarPratica() {
       opcao.value = arq.nome;
     });
   }
-  $("testar").textContent = "Verificar desafio";
+  $("testar").textContent = "✓ Verificar";
+  $("run-livre").hidden = projeto;
   $("exploracao").hidden = projeto;
   $("testar-tudo").hidden = projeto;
   $("executar-projeto").hidden = !http;
@@ -649,7 +736,7 @@ async function abrirAula(id) {
   $("retomar").hidden = true;
   $("titulo").textContent = aula.titulo;
   $("etiqueta").textContent =
-    `AULA ${String(aula.numero).padStart(2, "0")} · ${aula.modo === "projeto" ? "PROJETO DA LOJA" : "FUNDAMENTOS"}`;
+    `AULA ${String(aula.numero).padStart(2, "0")} · ${aula.modulo ?? (aula.modo === "projeto" ? "PROJETO" : "FUNDAMENTOS")}`;
   $("contexto").textContent = aula.contexto;
   $("estado-projeto").textContent =
     "Clique em Executar projeto para abrir sua API local.";
@@ -666,7 +753,7 @@ async function abrirAula(id) {
   renderizarEstudo();
   renderizarPratica();
   renderizarBiblioteca();
-  mostrarAba(perfil === "professor" ? "preparar" : "estudar");
+  mostrarAba("estudar");
   localStorage.setItem("ultima-aula-" + perfil, id);
   window.scrollTo({ top: 0, behavior: "instant" });
 }
@@ -696,7 +783,9 @@ async function testar(todos = false) {
     return;
   }
   if (modoDemo) {
-    throw new Error("Use Retomar atividade para verificar o código da tentativa.");
+    throw new Error(
+      "Use Retomar atividade para verificar o código da tentativa.",
+    );
   }
   bloquear(true);
   try {
@@ -735,7 +824,10 @@ async function iniciarProjeto(demonstracao = false) {
   bloquear(true);
   aviso("Iniciando a aplicação da loja…");
   try {
-    const retorno = await api("/api/projeto/iniciar", comDados({ demonstracao }));
+    const retorno = await api(
+      "/api/projeto/iniciar",
+      comDados({ demonstracao }),
+    );
     apiAtiva = true;
     apiDesatualizada = false;
     modoDemo = demonstracao;
@@ -743,7 +835,9 @@ async function iniciarProjeto(demonstracao = false) {
     renderizarEditor();
     $("estado-projeto").textContent =
       `Servidor real disponível em ${retorno.base}. ${demonstracao ? "Demonstração com a implementação de referência." : "Está executando seus arquivos."}`;
-    $("badge-projeto").textContent = demonstracao ? "Demonstração" : "Em execução";
+    $("badge-projeto").textContent = demonstracao
+      ? "Demonstração"
+      : "Em execução";
     $("logs").textContent =
       retorno.logs.join("\n") || "Nenhuma mensagem emitida pela aplicação.";
     mostrarAba("praticar");
@@ -762,8 +856,12 @@ async function iniciarProjeto(demonstracao = false) {
   }
 }
 async function baixarAula() {
-  const arquivo = await api("/api/exportar-aula?aula=" + aula.id, undefined, true);
-  baixar(arquivo, aula.id + ".aula-acai");
+  const arquivo = await api(
+    "/api/exportar-aula?aula=" + aula.id,
+    undefined,
+    true,
+  );
+  baixar(arquivo, aula.id + ".aula-hub");
   aviso(
     "Aula liberada. Envie esse arquivo ao aluno; ele importa no motor que já possui.",
   );
@@ -809,7 +907,7 @@ $("editor").oninput = () => {
     apiDesatualizada = true;
   }
   renderizarTestes();
-  $("salvo").textContent = "Alterações pendentes";
+  $("salvo").textContent = "Salvando…";
   clearTimeout(timer);
   timer = setTimeout(
     () => salvar().catch((e) => aviso("Falha ao salvar: " + e.message, true)),
@@ -874,7 +972,8 @@ $("executar-comando").onclick = tratar(async () => {
     retorno.codigo;
   $("arquivo-gerado").hidden = !retorno.arquivoGerado;
   if (retorno.arquivoGerado) {
-    $("arquivo-gerado").querySelector("pre").textContent = retorno.arquivoGerado;
+    $("arquivo-gerado").querySelector("pre").textContent =
+      retorno.arquivoGerado;
   }
 });
 $("modelo-request").onchange = preencherRequest;
@@ -883,7 +982,9 @@ $("enviar-request").onclick = tratar(async () => {
     throw new Error("Clique em Executar projeto antes de enviar a requisição.");
   }
   if (apiDesatualizada) {
-    throw new Error("Reexecute o projeto para aplicar as alterações do editor.");
+    throw new Error(
+      "Reexecute o projeto para aplicar as alterações do editor.",
+    );
   }
   const requisicao = {
     metodo: $("metodo").value,
@@ -918,7 +1019,9 @@ $("limpar-sessao").onclick = () => {
 };
 $("executar-cliente").onclick = tratar(async () => {
   if (!apiAtiva || apiDesatualizada) {
-    throw new Error("Execute o projeto com o código atual antes de chamar o cliente.");
+    throw new Error(
+      "Execute o projeto com o código atual antes de chamar o cliente.",
+    );
   }
   const retorno = await api("/api/projeto/cliente", {
     aulaId: aula.id,
@@ -935,7 +1038,12 @@ $("consultar-banco").onclick = tratar(async () => {
   });
   const root = $("tabela-banco");
   root.replaceChildren();
-  elemento(root, "p", `${retorno.linhas.length} linha(s) retornada(s).`, "secondary");
+  elemento(
+    root,
+    "p",
+    `${retorno.linhas.length} linha(s) retornada(s).`,
+    "secondary",
+  );
   if (retorno.linhas.length) {
     const tabela = elemento(root, "table");
     const tr = elemento(elemento(tabela, "thead"), "tr");
@@ -994,7 +1102,9 @@ $("arquivo-importado").onchange = tratar(async () => {
     resultados = [];
     renderizarPratica();
     mostrarAba("praticar");
-    aviso("Respostas carregadas. Rode os testes para conferir a implementação.");
+    aviso(
+      "Respostas carregadas. Rode os testes para conferir a implementação.",
+    );
   } else {
     const retorno = await api("/api/importar-aula", dado);
     await carregarInicio(retorno.id);
@@ -1012,14 +1122,15 @@ $("js-importado").onchange = tratar(async () => {
 });
 $("liberar").onclick = tratar(baixarAula);
 $("motor").onclick = tratar(baixarMotor);
-$("previa").onclick = () => window.open("/?visao=aluno&aula=" + aula.id, "_blank");
+$("previa").onclick = () =>
+  window.open("/?visao=aluno&aula=" + aula.id, "_blank");
 $("ajuda").onclick = () => {
   $("ajuda-texto").replaceChildren();
   const textos =
     perfil === "professor"
       ? [
           "Escolha a aula na biblioteca e acompanhe Preparar aula, Estudar e Praticar.",
-          "Envie o aplicativo do aluno uma vez. Depois use Baixar esta aula e envie apenas o arquivo .aula-acai.",
+          "Envie o aplicativo do aluno uma vez. Depois use Baixar esta aula e envie apenas o arquivo .aula-hub.",
           "A prévia projeta o conteúdo do aluno. A referência e o catálogo completo ficam no seu painel.",
         ]
       : [
@@ -1052,28 +1163,41 @@ async function carregarInicio(preferida) {
   perfil = dados.perfil;
   biblioteca = dados.aulas;
   $("perfil").textContent = perfil === "professor" ? "Professor" : "Aluno";
+  $("importar").textContent =
+    perfil === "professor" ? "↓ Importar respostas" : "↓ Importar aula";
   $("motor").hidden = perfil !== "professor";
   $("acoes-professor").hidden = perfil !== "professor";
   $("aba-preparar").hidden = perfil !== "professor";
   $("aba-corrigir").hidden = perfil !== "professor";
-  $("painel-professor").hidden = perfil !== "professor";
+  $("nav-professor").hidden = perfil !== "professor";
+  $("abrir-guia").hidden = perfil !== "professor";
+  $("nav-acervo-texto").textContent =
+    perfil === "professor" ? "Acervo" : "Minhas aulas";
+  $("catalogo-titulo").textContent =
+    perfil === "professor" ? "Seu acervo" : "Minhas aulas";
   $("nota-biblioteca").textContent =
     perfil === "professor"
       ? `${biblioteca.length} aulas. Use o painel para criar, revisar e liberar desafios.`
       : "Aqui aparecem apenas as aulas já liberadas neste motor.";
   const ultimo =
     preferida ??
-    (previa ? parametros.get("aula") : localStorage.getItem("ultima-aula-" + perfil));
+    (previa
+      ? parametros.get("aula")
+      : localStorage.getItem("ultima-aula-" + perfil));
   const id = biblioteca.some((item) => item.id === ultimo)
     ? ultimo
-    : (biblioteca.find((item) => item.numero === 12)?.id ?? biblioteca[0]?.id);
+    : (biblioteca.find((item) => item.numero === 0)?.id ?? biblioteca[0]?.id);
   if (!id) {
     throw new Error("Importe o arquivo de uma aula para começar.");
   }
   await abrirAula(id);
-  if (perfil === "professor" && !preferida && typeof abrirEstudio === "function") {
-    await abrirEstudio();
-  }
+  $("filtro-modulo").replaceChildren();
+  elemento($("filtro-modulo"), "option", "Todos os assuntos").value = "";
+  for (const modulo of new Set(biblioteca.map((a) => a.modulo)))
+    elemento($("filtro-modulo"), "option", modulo).value = modulo;
+  renderizarBiblioteca();
+  renderizarInicio();
+  if (!preferida) mostrarRota("inicio");
 }
 const inicioCarregado = carregarInicio().catch((erro) =>
   aviso(erro.message + " Abra o laboratório pelo aplicativo.", true),
@@ -1081,7 +1205,8 @@ const inicioCarregado = carregarInicio().catch((erro) =>
 
 function renderizarBriefing(exercicio) {
   const missao = aula.missoes?.[missaoAtual];
-  $("desafio-nome").textContent = exercicio?.titulo ?? missao?.titulo ?? aula.titulo;
+  $("desafio-nome").textContent =
+    exercicio?.titulo ?? missao?.titulo ?? aula.titulo;
   if (missao) {
     $("enunciado").textContent = missao.enunciado;
   }
@@ -1126,12 +1251,16 @@ function renderizarBriefing(exercicio) {
     elemento(
       dados,
       "h4",
-      Object.hasOwn(teste, "erroEsperado") ? "Erro esperado" : "Resultado esperado",
+      Object.hasOwn(teste, "erroEsperado")
+        ? "Erro esperado"
+        : "Resultado esperado",
     );
     elemento(
       dados,
       "pre",
-      Object.hasOwn(teste, "erroEsperado") ? teste.erroEsperado : fmt(teste.esperado),
+      Object.hasOwn(teste, "erroEsperado")
+        ? teste.erroEsperado
+        : fmt(teste.esperado),
       "console",
     );
     elemento(dados, "h4", "A solução precisa atender");
@@ -1148,6 +1277,7 @@ function renderizarBriefing(exercicio) {
     }
     $("rascunho").value = respostas.experimentos[chave];
     $("modo-experimento").value = "desafio";
+    $("meus-experimentos").hidden = exercicio.tipoExecucao === "script";
     $("console-livre").textContent =
       "Escreva sua hipótese e execute. Isso não verifica nem aprova testes.";
   } else {
@@ -1156,7 +1286,9 @@ function renderizarBriefing(exercicio) {
       elemento(
         dados,
         "p",
-        f.nome + " · " + (f.editavel ? "você implementa" : "apoio para leitura"),
+        f.nome +
+          " · " +
+          (f.editavel ? "você implementa" : "apoio para leitura"),
       ),
     );
     if (aula.tarefas?.length) {
@@ -1178,7 +1310,9 @@ function renderizarBriefing(exercicio) {
   }
   const navegacao = elemento(dados, "div", undefined, "grupo");
   const indice = exercicio ? exercicioAtual : missaoAtual;
-  const total = exercicio ? aula.exercicios.length : (aula.missoes?.length ?? 1);
+  const total = exercicio
+    ? aula.exercicios.length
+    : (aula.missoes?.length ?? 1);
   elemento(
     dados,
     "p",
@@ -1219,7 +1353,8 @@ $("rascunho").oninput = () => {
   if (aula?.modo !== "funcoes") {
     return;
   }
-  respostas.experimentos[aula.exercicios[exercicioAtual].id] = $("rascunho").value;
+  respostas.experimentos[aula.exercicios[exercicioAtual].id] =
+    $("rascunho").value;
   clearTimeout(timer);
   timer = setTimeout(() => salvar().catch((e) => aviso(e.message, true)), 500);
 };
@@ -1234,8 +1369,9 @@ $("run-livre").onclick = tratar(async () => {
     sincronizarEditor();
     await salvar();
     const codigo =
-      ($("modo-experimento").value === "desafio" ? $("editor").value + "\n;\n" : "") +
-      $("rascunho").value;
+      ($("modo-experimento").value === "desafio"
+        ? $("editor").value + "\n;\n"
+        : "") + $("rascunho").value;
     const retorno = await api("/api/executar", { aulaId: aula.id, codigo });
     $("console-livre").textContent = [
       ...retorno.saida,
@@ -1272,3 +1408,24 @@ if (window.laboratorioDesktop) {
     }
   });
 }
+
+document.querySelectorAll("[data-rota]").forEach(
+  (b) =>
+    (b.onclick = tratar(async () => {
+      await salvar();
+      mostrarRota(b.dataset.rota);
+    })),
+);
+$("marca-inicio").onclick = tratar(async (e) => {
+  e.preventDefault();
+  await salvar();
+  mostrarRota("inicio");
+});
+$("home-acervo").onclick = () => mostrarRota("aulas");
+$("voltar-acervo").onclick = () => mostrarRota("aulas");
+$("filtro-modulo").onchange = renderizarBiblioteca;
+$("abrir-guia").onclick = () => mostrarAba("preparar");
+$("fechar-guia").onclick = () => $("guia-professor").close();
+$("nav-coruja").onclick = tratar(async () => {
+  if (typeof abrirCoruja === "function") await abrirCoruja();
+});
