@@ -492,11 +492,18 @@ function renderizarCorrecao() {
 }
 
 function sincronizarCores() {
+  const editor = $("editor");
   const espelho = $("codigo-colorido");
-  espelho.innerHTML = colorirJS($("editor").value + "\n");
-  espelho.scrollTop = $("editor").scrollTop;
-  espelho.scrollLeft = $("editor").scrollLeft;
+  espelho.innerHTML = colorirJS(editor.value + "\n");
+  // O espelho ocupa apenas a área útil: nunca desenha sobre as barras de rolagem.
+  espelho.style.width = editor.clientWidth + "px";
+  espelho.style.height = editor.clientHeight + "px";
+  $("linhas").style.height = editor.clientHeight + "px";
+  espelho.scrollTop = editor.scrollTop;
+  espelho.scrollLeft = editor.scrollLeft;
+  $("linhas").scrollTop = editor.scrollTop;
 }
+new ResizeObserver(sincronizarCores).observe($("editor"));
 function contagemLinhas() {
   sincronizarCores();
   $("linhas").textContent = Array.from(
