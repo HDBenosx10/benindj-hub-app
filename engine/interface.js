@@ -1129,14 +1129,14 @@ $("ajuda").onclick = () => {
   const textos =
     perfil === "professor"
       ? [
-          "Escolha a aula na biblioteca e acompanhe Preparar aula, Estudar e Praticar.",
-          "Envie o aplicativo do aluno uma vez. Depois use Baixar esta aula e envie apenas o arquivo .aula-hub.",
+          "Abra uma aula no Acervo. Use Entender e Praticar; consulte a condução e os gabaritos em Material do professor.",
+          "Envie o aplicativo do aluno uma vez. Depois use Liberar aula e envie somente o arquivo .aula-hub.",
           "A prévia projeta o conteúdo do aluno. A referência e o catálogo completo ficam no seu painel.",
         ]
       : [
-          "Use Importar arquivo para abrir a aula liberada pelo professor.",
-          "Acompanhe Estudar e depois abra Desafios e código. O código fica salvo neste motor.",
-          "Envie as respostas com Baixar respostas. Você pode importar esse mesmo arquivo para recuperar seu trabalho.",
+          "Use Importar aula para abrir o arquivo liberado pelo professor.",
+          "Comece em Entender e avance para Praticar. Executar mostra a saída; Verificar confere os critérios. Seu código é salvo automaticamente.",
+          "No menu Arquivo do editor, use Exportar respostas. Você pode importar esse arquivo para recuperar seu trabalho.",
         ];
   textos.forEach((texto) => elemento($("ajuda-texto"), "p", texto));
   $("dialog-ajuda").showModal();
@@ -1151,7 +1151,7 @@ $("encerrar").onclick = tratar(async () => {
   elemento(
     document.querySelector("main"),
     "p",
-    "Suas respostas foram salvas. Para voltar, abra ABRIR.cmd.",
+    "Suas respostas foram salvas. Para voltar, abra o aplicativo BeninDJ Hub novamente.",
   );
 });
 

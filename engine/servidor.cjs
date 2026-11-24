@@ -280,7 +280,7 @@ async function iniciar() {
           req.headers.origin !== `http://${req.headers.host}`)
       ) {
         return json(res, 403, {
-          erro: "Abra o laboratório pelo atalho ABRIR.cmd.",
+          erro: "Abra o aplicativo BeninDJ Hub novamente.",
         });
       }
       if (req.method === "GET" && url.pathname === "/api/inicio") {
