@@ -28,9 +28,12 @@ if (!isMainThread) {
   const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
   Promise.resolve()
     .then(() =>
-      new AsyncFunction("console", "require", workerData.codigo)(
+      new AsyncFunction("console", "require", "recursos", workerData.codigo)(
         consoleLivre,
         require,
+        workerData.conexao
+          ? require("./recursos-cliente.cjs").criarCliente(workerData.conexao)
+          : undefined,
       ),
     )
     .then(() => parentPort.postMessage({ fim: true }))
@@ -41,13 +44,13 @@ if (!isMainThread) {
       }),
     );
 } else {
-  exports.executar = (codigo, prazo = 5000) =>
+  exports.executar = (codigo, prazo = 5000, conexao) =>
     new Promise((resolve) => {
       const inicio = Date.now();
       const saida = [];
       let encerrou = false;
       const worker = new Worker(__filename, {
-        workerData: { codigo },
+        workerData: { codigo, conexao },
         resourceLimits: { maxOldGenerationSizeMb: 96 },
       });
       function fim(erro) {

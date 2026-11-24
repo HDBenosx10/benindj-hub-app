@@ -22,7 +22,12 @@ for (const metodo of ["log", "info", "warn", "error", "table"]) {
 let servidor;
 async function iniciar() {
   const entrada = require(path.join(workerData.pasta, "app.cjs"));
-  servidor = await entrada.criarServidor({ caminhoBanco: workerData.banco });
+  servidor = await entrada.criarServidor({
+    caminhoBanco: workerData.banco,
+    recursos: workerData.conexao
+      ? require("./recursos-cliente.cjs").criarCliente(workerData.conexao)
+      : undefined,
+  });
   servidor.on("request", (requisicao) => {
     parentPort.postMessage({
       tipo: "requisicao",

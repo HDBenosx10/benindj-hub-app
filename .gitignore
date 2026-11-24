@@ -13,3 +13,5 @@ professor/
 *.p12
 *.respostas.json
 .DS_Store
+
+/.qa/

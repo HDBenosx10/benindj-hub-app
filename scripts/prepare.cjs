@@ -91,7 +91,12 @@ exports.preparar = async (perfil = "aluno", professorRoot) => {
     path.join(backend, "config.json"),
     JSON.stringify({
       perfil,
-      versao: 6,
+      versao: 7,
+      versaoApp: process.env.HUB_RELEASE_VERSION
+        ? require("./release-version.cjs").validarVersao(
+            process.env.HUB_RELEASE_VERSION,
+          )
+        : require("../package.json").version,
       urlReleases: process.env.HUB_RELEASES_URL ?? null,
     }),
     "utf8",

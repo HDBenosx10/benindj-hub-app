@@ -78,8 +78,35 @@ async function smoke() {
         id: "aula-01",
         numero: 1,
         titulo: "Aula liberada no teste",
+        ambiente: {
+          versao: 1,
+          recursos: [
+            {
+              id: "banco",
+              tipo: "sqlite",
+              modo: "arquivo",
+              ddl: "CREATE TABLE exemplo(id INTEGER);",
+              seed: "INSERT INTO exemplo VALUES(1);",
+            },
+          ],
+        },
       };
       await api(estado.endereco, "/api/importar-aula", importada);
+      await api(estado.endereco, "/api/ambiente/operar", {
+        aulaId: "aula-01",
+        operacao: {
+          recurso: "banco",
+          acao: "sql",
+          sql: "UPDATE exemplo SET id=7",
+        },
+      });
+      const livre = await api(estado.endereco, "/api/executar", {
+        aulaId: "aula-01",
+        codigo:
+          'console.log((await recursos.sqlite("banco").consultar("SELECT id FROM exemplo"))[0].id)',
+      });
+      assert.equal(livre.erro, null);
+      assert.deepEqual(livre.saida, ["7"]);
       await fechar(estado.endereco);
       estado = await abrir();
       const reaberto = await api(estado.endereco, "/api/inicio");
@@ -87,6 +114,15 @@ async function smoke() {
         reaberto.aulas.map((a) => a.numero),
         [0, 1],
       );
+      const persistido = await api(estado.endereco, "/api/ambiente/operar", {
+        aulaId: "aula-01",
+        operacao: {
+          recurso: "banco",
+          acao: "sql",
+          sql: "SELECT id FROM exemplo",
+        },
+      });
+      assert.equal(persistido.linhas[0].id, 7);
       const salvo = await api(estado.endereco, "/api/aula?aula=aula-00");
       assert.equal(
         salvo.respostas.codigos["hello-world"],

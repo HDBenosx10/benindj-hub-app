@@ -1724,3 +1724,57 @@ footer span:last-child {
     scroll-behavior: auto !important;
   }
 }
+
+/* Recursos opcionais: somente aparecem quando a aula os habilita. */
+.resource-form {
+  display: grid;
+  gap: 16px;
+  padding: 8px 0;
+}
+.resource-dialog {
+  width: min(760px, 95vw);
+  max-height: 90vh;
+}
+.check-field {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.check-field input {
+  width: auto;
+}
+.resource-tabs {
+  margin: 24px 0;
+  flex-wrap: wrap;
+}
+.material-texto {
+  white-space: pre-line;
+}
+.resource-form details {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.resource-form .campo {
+  display: grid;
+  gap: 7px;
+}
+.resource-form input,
+.resource-form select,
+.resource-form textarea {
+  width: 100%;
+}
+.resource-form .check-field input {
+  width: auto;
+}
+#ambiente .card {
+  margin-bottom: 20px;
+}
+#transferencia .card {
+  margin-bottom: 20px;
+}
+.lesson-nav .abas {
+  flex-wrap: wrap;
+}
+
+#ambiente .table-wrap {max-height:360px;overflow:auto}

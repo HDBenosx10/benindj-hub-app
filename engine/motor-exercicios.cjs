@@ -50,10 +50,18 @@ async function executarNoWorker() {
         "require",
         "console",
         "apoio",
+        "recursos",
         workerData.codigo + "\n;\n" + teste.executar,
       );
 
-      const recebido = await programa(require, consoleDaAula, apoio);
+      const recebido = await programa(
+        require,
+        consoleDaAula,
+        apoio,
+        workerData.conexao
+          ? require("./recursos-cliente.cjs").criarCliente(workerData.conexao)
+          : undefined,
+      );
       const esperavaErro = Object.hasOwn(teste, "erroEsperado");
 
       resultado = {
@@ -89,12 +97,12 @@ async function executarNoWorker() {
   parentPort.postMessage({ tipo: "concluido" });
 }
 
-function avaliar(codigo, testes, prazoMs = 5000) {
+function avaliar(codigo, testes, prazoMs = 5000, conexao) {
   return new Promise((resolve) => {
     const resultados = [];
     let finalizado = false;
     const worker = new Worker(__filename, {
-      workerData: { codigo, testes },
+      workerData: { codigo, testes, conexao },
       execArgv: ["--disable-warning=ExperimentalWarning"],
       resourceLimits: { maxOldGenerationSizeMb: 96 },
     });

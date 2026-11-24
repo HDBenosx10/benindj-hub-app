@@ -130,21 +130,32 @@ function montarArquivos(aula, alteracoes = {}, demonstracao = false) {
 async function prepararPasta(pasta, arquivos) {
   await fs.mkdir(pasta, { recursive: true });
   for (const [nome, codigo] of Object.entries(arquivos)) {
-    if (!/^[a-z0-9-]+\.(cjs|sql|json)$/.test(nome)) {
+    if (!/^[a-z0-9-]+\.(cjs|js|sql|json)$/.test(nome)) {
       throw new Error("Nome de arquivo inválido.");
     }
     await fs.writeFile(path.join(pasta, nome), codigo, "utf8");
   }
 }
 
-async function abrirProjeto(pasta, arquivos) {
+async function abrirProjeto(pasta, arquivos, opcoes = {}) {
   await prepararPasta(pasta, arquivos);
+  const ambienteProprio =
+    !opcoes.conexao && opcoes.ambiente
+      ? await require("./ambiente.cjs").abrirAmbiente(
+          path.join(pasta, ".recursos"),
+          opcoes.ambiente,
+        )
+      : null;
   const banco = path.join(pasta, "hub.sqlite");
   const logs = [];
   const requisicoes = [];
   const pendentes = new Map();
   const worker = new Worker(path.join(__dirname, "projeto-worker.cjs"), {
-    workerData: { pasta, banco },
+    workerData: {
+      pasta,
+      banco,
+      conexao: opcoes.conexao ?? ambienteProprio?.conexao,
+    },
     execArgv: ["--disable-warning=ExperimentalWarning"],
     resourceLimits: { maxOldGenerationSizeMb: 128 },
   });
@@ -207,6 +218,7 @@ async function abrirProjeto(pasta, arquivos) {
     }
   });
   async function parar() {
+    await ambienteProprio?.parar();
     if (worker.threadId === -1) {
       return;
     }
@@ -235,6 +247,14 @@ async function abrirProjeto(pasta, arquivos) {
       requisicoes,
       pasta,
       parar,
+      operarRecurso(dado) {
+        const conexao = opcoes.conexao ?? ambienteProprio?.conexao;
+        if (!conexao)
+          throw Error("Este projeto não tem recursos configurados.");
+        return require("./recursos-cliente.cjs")
+          .criarCliente(conexao)
+          .operar(dado.recurso, dado.acao, dado);
+      },
       modulo(arquivo, funcao, argumentos) {
         return new Promise((resolve, reject) => {
           const id = crypto.randomUUID();
@@ -317,7 +337,9 @@ async function testarProjeto(aula, arquivos) {
     const trilha = [];
     let esperado = "";
     try {
-      projeto = await abrirProjeto(pasta, arquivos);
+      projeto = await abrirProjeto(pasta, arquivos, {
+        ambiente: aula.ambiente,
+      });
       let token;
       if (teste.cliente) {
         const cliente = teste.cliente;
@@ -367,10 +389,22 @@ async function testarProjeto(aula, arquivos) {
           "Requisição recebida pela API: " + metodoEsperado + " /produtos.",
         );
       }
-      for (const acao of teste.acoes) {
+      for (const acao of teste.acoes ?? []) {
+        if (acao.recurso) {
+          const recebido = await projeto.operarRecurso(acao);
+          esperado = inspect(acao.esperado, { depth: 5 });
+          trilha.push(
+            "Recurso " + acao.recurso + ": " + inspect(recebido, { depth: 5 }),
+          );
+          if (!confere(recebido, acao.esperado))
+            throw Error("Estado do recurso diferente do contrato.");
+          continue;
+        }
         if (acao.reiniciar) {
           await projeto.parar();
-          projeto = await abrirProjeto(pasta, arquivos);
+          projeto = await abrirProjeto(pasta, arquivos, {
+            ambiente: aula.ambiente,
+          });
           trilha.push(
             "Servidor encerrado e reaberto usando o mesmo arquivo SQLite.",
           );

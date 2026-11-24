@@ -7,6 +7,7 @@
     <title>BeninDJ Hub</title>
     <link rel="stylesheet" href="/estilo.css" />
     <script src="/interface.js" defer></script>
+    <script src="/ambiente-ui.js" defer></script>
     __ESTUDIO__
   </head>
   <body>
@@ -138,11 +139,17 @@
               <button data-aba="estudar" aria-selected="true">
                 01 · Entender</button
               ><button data-aba="praticar">02 · Praticar</button>
+              <button id="aba-ambiente" data-aba="ambiente" hidden>
+                Ambiente
+              </button>
+              <button data-aba="transferencia">Fora do Hub ↗</button>
             </nav>
             <button id="abrir-guia" hidden class="text-button">
               Material do professor ↗
             </button>
           </div>
+          <section id="ambiente" class="painel" hidden></section>
+          <section id="transferencia" class="painel" hidden></section>
           <section id="estudar" class="painel"></section>
           <section id="praticar" class="painel" hidden>
             <div id="concluido" class="sucesso" hidden>
@@ -371,7 +378,8 @@ Nenhuma mensagem emitida pela aplicação.</pre>
         <section id="estudio" hidden></section>
         <section id="assistente" hidden></section>
         <footer>
-          BeninDJ Hub <span>Aprenda. Crie. Evolua.</span><span>v0.6.0</span>
+          BeninDJ Hub <span>Aprenda. Crie. Evolua.</span
+          ><span><span id="versao-app">v0.7.0</span></span>
         </footer>
       </main>
     </div>

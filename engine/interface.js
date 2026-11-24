@@ -135,6 +135,7 @@ function baixar(blob, nome) {
 }
 function botao(parent, texto, acao, classe) {
   const item = elemento(parent, "button", texto, classe);
+  item.type = "button";
   item.addEventListener("click", tratar(acao));
   return item;
 }
@@ -272,9 +273,14 @@ function mostrarAba(nome) {
     return;
   }
   if ($("guia-professor").open) $("guia-professor").close();
+  $("mensagem").hidden = true;
   aba = nome;
+  if (nome === "ambiente")
+    carregarBancada().catch((e) => aviso(e.message, true));
+  if (nome === "transferencia") renderizarTransferencia();
   mostrarRota("aula");
-  for (const id of ["estudar", "praticar"]) $(id).hidden = id !== nome;
+  for (const id of ["estudar", "praticar", "ambiente", "transferencia"])
+    $(id).hidden = id !== nome;
   document
     .querySelectorAll(".lesson-nav [data-aba]")
     .forEach((b) =>
@@ -719,10 +725,12 @@ async function abrirAula(id) {
   if (apiAtiva && aula) {
     await api("/api/projeto/parar", { aulaId: aula.id });
   }
+  if (aula?.ambiente) await api("/api/ambiente/parar", { aulaId: aula.id });
   document.body.classList.remove("no-estudio");
   $("estudio").hidden = true;
   const dados = await api("/api/aula?aula=" + encodeURIComponent(id));
   aula = dados.aula;
+  $("aba-ambiente").hidden = !aula.ambiente;
   respostas = dados.respostas;
   respostas.experimentos ??= {};
   resultados = [];
@@ -820,10 +828,10 @@ async function iniciarProjeto(demonstracao = false) {
   if (ocupado) {
     return;
   }
-  await salvar();
   bloquear(true);
-  aviso("Iniciando a aplicação da loja…");
+  aviso("Iniciando seu servidor…");
   try {
+    await salvar();
     const retorno = await api(
       "/api/projeto/iniciar",
       comDados({ demonstracao }),
@@ -1162,6 +1170,7 @@ async function carregarInicio(preferida) {
   );
   perfil = dados.perfil;
   biblioteca = dados.aulas;
+  $("versao-app").textContent = "v" + (dados.versaoApp ?? "0.7.0");
   $("perfil").textContent = perfil === "professor" ? "Professor" : "Aluno";
   $("importar").textContent =
     perfil === "professor" ? "↓ Importar respostas" : "↓ Importar aula";

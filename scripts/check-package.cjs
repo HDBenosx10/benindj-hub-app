@@ -18,6 +18,8 @@ const assert = require("node:assert/strict");
     "autoria.cjs",
     "coruja.cjs",
     "estudio.js",
+    "estudio-recursos.js",
+    "modelo-backend.cjs",
     ".dados",
   ]) {
     assert.ok(!nomes.includes(nome), "Material privado indevido: " + nome);

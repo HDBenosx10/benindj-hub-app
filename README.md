@@ -8,7 +8,7 @@ As respostas ficam salvas automaticamente no computador, fora do executável. A 
 
 ## Gerar uma versão
 
-No GitHub, abra **Actions → Gerar versão Windows → Run workflow**. Informe uma versão inédita, como `0.6.0`. O padrão cria uma release em rascunho; marque **publicar** para disponibilizá-la ao terminar.
+No GitHub, abra **Actions → Gerar versão Windows → Run workflow**. Informe uma versão inédita, como `0.7.0`. O padrão cria uma release em rascunho; marque **publicar** para disponibilizá-la ao terminar.
 
 A esteira executa testes, monta o aplicativo, confere que apenas a aula 0 está incluída, abre o executável e verifica execução, importação e persistência. A release contém o `.exe`, `SHA256SUMS.txt` e `BUILD-INFO.json` com os commits de origem. Para corrigir uma versão, gere outra.
 
@@ -32,3 +32,9 @@ O acervo, os gabaritos e a autoria com DEV Coruja pertencem ao [repositório pri
 ## Interface
 
 Paleta baseada no Dracula Pro do proprietário: fundo `#22212C`, navegação `#17161D` e roxo `#9580FF`. Organização inspirada na referência [Northflank](https://www.behance.net/gallery/174352873/Northflank-Cloud-Platform). Os componentes e ícones são próprios; nenhum pacote do tema privado é distribuído.
+
+## Bancada de back-end
+
+Aulas podem trazer SQLite em memória ou arquivo, documentos JSON locais e mocks HTTP com atraso e sequência de respostas. A aba Ambiente permite consultar e alterar esses recursos, respeitando as permissões da aula. O aluno pode criar recursos adicionais quando autorizado. Fora do Hub exporta código e ambiente para Node, sem gabaritos.
+
+Veja o [guia da bancada](docs/ambientes/README.md) para contratos, limites, testes e execução fora da plataforma. O aplicativo inicial continua incluindo somente Hello World; infraestrutura aparece nas aulas que o professor liberar.

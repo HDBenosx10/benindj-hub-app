@@ -3,7 +3,8 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 const http = require("node:http");
 const crypto = require("node:crypto");
-const { avaliar } = require("./motor-exercicios.cjs");
+const { avaliarComAmbiente } = require("./avaliacao-ambiente.cjs");
+const { validarAmbiente, validarMateriais } = require("./ambiente-schema.cjs");
 const projetos = require("./projetos.cjs");
 const oficinas = require("./oficinas.cjs");
 
@@ -41,6 +42,23 @@ function validarAula(aula) {
   ) {
     throw new Error("Projeto sem arquivos e cenários.");
   }
+  if (
+    aula.modo === "projeto" &&
+    aula.projeto.arquivos.some(
+      (f) =>
+        !f ||
+        !/^[a-z0-9-]+\.(cjs|js|sql|json)$/.test(f.nome) ||
+        typeof f.codigo !== "string",
+    )
+  )
+    throw Error("Arquivo de projeto inválido.");
+  if (
+    aula.modo === "funcoes" &&
+    aula.exercicios.some((e) => !e || !/^[a-zA-Z][\w-]{0,60}$/.test(e.id))
+  )
+    throw Error("Identificador de exercício inválido.");
+  validarAmbiente(aula.ambiente);
+  validarMateriais(aula.materiaisComplementares);
   return aula;
 }
 
@@ -121,6 +139,9 @@ async function iniciar() {
   }
   let gravacao = Promise.resolve();
   const ativos = new Map();
+  const ambientes = require("./ambiente-gerenciador.cjs").criarGerenciador(
+    path.join(pastaDados, "ambientes"),
+  );
   let conferindo = false;
 
   function visao(req) {
@@ -249,8 +270,14 @@ async function iniciar() {
       const estaticos = {
         "/": "index.html",
         "/interface.js": "interface.js",
+        "/ambiente-ui.js": "ambiente-ui.js",
         "/estilo.css": "estilo.css",
-        ...(professor ? { "/estudio.js": "estudio.js" } : {}),
+        ...(professor
+          ? {
+              "/estudio.js": "estudio.js",
+              "/estudio-recursos.js": "estudio-recursos.js",
+            }
+          : {}),
       };
       if (req.method === "GET" && estaticos[url.pathname]) {
         const nome = estaticos[url.pathname];
@@ -263,7 +290,9 @@ async function iniciar() {
           .replace("__TOKEN__", token)
           .replace(
             "__ESTUDIO__",
-            professor ? '<script src="/estudio.js" defer></script>' : "",
+            professor
+              ? '<script src="/estudio.js" defer></script><script src="/estudio-recursos.js" defer></script>'
+              : "",
           );
         res.writeHead(200, {
           "Content-Type": tipo + "; charset=utf-8",
@@ -295,6 +324,7 @@ async function iniciar() {
         }
         return json(res, 200, {
           perfil: visao(req),
+          versaoApp: config.versaoApp,
           aulas: [...mapa.values()].map((aula) => ({
             id: aula.id,
             numero: aula.numero,
@@ -324,6 +354,9 @@ async function iniciar() {
           );
         }
         const aula = validarAula(await corpo(req));
+        await pararChave(`aluno:${aula.id}`);
+        await ambientes.parar(`aluno:${aula.id}`);
+        await ambientes.obter(`aluno:${aula.id}`, aula);
         await fs.writeFile(
           path.join(raiz, "aulas", aula.id + ".hub.json"),
           "\uFEFF" + JSON.stringify(aula, null, 2),
@@ -337,6 +370,7 @@ async function iniciar() {
         for (const id of [...ativos.keys()]) {
           await pararChave(id);
         }
+        await ambientes.encerrar();
         await gravacao;
         servidor.close(() => process.exit(0));
         servidor.closeIdleConnections();
@@ -359,6 +393,7 @@ async function iniciar() {
       const aula = aulaPorId(req, dado.aulaId ?? url.searchParams.get("aula"));
       const id = chave(req, aula);
       if (req.method === "GET" && url.pathname === "/api/aula") {
+        await ambientes.obter(id, aula);
         return json(res, 200, {
           aula: visao(req) === "professor" ? aula : publico(aula),
           respostas: dadosDaAula(req, aula),
@@ -375,6 +410,58 @@ async function iniciar() {
         res.end("\uFEFF" + JSON.stringify(publico(aula), null, 2));
         return;
       }
+      if (url.pathname.startsWith("/api/ambiente/")) {
+        if (req.method !== "POST")
+          throw Error("Use POST para operar o ambiente.");
+        if (!aula.ambiente)
+          throw Error("O professor não habilitou recursos nesta aula.");
+        let ambiente;
+        if (url.pathname === "/api/ambiente/configurar") {
+          await pararChave(id);
+          ambiente = await ambientes.configurar(id, aula, dado.definicao);
+        } else if (url.pathname === "/api/ambiente/restaurar") {
+          await pararChave(id);
+          ambiente = await ambientes.restaurar(id, aula);
+        } else if (url.pathname === "/api/ambiente/reiniciar") {
+          await pararChave(id);
+          await ambientes.parar(id);
+          ambiente = await ambientes.obter(id, aula);
+        } else if (url.pathname === "/api/ambiente/parar") {
+          await pararChave(id);
+          await ambientes.parar(id);
+          await ambientes.parar(id + "-demo");
+          return json(res, 200, { parado: true });
+        } else if (url.pathname === "/api/ambiente/operar") {
+          ambiente = await ambientes.obter(id, aula);
+          return json(res, 200, await ambiente.operar(dado.operacao));
+        } else if (url.pathname === "/api/ambiente/estado")
+          ambiente = await ambientes.obter(id, aula);
+        else throw Error("Operação de ambiente desconhecida.");
+        const estado = await ambiente.operar({ acao: "estado" });
+        return json(res, 200, {
+          ...estado,
+          recursos: estado.recursos.map((r) => ({
+            ...r,
+            ...(r.tipo === "mock-http"
+              ? { url: ambiente.conexao.base + "/mock/" + r.id }
+              : {}),
+          })),
+        });
+      }
+      if (req.method === "POST" && url.pathname === "/api/exportar-projeto") {
+        const salvo = await salvar(req, aula, dado);
+        const pacote = await require("./exportar-projeto.cjs").exportar(
+          aula,
+          salvo,
+          await ambientes.configuracao(id, aula),
+        );
+        res.writeHead(200, {
+          "Content-Type": "application/zip",
+          "Content-Disposition": `attachment; filename="${aula.id}-projeto.zip"`,
+        });
+        res.end(pacote);
+        return;
+      }
       if (req.method === "POST" && url.pathname === "/api/salvar") {
         return json(res, 200, {
           salvo: true,
@@ -388,7 +475,11 @@ async function iniciar() {
         return json(
           res,
           200,
-          await require("./executar.cjs").executar(dado.codigo),
+          await require("./executar.cjs").executar(
+            dado.codigo,
+            5000,
+            (await ambientes.obter(id, aula))?.conexao,
+          ),
         );
       }
       if (req.method === "POST" && url.pathname === "/api/testar") {
@@ -410,9 +501,10 @@ async function iniciar() {
             }
             resultados = [];
             for (const exercicio of exercicios) {
-              const retorno = await avaliar(
+              const retorno = await avaliarComAmbiente(
                 salvo.codigos[exercicio.id],
                 exercicio.testes,
+                aula.ambiente,
               );
               resultados.push(
                 ...retorno.map((item) => ({
@@ -441,9 +533,11 @@ async function iniciar() {
         if (aula.modo !== "funcoes") {
           throw new Error("Execute o projeto para observar esta demonstração.");
         }
-        const resultados = await avaliar(aula.exemplo, [
-          { nome: "Demonstração", executar: "return true;", esperado: true },
-        ]);
+        const resultados = await avaliarComAmbiente(
+          aula.exemplo,
+          [{ nome: "Demonstração", executar: "return true;", esperado: true }],
+          aula.ambiente,
+        );
         return json(res, 200, { resultados });
       }
       if (req.method === "POST" && url.pathname === "/api/projeto/iniciar") {
@@ -467,6 +561,14 @@ async function iniciar() {
         const projeto = await projetos.abrirProjeto(
           pastaProjeto(req, aula, Boolean(dado.demonstracao)),
           arquivos,
+          {
+            conexao: (
+              await ambientes.obter(
+                id + (dado.demonstracao ? "-demo" : ""),
+                aula,
+              )
+            )?.conexao,
+          },
         );
         ativos.set(id, { projeto, demonstracao: Boolean(dado.demonstracao) });
         return json(res, 200, {
