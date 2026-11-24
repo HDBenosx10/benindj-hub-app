@@ -459,7 +459,7 @@ function desenharBancada() {
             resultado.changes !== undefined
               ? `Registros alterados: ${resultado.changes}.`
               : (resultado.aviso ??
-                `${resultado.linhas?.length ?? 0} linhas retornadas.${resultado.truncado ? " Exibição limitada a mil linhas." : ""}`);
+                `Linhas retornadas: ${resultado.linhas?.length ?? 0}.${resultado.truncado ? " Exibição limitada a mil linhas." : ""}`);
           elemento(saida, "p", resumo, "secondary");
         } catch (e) {
           elemento(saida, "pre", e.message, "console erro");

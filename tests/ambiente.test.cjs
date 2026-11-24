@@ -208,6 +208,10 @@ test("Aberturas concorrentes compartilham uma instância, e memória reinicia ao
   );
 });
 test("Manifesto rejeita ids, headers e alterações em recursos fixados", () => {
+  assert.throws(
+    () => validarAmbiente(base([sql({ permissoes: { ddl: "false" } })])),
+    /true ou false/,
+  );
   assert.throws(() => validarAmbiente(base([sql({ id: "../escape" })])));
   assert.throws(() =>
     validarAmbiente(

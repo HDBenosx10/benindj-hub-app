@@ -15,7 +15,29 @@ function validarAmbiente(ambiente) {
   if (Buffer.byteLength(JSON.stringify(ambiente)) > 500000)
     throw Error("Ambiente maior que 500 KB.");
   const ids = new Set();
+  if (
+    ambiente.permitirCriacao !== undefined &&
+    typeof ambiente.permitirCriacao !== "boolean"
+  )
+    throw Error("Permitir criação deve ser true ou false.");
   for (const recurso of ambiente.recursos) {
+    if (
+      recurso?.editavel !== undefined &&
+      typeof recurso.editavel !== "boolean"
+    )
+      throw Error("Editável deve ser true ou false.");
+    if (
+      recurso?.permissoes !== undefined &&
+      (!recurso.permissoes ||
+        typeof recurso.permissoes !== "object" ||
+        Array.isArray(recurso.permissoes) ||
+        ["ddl", "dml"].some(
+          (k) =>
+            recurso.permissoes[k] !== undefined &&
+            typeof recurso.permissoes[k] !== "boolean",
+        ))
+    )
+      throw Error("Permissões de DDL e DML devem ser true ou false.");
     if (
       !recurso ||
       !/^[a-z][a-z0-9-]{0,39}$/.test(recurso.id) ||
