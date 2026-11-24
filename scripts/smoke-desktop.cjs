@@ -162,11 +162,82 @@ async function smoke() {
         codigos["hello-world"],
       );
     }
+    async function esperarDebug(id, condicao) {
+      const prazo = Date.now() + 10000;
+      while (Date.now() < prazo) {
+        const d = await api(estado.endereco, "/api/debug/estado", {
+          aulaId: "aula-00",
+          sessaoId: id,
+        });
+        if (d.status === "erro") throw Error(d.erro);
+        if (condicao(d) && !d.inspecionando) return d;
+        await new Promise((r) => setTimeout(r, 50));
+      }
+      throw Error("O debugger empacotado não atingiu a pausa esperada.");
+    }
+    const dadosDebug = {
+      aulaId: "aula-00",
+      codigos,
+      exercicioId: "hello-world",
+      chamadas:
+        "let debugContador = 0;\ndebugContador += 1;\nconsole.log(debugContador);",
+      breakpoints: { "hello-world.js": [5] },
+      observacoes: ["debugContador"],
+    };
+    let debug = await api(estado.endereco, "/api/debug/iniciar", dadosDebug);
+    await esperarDebug(debug.id, (d) => d.status === "pausado");
+    await api(estado.endereco, "/api/debug/controle", {
+      aulaId: "aula-00",
+      sessaoId: debug.id,
+      acao: "continuar",
+    });
+    let pausa = await esperarDebug(
+      debug.id,
+      (d) => d.status === "pausado" && d.linha === 5,
+    );
+    assert.equal(pausa.observacoes[0].valor, "0");
+    await api(estado.endereco, "/api/debug/controle", {
+      aulaId: "aula-00",
+      sessaoId: debug.id,
+      acao: "proxima",
+    });
+    pausa = await esperarDebug(
+      debug.id,
+      (d) => d.status === "pausado" && d.linha === 6,
+    );
+    assert.equal(pausa.observacoes[0].valor, "1");
+    await api(estado.endereco, "/api/debug/controle", {
+      aulaId: "aula-00",
+      sessaoId: debug.id,
+      acao: "continuar",
+    });
+    const fimDebug = await esperarDebug(
+      debug.id,
+      (d) => d.status === "concluido",
+    );
+    assert.deepEqual(fimDebug.saida, ["Hello world!", "1"]);
+    const salvoDebug = await api(estado.endereco, "/api/aula?aula=aula-00");
+    assert.equal(
+      salvoDebug.respostas.codigos["hello-world"],
+      codigos["hello-world"],
+    );
+    assert.equal(
+      typeof salvoDebug.respostas.progresso["hello-world"],
+      "string",
+    );
+    const progressoDebug = await api(estado.endereco, "/api/inicio");
+    assert.equal(
+      progressoDebug.aulas.find((a) => a.id === "aula-00").progresso.completa,
+      true,
+    );
+    // Fechar o app durante uma pausa também deve encerrar o subprocesso.
+    debug = await api(estado.endereco, "/api/debug/iniciar", dadosDebug);
+    await esperarDebug(debug.id, (d) => d.status === "pausado");
     await fechar(estado.endereco);
     console.log(
       "Smoke desktop aprovado: " +
         perfil +
-        ", execução, persistência e encerramento. Abertura do processo Electron (ms): " +
+        ", execução, debug, persistência e encerramento. Abertura do processo Electron (ms): " +
         tempos.join(", "),
     );
     if (anterior)

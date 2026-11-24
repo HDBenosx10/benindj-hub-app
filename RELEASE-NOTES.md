@@ -1,4 +1,15 @@
-# BeninDJ Hub 0.10.1
+# BeninDJ Hub 0.11.0
+
+- Painel Debug recolhível à direita do editor, com controles sempre acessíveis durante a inspeção.
+- Breakpoints na margem ou por número de linha, confirmação da instrução executável e destaque da próxima linha.
+- Continuar/pausar (F8), próxima linha (F10), entrar (F11), sair (Shift+F11) e parar, usando o inspector real do Node em outro processo.
+- Expressões observadas, variáveis locais, blocos, closures e seleção de quadros da pilha. Observações recusam efeitos colaterais e têm limite de tempo.
+- Projetos CommonJS e APIs: breakpoints entre arquivos, abertura automática do arquivo pausado e cliente HTTP para investigar rotas com os recursos reais da aula.
+- Testes do executável verificam breakpoints, avanço, valores, preservação das respostas e fechamento durante uma pausa. O encerramento aguarda as conexões sem forçar a saída do runtime no Windows.
+
+Leia o [guia de depuração](https://github.com/HDBenosx10/benindj-hub-app/blob/main/docs/depuracao.md) para uso e limites. Debug acompanha JavaScript; JSON, SQL nativo e comandos npm/Git usam seus fluxos próprios. Depurar pode alterar os recursos, como a execução normal, e não concede aprovação nos desafios.
+
+## Editor e correção de cores incluídos
 
 - Corrige o mapeamento Dracula Pro: const, let, var e function em rosa, sem itálico; comentários sem itálico e parâmetros em laranja itálico.
 - Editor, exemplos e gabaritos usam as mesmas regras corrigidas. A referência consultada foi a extensão VS Code do repositório Dracula Pro do usuário.

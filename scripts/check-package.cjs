@@ -10,8 +10,16 @@ const assert = require("node:assert/strict");
     await fs.readFile(path.join(pasta, "config.json"), "utf8"),
   );
   assert.equal(config.perfil, "aluno");
+  for (const arquivo of ["debug-ui.js", "debug-worker.cjs", "depurador.cjs"])
+    assert.ok(
+      (await fs.stat(path.join(pasta, arquivo))).size > 0,
+      "Debugger ausente: " + arquivo,
+    );
   for (const arquivo of ["editor.js", "editor-tema.css", "LICENCAS.txt"]) {
-    assert.ok((await fs.stat(path.join(pasta,"vendor",arquivo))).size > 0, "Arquivo do editor ausente: " + arquivo);
+    assert.ok(
+      (await fs.stat(path.join(pasta, "vendor", arquivo))).size > 0,
+      "Arquivo do editor ausente: " + arquivo,
+    );
   }
   const nomes = await fs.readdir(pasta);
   for (const nome of [

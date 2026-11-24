@@ -12,6 +12,7 @@ import { json } from "@codemirror/lang-json";
 import { sql, SQLite } from "@codemirror/lang-sql";
 import { cores, destaque, linguagemJavaScript } from "./sintaxe.js";
 import { formatarTexto, podeFormatar } from "./formatacao.js";
+import { extensoesDebug, definirDebug, linhasBreakpoints } from "./debug.js";
 export { colorirJS } from "./sintaxe.js";
 
 const tema = EditorView.theme(
@@ -64,6 +65,9 @@ export function criar(parent, opcoes = {}) {
         : new LanguageSupport(linguagemJavaScript, javascript().support);
   const extensoes = () => [
     basicSetup,
+    extensoesDebug((linhas, automatico) =>
+      opcoes.aoBreakpoints?.(linhas, automatico),
+    ),
     tema,
     syntaxHighlighting(destaque),
     indentUnit.of("  "),
@@ -115,6 +119,9 @@ export function criar(parent, opcoes = {}) {
     get value() {
       return view.state.doc.toString();
     },
+    get breakpoints() {
+      return linhasBreakpoints(view);
+    },
     set value(texto) {
       if ((texto ?? "") === view.state.doc.toString()) return;
       silencioso = true;
@@ -157,6 +164,9 @@ export function criar(parent, opcoes = {}) {
     notificarAlteracao() {
       api.oninput?.();
     },
+    depurar(linhas, linha) {
+      definirDebug(view, linhas, linha);
+    },
     focar() {
       view.focus();
     },
@@ -173,7 +183,12 @@ export function criar(parent, opcoes = {}) {
         estado.selection.main.head,
       );
       if (view.state !== estado || leitura) return false;
-      if (resultado.formatted !== api.value)
+      if (resultado.formatted !== api.value) {
+        // Uma substituição integral não tem correspondência segura de linhas.
+        if (api.breakpoints.length) {
+          definirDebug(view, [], null);
+          opcoes.aoBreakpoints?.([], true);
+        }
         view.dispatch({
           changes: {
             from: 0,
@@ -186,6 +201,7 @@ export function criar(parent, opcoes = {}) {
             Transaction.userEvent.of("input.format"),
           ],
         });
+      }
       view.focus();
       return true;
     },

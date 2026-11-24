@@ -154,6 +154,8 @@ async function iniciar() {
     path.join(pastaDados, "ambientes"),
   );
   let conferindo = false;
+  const depuracoes = new Map();
+  let iniciandoDebug = false;
   let encerrando = false;
 
   function visao(req) {
@@ -242,8 +244,7 @@ async function iniciar() {
     res.writeHead(status, {
       "Content-Type": "application/json; charset=utf-8",
       "Cache-Control": "no-store",
-      "Content-Security-Policy":
-        `default-src 'self'; script-src 'self'; style-src 'self' 'nonce-${token}'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'`,
+      "Content-Security-Policy": `default-src 'self'; script-src 'self'; style-src 'self' 'nonce-${token}'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'`,
     });
     res.end(JSON.stringify(dado));
   }
@@ -264,6 +265,8 @@ async function iniciar() {
     );
   }
   async function pararChave(id) {
+    await depuracoes.get(id)?.parar();
+    depuracoes.delete(id);
     const ativo = ativos.get(id);
     if (ativo) {
       await ativo.projeto.parar();
@@ -288,6 +291,7 @@ async function iniciar() {
         "/vendor/editor-tema.css": "vendor/editor-tema.css",
         "/ambiente-ui.js": "ambiente-ui.js",
         "/jornada-ui.js": "jornada-ui.js",
+        "/debug-ui.js": "debug-ui.js",
         "/estilo.css": "estilo.css",
         ...(professor
           ? {
@@ -314,8 +318,7 @@ async function iniciar() {
         res.writeHead(200, {
           "Content-Type": tipo + "; charset=utf-8",
           "Cache-Control": "no-store",
-          "Content-Security-Policy":
-            `default-src 'self'; script-src 'self'; style-src 'self' 'nonce-${token}'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'`,
+          "Content-Security-Policy": `default-src 'self'; script-src 'self'; style-src 'self' 'nonce-${token}'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'`,
         });
         res.end(texto);
         return;
@@ -404,9 +407,13 @@ async function iniciar() {
         for (const id of [...ativos.keys()]) {
           await pararChave(id);
         }
+        for (const debug of depuracoes.values()) await debug.parar();
+        depuracoes.clear();
         await ambientes.encerrar();
         await gravacao;
-        servidor.close(() => process.exit(0));
+        servidor.close(() => {
+          process.exitCode = 0;
+        });
         servidor.closeAllConnections();
         return;
       }
@@ -426,7 +433,96 @@ async function iniciar() {
       }
       const aula = aulaPorId(req, dado.aulaId ?? url.searchParams.get("aula"));
       const id = chave(req, aula);
+      if (url.pathname.startsWith("/api/debug/")) {
+        if (req.method !== "POST")
+          throw Error("Use POST para operar o debugger.");
+        const acao = url.pathname.split("/").pop();
+        if (acao === "iniciar") {
+          if (iniciandoDebug) throw Error("Aguarde a sessão de debug iniciar.");
+          iniciandoDebug = true;
+          try {
+            for (const [chaveDebug, sessaoDebug] of depuracoes)
+              if (chaveDebug.startsWith(visao(req) + ":")) {
+                await sessaoDebug.parar();
+                depuracoes.delete(chaveDebug);
+              }
+            await pararChave(id);
+            const salvo = await salvar(req, aula, dado);
+            const conexao = (await ambientes.obter(id, aula))?.conexao;
+            const opcoes = {
+              conexao,
+              breakpoints: dado.breakpoints,
+              observacoes: dado.observacoes,
+            };
+            if (aula.modo === "funcoes") {
+              const exercicio = aula.exercicios.find(
+                (e) => e.id === dado.exercicioId,
+              );
+              if (!exercicio)
+                throw Error("Escolha uma atividade para depurar.");
+              if (
+                typeof dado.chamadas !== "string" ||
+                dado.chamadas.length > 100000
+              )
+                throw Error("Chamadas de depuração inválidas.");
+              opcoes.arquivo = exercicio.id + ".js";
+              opcoes.codigo =
+                salvo.codigos[exercicio.id] + "\n;\n" + dado.chamadas;
+            } else {
+              const arquivos = projetos.montarArquivos(aula, salvo.arquivos);
+              opcoes.http = aula.projeto.tipo === "http";
+              opcoes.arquivo = opcoes.http
+                ? "app.cjs"
+                : Object.hasOwn(arquivos, "main.cjs")
+                  ? "main.cjs"
+                  : dado.arquivo;
+              if (
+                !Object.hasOwn(arquivos, opcoes.arquivo) ||
+                !/\.(js|cjs)$/.test(opcoes.arquivo)
+              )
+                throw Error("Selecione um arquivo JavaScript executável.");
+              opcoes.pasta = path.join(pastaProjeto(req, aula), "debug");
+              opcoes.arquivos = Object.keys(arquivos);
+              await projetos.prepararPasta(opcoes.pasta, arquivos);
+              const compartilhado = conexao?.recursos.find(
+                (r) =>
+                  r.id === "banco" &&
+                  r.tipo === "sqlite" &&
+                  r.modo === "arquivo",
+              );
+              opcoes.banco = compartilhado
+                ? await require("./recursos-cliente.cjs")
+                    .criarCliente(conexao)
+                    .sqlite("banco")
+                    .caminhoArquivo()
+                : path.join(pastaProjeto(req, aula), "hub.sqlite");
+            }
+            const debug = await require("./depurador.cjs").criarSessao(opcoes);
+            depuracoes.set(id, debug);
+            return json(res, 200, debug.estado());
+          } finally {
+            iniciandoDebug = false;
+          }
+        }
+        const debug = depuracoes.get(id);
+        if (!debug || debug.id !== dado.sessaoId)
+          throw Error("Sessão de debug encerrada. Inicie uma nova sessão.");
+        if (acao === "controle") await debug.controlar(dado.acao, dado.quadro);
+        else if (acao === "configurar")
+          await debug.configurar(dado.breakpoints, dado.observacoes);
+        else if (acao === "requisitar") await debug.requisitar(dado.requisicao);
+        else if (acao !== "estado")
+          throw Error("Operação de debug desconhecida.");
+        debug.renovar();
+        return json(res, 200, debug.estado());
+      }
       if (req.method === "GET" && url.pathname === "/api/aula") {
+        // Reabrir a aula após recarregar a janela encerra sessões sem interface.
+        for (const [chaveDebug, sessaoDebug] of depuracoes)
+          if (chaveDebug.startsWith(visao(req) + ":")) {
+            await sessaoDebug.parar();
+            depuracoes.delete(chaveDebug);
+          }
         await ambientes.obter(id, aula);
         return json(res, 200, {
           aula: visao(req) === "professor" ? aula : publico(aula),
@@ -769,11 +865,16 @@ async function iniciar() {
     return;
   }
   async function encerrar() {
+    for (const debug of depuracoes.values()) await debug.parar();
+    depuracoes.clear();
     for (const id of [...ativos.keys()]) {
       await pararChave(id);
     }
     await gravacao;
-    servidor.close(() => process.exit(0));
+    servidor.close(() => {
+      process.exitCode = 0;
+    });
+    servidor.closeAllConnections();
   }
   process.on("SIGINT", encerrar);
   process.on("SIGTERM", encerrar);

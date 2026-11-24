@@ -20,10 +20,13 @@ let apiAtiva = false;
 let apiDesatualizada = false;
 let sessao;
 let modoDemo = false;
+let painelDebug;
 const editorCodigo = HubEditor.criar($("editor"), {
   nonce: TOKEN,
   aoFormatar: () => tratar(formatarEditor)(),
   aoVerificar: () => tratar(() => testar(false))(),
+  aoBreakpoints: (linhas, automatico) =>
+    painelDebug?.breakpoints(linhas, automatico),
   aoEstado: (estado) => {
     $("formatar-codigo").disabled =
       !aula || estado.somenteLeitura || !estado.podeFormatar;
@@ -37,6 +40,7 @@ const editorCodigo = HubEditor.criar($("editor"), {
 async function formatarEditor() {
   if (!aula || ocupado || editorCodigo.readOnly) return;
   $("formatar-codigo").disabled = true;
+  const tinhaBreakpoints = editorCodigo.breakpoints.length > 0;
   try {
     const aplicado = await editorCodigo.formatar();
     if (!aplicado) {
@@ -44,7 +48,12 @@ async function formatarEditor() {
       return;
     }
     await salvar();
-    aviso("Código formatado e salvo. Ctrl+Z desfaz a formatação.");
+    aviso(
+      "Código formatado e salvo. Ctrl+Z desfaz a formatação." +
+        (tinhaBreakpoints && !editorCodigo.breakpoints.length
+          ? " Os breakpoints foram limpos; marque novamente as linhas desejadas."
+          : ""),
+    );
   } catch (erro) {
     const posicao = erro.loc?.start;
     aviso(
@@ -60,6 +69,59 @@ async function formatarEditor() {
   }
 }
 $("formatar-codigo").onclick = tratar(formatarEditor);
+painelDebug = HubDebug({
+  editor: editorCodigo,
+  api,
+  salvar,
+  dados: comDados,
+  contexto: () =>
+    aula
+      ? {
+          perfil,
+          aulaId: aula.id,
+          exercicioId:
+            aula.modo === "funcoes"
+              ? aula.exercicios[exercicioAtual].id
+              : undefined,
+          arquivo:
+            aula.modo === "funcoes"
+              ? aula.exercicios[exercicioAtual].id + ".js"
+              : arquivoAtual,
+          funcoes: aula.modo === "funcoes",
+          http: aula.projeto?.tipo === "http",
+          habilitado:
+            !modoDemo &&
+            !ocupado &&
+            (aula.modo === "funcoes" || /\.(js|cjs)$/.test(arquivoAtual)),
+          linhasCodigo: editorCodigo.value.split("\n").length,
+        }
+      : null,
+  abrirArquivo: async (nome) => {
+    if (!aula.projeto?.arquivos.some((a) => a.nome === nome)) return;
+    sincronizarEditor();
+    arquivoAtual = nome;
+    renderizarEditor();
+  },
+  bloquear: (valor) => {
+    document.body.classList.toggle("debugando", valor);
+    bloquear(ocupado);
+    for (const id of [
+      "run-livre",
+      "abrir-js",
+      "rascunho",
+      "modo-experimento",
+      "retomar",
+    ])
+      $(id).disabled = valor;
+    document
+      .querySelectorAll("#exercicios select")
+      .forEach((s) => (s.disabled = valor));
+    if (valor && apiAtiva) {
+      apiAtiva = false;
+      $("badge-projeto").textContent = "Parado para depurar";
+    }
+  },
+});
 
 function elemento(parent, tag, texto, classe) {
   const item = document.createElement(tag);
@@ -563,7 +625,7 @@ function renderizarEditor() {
       aula.id + ":" + exercicio.id,
       exercicio.id + ".js",
       respostas.codigos[exercicio.id],
-      ocupado,
+      ocupado || painelDebug.ativo(),
     );
     $("nome-editor").textContent = exercicio.id + ".js";
     $("enunciado").textContent = exercicio.enunciado;
@@ -579,7 +641,7 @@ function renderizarEditor() {
       modoDemo
         ? aula.professor.solucaoProjeto[arquivoAtual]
         : respostas.arquivos[arquivoAtual],
-      modoDemo || !arquivo.editavel || ocupado,
+      modoDemo || !arquivo.editavel || ocupado || painelDebug.ativo(),
     );
     $("nome-editor").textContent = arquivoAtual;
     $("enunciado").textContent = aula.desafio;
@@ -591,6 +653,7 @@ function renderizarEditor() {
         : "Apoio disponível para leitura";
   }
   $("salvo").textContent = "Salvo automaticamente";
+  painelDebug.contextoAtualizado();
 }
 function renderizarTestes() {
   const testes =
@@ -748,6 +811,7 @@ async function abrirAula(id) {
   if (ocupado) {
     return;
   }
+  await painelDebug.parar();
   await salvar();
   if (apiAtiva && aula) {
     await api("/api/projeto/parar", { aulaId: aula.id });
@@ -807,18 +871,19 @@ function bloquear(valor) {
     "arquivo",
     "recomecar",
   ]) {
-    $(id).disabled = valor;
+    $(id).disabled = valor || (id !== "arquivo" && painelDebug?.ativo());
   }
   editorCodigo.readOnly =
     valor ||
+    painelDebug?.ativo() ||
     modoDemo ||
     (aula.modo === "projeto" &&
       !aula.projeto.arquivos.find((a) => a.nome === arquivoAtual).editavel);
-  $("testar").disabled = valor || modoDemo;
-  $("recomecar").disabled = valor || modoDemo;
+  $("testar").disabled = valor || modoDemo || painelDebug?.ativo();
+  $("recomecar").disabled = valor || modoDemo || painelDebug?.ativo();
 }
 async function testar(todos = false) {
-  if (ocupado) {
+  if (ocupado || painelDebug.ativo()) {
     return;
   }
   if (modoDemo) {

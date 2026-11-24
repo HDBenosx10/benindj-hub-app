@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/estilo.css" />
     <link rel="stylesheet" href="/vendor/editor-tema.css" />
     <script src="/vendor/editor.js" defer></script>
+    <script src="/debug-ui.js" defer></script>
     <script src="/interface.js" defer></script>
     <script src="/ambiente-ui.js" defer></script>
     <script src="/jornada-ui.js" defer></script>
@@ -204,35 +205,217 @@
                   ><select id="arquivo"></select
                   ><span id="permissao"></span>
                 </div>
-                <div class="editor-shell">
-                  <div class="editor-top">
-                    <span id="nome-editor"></span><span id="salvo">Pronto</span>
-                    <button id="formatar-codigo" type="button" title="Formatar JavaScript ou JSON · Shift+Alt+F">Formatar</button>
-                    <details class="file-menu">
-                      <summary>Arquivo ···</summary>
-                      <div>
-                        <button id="abrir-js">Importar .js</button
-                        ><button id="baixar-respostas">
-                          Exportar respostas</button
-                        ><button id="recomecar">
-                          Restaurar código inicial
-                        </button>
-                      </div>
-                    </details>
-                  </div>
-                  <div id="editor" class="editor-codigo"></div>
-                  <div class="editor-actions">
-                    <div class="grupo">
-                      <button id="run-livre" class="primary">▶ Executar</button
-                      ><button id="executar-projeto" class="primary" hidden>
-                        ▶ Executar projeto</button
-                      ><button id="parar-projeto" hidden>Parar</button
-                      ><button id="retomar" hidden>Retomar atividade</button>
+                <div class="editor-debug-layout">
+                  <div class="editor-shell">
+                    <div class="editor-top">
+                      <span id="nome-editor"></span
+                      ><span id="salvo">Pronto</span>
+                      <button
+                        id="formatar-codigo"
+                        type="button"
+                        title="Formatar JavaScript ou JSON · Shift+Alt+F"
+                      >
+                        Formatar
+                      </button>
+                      <details class="file-menu">
+                        <summary>Arquivo ···</summary>
+                        <div>
+                          <button id="abrir-js">Importar .js</button
+                          ><button id="baixar-respostas">
+                            Exportar respostas</button
+                          ><button id="recomecar">
+                            Restaurar código inicial
+                          </button>
+                        </div>
+                      </details>
                     </div>
-                    <button id="testar" class="verify-button">
-                      ✓ Verificar
-                    </button>
+                    <div id="editor" class="editor-codigo"></div>
+                    <div class="editor-actions">
+                      <div class="grupo">
+                        <button id="run-livre" class="primary">
+                          ▶ Executar</button
+                        ><button id="executar-projeto" class="primary" hidden>
+                          ▶ Executar projeto</button
+                        ><button id="parar-projeto" hidden>Parar</button
+                        ><button id="retomar" hidden>Retomar atividade</button>
+                      </div>
+                      <button id="testar" class="verify-button">
+                        ✓ Verificar
+                      </button>
+                    </div>
                   </div>
+                  <aside
+                    id="debug-panel"
+                    class="debug-panel"
+                    aria-label="Depuração do código"
+                  >
+                    <button
+                      id="debug-toggle"
+                      type="button"
+                      aria-expanded="false"
+                      aria-controls="debug-content"
+                      title="Abrir painel de debug"
+                    >
+                      ◉ <span>Debug</span><span class="debug-chevron">‹</span>
+                    </button>
+                    <section id="debug-content" hidden>
+                      <div class="debug-fixed">
+                        <div class="debug-heading">
+                          <strong>Depuração</strong
+                          ><span id="debug-status" class="pill" role="status"
+                            >Pronto</span
+                          >
+                        </div>
+                        <div
+                          class="debug-toolbar"
+                          aria-label="Controles de execução"
+                        >
+                          <button id="debug-start" type="button">
+                            ▶ Depurar
+                          </button>
+                          <button
+                            data-debug="continuar"
+                            title="Continuar · F8"
+                            disabled
+                          >
+                            ▶ Continuar
+                          </button>
+                          <button data-debug="pausar" title="Pausar" disabled>
+                            Ⅱ Pausar
+                          </button>
+                          <button
+                            data-debug="proxima"
+                            title="Próxima linha, sem entrar nas funções · F10"
+                            disabled
+                          >
+                            ↷ Próxima linha
+                          </button>
+                          <button
+                            data-debug="entrar"
+                            title="Entrar na função · F11"
+                            disabled
+                          >
+                            ↓ Entrar
+                          </button>
+                          <button
+                            data-debug="sair"
+                            title="Sair da função · Shift+F11"
+                            disabled
+                          >
+                            ↑ Sair
+                          </button>
+                          <button
+                            data-debug="parar"
+                            title="Encerrar debug"
+                            disabled
+                          >
+                            ■ Parar
+                          </button>
+                        </div>
+                        <p id="debug-location" class="debug-help">
+                          Clique à esquerda dos números de linha para marcar um
+                          breakpoint. A linha destacada será executada no
+                          próximo passo.
+                        </p>
+                        <p
+                          id="debug-error"
+                          class="debug-error"
+                          role="alert"
+                          hidden
+                        ></p>
+                      </div>
+                      <details id="debug-calls-section">
+                        <summary>Chamadas para investigar</summary>
+                        <label for="debug-calls"
+                          >Chame sua função com as entradas que quer
+                          acompanhar.</label
+                        >
+                        <textarea
+                          id="debug-calls"
+                          class="small-code"
+                          rows="3"
+                          spellcheck="false"
+                          placeholder="console.log(minhaFuncao(10));"
+                        ></textarea>
+                        <small
+                          >Usa o mesmo rascunho de Meus experimentos. Depurar
+                          não aprova o desafio.</small
+                        >
+                      </details>
+                      <details open>
+                        <summary>Observar expressões</summary>
+                        <form id="debug-watch-form" class="debug-add">
+                          <input
+                            id="debug-watch-input"
+                            aria-label="Variável ou expressão para observar"
+                            placeholder="total, itens.length…"
+                            maxlength="500"
+                            required
+                          /><button type="submit" title="Adicionar observação">
+                            +
+                          </button>
+                        </form>
+                        <p class="debug-help">
+                          Valores atualizados a cada pausa. Expressões que
+                          alteram o programa são recusadas.
+                        </p>
+                        <ul id="debug-watches" class="debug-list"></ul>
+                      </details>
+                      <details open>
+                        <summary>Variáveis do escopo</summary>
+                        <ul id="debug-variables" class="debug-list"></ul>
+                      </details>
+                      <details open>
+                        <summary>Breakpoints</summary>
+                        <form id="debug-break-form" class="debug-add">
+                          <input
+                            id="debug-break-line"
+                            type="number"
+                            min="1"
+                            aria-label="Linha do breakpoint"
+                            placeholder="Linha"
+                            required
+                          /><button type="submit" title="Adicionar breakpoint">
+                            +
+                          </button>
+                        </form>
+                        <ul id="debug-breakpoints" class="debug-list"></ul>
+                      </details>
+                      <details>
+                        <summary>Pilha de chamadas</summary>
+                        <ul id="debug-stack" class="debug-list"></ul>
+                      </details>
+                      <details id="debug-http" hidden>
+                        <summary>Requisição para depurar</summary>
+                        <label for="debug-method">Método</label
+                        ><select id="debug-method">
+                          <option>GET</option>
+                          <option>POST</option>
+                          <option>PUT</option>
+                          <option>PATCH</option>
+                          <option>DELETE</option>
+                        </select>
+                        <label for="debug-path">Caminho</label
+                        ><input
+                          id="debug-path"
+                          value="/saude"
+                          placeholder="/produtos"
+                        />
+                        <label for="debug-body">Corpo JSON</label
+                        ><textarea
+                          id="debug-body"
+                          rows="2"
+                          class="small-code"
+                          placeholder="{}"
+                        ></textarea>
+                        <button id="debug-request" type="button" disabled>
+                          Enviar requisição
+                        </button>
+                        <pre id="debug-http-output" class="debug-value">
+Continue até o servidor iniciar. Depois envie uma requisição para alcançar o breakpoint da rota.</pre>
+                      </details>
+                    </section>
+                  </aside>
                 </div>
                 <section id="exploracao" class="exploracao">
                   <details id="meus-experimentos">
