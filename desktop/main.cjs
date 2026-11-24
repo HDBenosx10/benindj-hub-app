@@ -7,6 +7,15 @@ let janela, backend, endereco, token;
 const inicioProcesso = performance.now();
 let fechando = false;
 const pendentes = [];
+function atalhosDoDebugger(janela) {
+  // O menu nativo usa F10/F11 antes do renderer. Deixe as teclas do debug
+  // chegarem à página; os demais atalhos de menu mantêm o comportamento atual.
+  janela.webContents.on("before-input-event", (_evento, entrada) => {
+    janela.webContents.setIgnoreMenuShortcuts(
+      ["F8", "F10", "F11"].includes(entrada.key),
+    );
+  });
+}
 const perfil =
   (require("../package.json").hubPerfil ?? process.env.HUB_PROFILE) ===
   "professor"
@@ -244,6 +253,7 @@ async function iniciar() {
   janela.webContents.session.setPermissionRequestHandler(
     (_wc, _permissao, callback) => callback(false),
   );
+  atalhosDoDebugger(janela);
   janela.webContents.setWindowOpenHandler(({ url }) => {
     const alvo = new URL(url);
     if (
@@ -266,6 +276,7 @@ async function iniciar() {
           e.preventDefault();
         }
       });
+      atalhosDoDebugger(previa);
       previa.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
       previa.loadURL(url);
     } else if (
