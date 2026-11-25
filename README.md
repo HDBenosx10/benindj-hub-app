@@ -1,22 +1,69 @@
+<div align="center">
+
 # BeninDJ Hub · Aluno
 
-Laboratório de JavaScript para Windows. Abra o executável e entre na aula. **Executar** permite explorar seu código; **Verificar** confere os critérios da atividade.
+**Aprenda programação escrevendo, executando e entendendo seu próprio código.**
 
-O aplicativo começa somente com a **aula 0 — Hello world!**. Para receber outra aula, use **Importar aula** com o arquivo `.aula-hub` enviado pelo professor. O aluno não instala Node nem usa terminal para abrir o aplicativo.
+Laboratório para Windows com aulas do seu professor, editor JavaScript, exercícios verificáveis e ferramentas de back-end no mesmo ambiente.
 
-As respostas ficam salvas automaticamente no computador, fora do executável. A atualização migra os dados do perfil anterior sem sobrescrever respostas existentes.
+[Baixar para Windows](https://github.com/HDBenosx10/benindj-hub-app/releases/latest) · [Guia do laboratório](docs/ambientes/README.md) · [Reportar um problema](https://github.com/HDBenosx10/benindj-hub-app/issues)
 
-## Gerar uma versão
+</div>
 
-No GitHub, abra **Actions → Gerar versão Windows → Run workflow**. Informe uma versão inédita, como `0.9.0`. O padrão cria uma release em rascunho; marque **publicar** para disponibilizá-la ao terminar.
+![Laboratório do aluno: enunciado contextualizado, editor e console, com debugger recolhido](docs/images/laboratorio-aluno.png)
 
-A esteira executa testes, monta o aplicativo, confere que apenas a aula 0 está incluída, abre o executável e verifica execução, importação e persistência. A release contém o `.exe`, `SHA256SUMS.txt` e `BUILD-INFO.json` com os commits de origem. Para corrigir uma versão, gere outra.
+## Um lugar para estudar e experimentar
 
-Pushes e pull requests verificam o código sem criar releases. A publicação usa o `GITHUB_TOKEN` fornecido pelo GitHub Actions.
+No Hub, cada aula reúne explicação, exemplos e atividades. Você lê o contexto, escreve uma solução e acompanha o que o programa faz. **Executar** abre espaço para explorar seu raciocínio; **Verificar** confere os critérios da atividade e mostra o resultado dos testes.
 
-## Desenvolvimento
+| Recurso | Durante o estudo |
+| --- | --- |
+| Editor JavaScript | Destaque de sintaxe com paleta Dracula Pro, numeração de linhas e formatação com Prettier. |
+| Enunciados por exercício | Contexto, parâmetros, entrada, saída esperada e regras ao lado do código. |
+| Depuração | Breakpoints, variáveis, expressões observadas e execução passo a passo em um painel recolhível. |
+| Bancada de back-end | SQLite, documentos JSON e mocks HTTP, conforme os recursos e permissões definidos na aula. |
+| Progresso | Retomada da aula e da atividade em que você parou, com acompanhamento das verificações. |
+| Fora do Hub | Exportação de projetos e ambiente para continuar praticando com ferramentas externas. |
 
-Requer Windows, Git e Node 24.13 ou superior.
+## Comece em poucos passos
+
+1. Abra a [última release](https://github.com/HDBenosx10/benindj-hub-app/releases/latest) e baixe o **instalador Aluno** para Windows x64. A opção portable também está disponível.
+2. Instale e abra o BeninDJ Hub. O runtime necessário ao laboratório acompanha o aplicativo; você não precisa instalar Node ou SQLite para começar.
+3. Experimente a **aula 0 — Hello world!**, a única aula incluída inicialmente.
+4. Para receber o acervo do professor, use o convite fornecido por ele em **Conexões e atualizações**. Também é possível importar arquivos de uma ou várias aulas de uma vez.
+
+> O convite é de uso único e o acesso fica associado à instalação ativada. Ao trocar de computador, peça ao professor a reemissão do acesso.
+
+![Página inicial do aluno, com a primeira aula disponível e indicação do próximo passo](docs/images/inicio-aluno.png)
+
+## Sua trilha acompanha a aula
+
+O professor pode disponibilizar primeiro o **planejamento**: títulos, grupos e sequência das aulas. Você enxerga o percurso, mas o conteúdo de cada etapa só aparece depois da liberação. Receber uma trilha não libera automaticamente suas aulas.
+
+Seus objetivos pessoais, como aprender JavaScript com foco em back-end, ajudam a identificar percursos compatíveis. A sequência de ensino é fornecida pelo professor. O runtime atual executa **JavaScript**; outras linguagens não estão disponíveis para execução nesta versão.
+
+## Seus códigos continuam com você
+
+As respostas são salvas automaticamente no perfil do usuário do Windows, fora da pasta de instalação. Atualizar o aplicativo preserva esse perfil. Antes de trocar de computador, use os recursos de exportação de respostas; eles também são úteis como backup.
+
+A edição instalada permite consultar, baixar e aplicar atualizações pelo aplicativo. Os pacotes de atualização são conferidos com assinatura e hash antes da instalação. Na edição portable, a atualização é feita substituindo o executável pelo novo download verificado.
+
+Aluno e Professor podem coexistir na mesma máquina, com instalações, perfis e caches de atualização separados.
+
+## Conheça as ferramentas
+
+- [Editor, formatação e preservação de respostas](docs/editor-e-atualizacoes.md)
+- [Depuração passo a passo](docs/depuracao.md)
+- [Ambientes: banco, documentos e mocks HTTP](docs/ambientes/README.md)
+- [Jornada e recursos das aulas](docs/jornada.md)
+- [Acervo conectado e atualizações](docs/acervo-e-atualizacoes.md)
+
+A interface utiliza uma paleta baseada no Dracula Pro do proprietário do projeto. Os prints são capturas reais do Hub, com um perfil demonstrativo, sem dados de alunos.
+
+<details>
+<summary><strong>Desenvolvimento e publicação</strong></summary>
+
+Requisitos de desenvolvimento: Windows, Git e Node 24.13 ou superior.
 
 ```sh
 npm ci
@@ -25,35 +72,8 @@ npm test
 npm run build
 ```
 
-O build baixa o runtime oficial do Node. O executável inclui Node e npm para as oficinas. `.build`, `.cache`, `dist` e `node_modules` são gerados e não entram no Git.
+O build inclui o runtime Node e npm usados pelas oficinas. Arquivos gerados, dados locais e chaves não pertencem ao repositório. O acervo privado e os gabaritos ficam no projeto Professor.
 
-O acervo, os gabaritos e a autoria com DEV Coruja pertencem ao [repositório privado do professor](https://github.com/HDBenosx10/benindj-hub-professor).
+Tags `vX.Y.Z` acionam a esteira de release: testes, montagem, verificações do aplicativo e publicação dos pacotes de instalação e portable. O workflow **Gerar versão Windows** também permite uma execução manual. A publicação exige o Secret `HUB_UPDATE_PRIVATE_KEY`, compatível com a chave pública fixada no aplicativo. Nunca inclua a chave privada no Git.
 
-## Interface
-
-Paleta baseada no Dracula Pro do proprietário: fundo `#22212C`, navegação `#17161D` e roxo `#9580FF`. Organização inspirada na referência [Northflank](https://www.behance.net/gallery/174352873/Northflank-Cloud-Platform). Os componentes e ícones são próprios; nenhum pacote do tema privado é distribuído.
-
-## Bancada de back-end
-
-Aulas podem trazer SQLite em memória ou arquivo, documentos JSON locais e mocks HTTP com atraso e sequência de respostas. A aba Ambiente permite consultar e alterar esses recursos, respeitando as permissões da aula. O aluno pode criar recursos adicionais quando autorizado. Fora do Hub exporta código e ambiente para Node, sem gabaritos.
-
-Veja o [guia da bancada](docs/ambientes/README.md) para contratos, limites, testes e execução fora da plataforma. O aplicativo inicial continua incluindo somente Hello World; infraestrutura aparece nas aulas que o professor liberar.
-
-## Trilhas e bancada visual · 0.8
-
-A primeira abertura permite escolher Back-end, Front-end ou IA. Hoje, JavaScript é a linguagem executável; Front-end/IA têm o núcleo comum, com especialização em preparação. Java/Go ficam indisponíveis até a V2. Minha trilha mostra progresso somente das aulas liberadas. O professor continua controlando a distribuição.
-
-[Guia de jornada, recursos e abertura](docs/jornada.md). Para uso diário, prefira o instalador por usuário. A versão portátil continua disponível, com extração a cada abertura. Os arquivos de dados são mantidos fora da instalação.
-
-## Releases oficiais
-
-Uma tag vX.Y.Z aciona testes, montagem e publicação oficial dos pacotes portátil e instalador. A ação manual continua disponível para rascunhos. A release publicada remove somente rascunhos antigos; o histórico Git e as releases publicadas anteriores são preservados.
-
-## Editor 0.10 e saves
-
-O laboratório usa CodeMirror com parser JavaScript, destaque para JSON/SQL e paleta consultada no Dracula Pro. **Formatar** ou **Shift+Alt+F** organiza JavaScript/JSON com Prettier offline. Ctrl+Z desfaz a operação; erros de sintaxe preservam o texto. [Guia do editor e das atualizações](docs/editor-e-atualizacoes.md).
-
-Portátil e instalador preservam respostas no perfil do usuário, fora do executável. A esteira de release testa a passagem da versão 0.9 para a nova versão usando um perfil temporário.
-## Debug no editor
-
-Abra o painel **Debug**, à direita do editor, para marcar breakpoints, observar expressões, inspecionar variáveis e avançar com F10/F11. O processo Node inspecionado é separado da interface. Projetos HTTP têm um cliente no próprio painel para investigar as rotas. Consulte o [guia de depuração](docs/depuracao.md).
+</details>
