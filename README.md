@@ -38,6 +38,8 @@ No Hub, cada aula reúne explicação, exemplos e atividades. Você lê o contex
 
 ## Sua trilha acompanha a aula
 
+Recebeu um planejamento? Consulte o [passo a passo para importar sua trilha](docs/receber-trilha.html). Na versão 0.13.1, o botão **Importar aulas** também aceita arquivos `.trilha-hub`.
+
 O professor pode disponibilizar primeiro o **planejamento**: títulos, grupos e sequência das aulas. Você enxerga o percurso, mas o conteúdo de cada etapa só aparece depois da liberação. Receber uma trilha não libera automaticamente suas aulas.
 
 Seus objetivos pessoais, como aprender JavaScript com foco em back-end, ajudam a identificar percursos compatíveis. A sequência de ensino é fornecida pelo professor. O runtime atual executa **JavaScript**; outras linguagens não estão disponíveis para execução nesta versão.
