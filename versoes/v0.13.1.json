@@ -1,0 +1,15 @@
+{
+  "versao": "0.13.1",
+  "perfil": "aluno",
+  "commit": "371aa6382ae8f76fa566a04dea98b24838686f1f",
+  "status": "failure",
+  "runId": "45546321204",
+  "runUrl": "https://github.com/HDBenosx10/benindj-hub-app/actions/runs/45546321204",
+  "geradoEm": "2026-11-25T04:22:57.432Z",
+  "etapasComFalha": [
+    {
+      "etapa": "Conferir assinatura antes de montar",
+      "conclusao": "failure"
+    }
+  ]
+}
