@@ -346,6 +346,7 @@ async function iniciar() {
         "/leitura-ui.js": "leitura-ui.js",
         "/lotes-ui.js": "lotes-ui.js",
         "/nuvem-ui.js": "nuvem-ui.js",
+        "/acervo-atualizacoes.js": "acervo-atualizacoes.js",
         "/estilo.css": "estilo.css",
         ...(professor
           ? {

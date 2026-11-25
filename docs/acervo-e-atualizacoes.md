@@ -1,5 +1,17 @@
 # Acervo por turma e atualizações
 
+## Corrigir aulas já entregues · 0.14
+
+Depois da primeira atualização de Professor e Aluno para 0.14.0, correções de conteúdo não exigem trocar arquivos ou reinstalar o Hub.
+
+No Professor, abra a aula e clique em **Editar esta aula**. Faça a alteração no estúdio, vá à etapa **Revisão** e escolha **Salvar e enviar atualização**. O aplicativo valida os gabaritos, salva a revisão e mostra as turmas que já receberam aquela aula. Marque os destinos e confirme em **Enviar atualização às turmas**. Para publicar uma alteração já salva, use **Enviar atualização** no cabeçalho da aula. **Salvar no acervo** continua sendo uma gravação privada, sem distribuição.
+
+O Aluno com convite ativado consulta correções das aulas já recebidas na abertura, ao voltar para a janela, ao recuperar a conexão e a cada dois minutos enquanto a janela está visível. Uma aula fechada é atualizada automaticamente. Se a aula estiver aberta, o aplicativo mostra **Salvar e aplicar atualização**; ele preserva o código e retoma a atividade. Execução, debugger, servidor ativo e diálogos precisam terminar antes da aplicação.
+
+O código antigo permanece salvo mesmo se a assinatura da função mudar: o aluno deve adaptá-lo ao novo enunciado. Somente os exercícios cujos critérios mudaram exigem verificar novamente. A revisão anterior do conteúdo fica no histórico local; isso não é um histórico automático de todas as edições do código do aluno.
+
+As primeiras liberações de novas aulas e os planejamentos continuam chegando por **Receber aulas disponíveis** e confirmação. A consulta automática altera somente aulas que o aluno já importou. Quem recebeu conteúdo por arquivo precisa ativar um convite da turma para receber as próximas correções online. O serviço só entrega as revisões explicitamente publicadas para essa turma.
+
 ## Objetivos, planejamento e conteúdo
 
 Na versão 0.13, **meus objetivos** são a preferência do aluno por uma área e linguagem. Eles ajudam a encontrar percursos compatíveis; não criam estágios nem liberam conteúdo.

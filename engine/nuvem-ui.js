@@ -4,7 +4,60 @@ let painelNuvem,
   conexaoNuvem,
   nuvemOcupada = false;
 const desktopNuvem = window.laboratorioDesktop;
+let sincronizadorAulas;
 const nuvemDisponivel = () => typeof desktopNuvem?.nuvem === "function";
+async function publicarAtualizacaoAula(id) {
+  if (perfil !== "professor" || !nuvemDisponivel())
+    throw Error("Abra o Professor desktop conectado ao acervo para enviar uma atualização.");
+  const estado = await desktopNuvem.nuvem("estado");
+  if (!estado.conectado) {
+    mostrarRota("conexao");
+    throw Error("A aula foi salva localmente. Conecte seu acervo para publicá-la.");
+  }
+  const painel = await desktopNuvem.nuvem("painel");
+  const liberadas = new Set(painel.liberacoes.filter((l) => l.aula_id === id).map((l) => l.turma_id));
+  const turmas = painel.turmas.filter((t) => liberadas.has(t.id));
+  if (!turmas.length) {
+    mostrarRota("conexao");
+    throw Error("Esta aula ainda não foi liberada para uma turma. Publique a primeira liberação em Conexões e atualizações.");
+  }
+  const pacote = await api("/api/aulas/exportar", { ids: [id] });
+  const d = elemento(document.body, "dialog", undefined, "dialogo-lote");
+  elemento(d, "h2", "Enviar atualização da aula");
+  elemento(d, "p", pacote.aulas[0].titulo);
+  elemento(d, "p", "Escolha as turmas que já receberam esta aula. Alunos conectados recebem a revisão automaticamente; quem estiver usando a aula verá um aviso para aplicá-la. Códigos salvos são preservados. Salvar sem publicar mantém o rascunho privado.");
+  const escolhas = turmas.map((turma) => {
+    const linha = elemento(d, "label", undefined, "item-importacao");
+    const check = elemento(linha, "input"); check.type = "checkbox"; check.checked = true;
+    elemento(linha, "span", turma.nome);
+    return { turma, check };
+  });
+  const status = elemento(d, "p"); status.setAttribute("role", "status");
+  const acoes = elemento(d, "footer"), cancelar = botao(acoes, "Agora não", () => d.close());
+  const enviar = botao(acoes, "Enviar atualização às turmas", async () => {
+    const selecionadas = escolhas.filter((e) => e.check.checked);
+    if (!selecionadas.length) { status.textContent = "Selecione pelo menos uma turma."; return; }
+    enviar.disabled = cancelar.disabled = true;
+    for (const { check } of escolhas) check.disabled = true;
+    d.oncancel = (e) => e.preventDefault();
+    let sucesso = 0;
+    const falhas = [];
+    for (const { turma } of selecionadas) {
+      try {
+        await desktopNuvem.nuvem("publicar", { turmaId: turma.id, aulas: pacote.aulas });
+        sucesso++;
+      } catch (e) { falhas.push(turma.nome + ": " + e.message); }
+    }
+    status.textContent = `${sucesso} turma(s) atualizada(s).` + (falhas.length ? " Falhas: " + falhas.join("; ") : " Os alunos receberão a revisão quando estiverem conectados.");
+    enviar.hidden = true; cancelar.disabled = false; cancelar.textContent = "Concluir"; d.oncancel = null;
+    aviso(status.textContent, falhas.length > 0);
+  }, "primary");
+  d.onclose = () => d.remove();
+  d.showModal();
+}
+$("publicar-revisao-professor").onclick = tratar(async () => {
+  if (aula) await publicarAtualizacaoAula(aula.id);
+});
 function mensagemNuvem(texto, erro = false) {
   $("nuvem-status").textContent = texto;
   $("nuvem-status").classList.toggle("erro", erro);
@@ -60,7 +113,10 @@ async function atualizarConexaoNuvem() {
   $("nuvem-origem").textContent = conexaoNuvem.url ?? "";
   if (!conexaoNuvem.conectado) return;
   if (professor) await carregarPainelNuvem();
-  else await consultarCatalogoNuvem();
+  else {
+    await consultarCatalogoNuvem();
+    await sincronizadorAulas?.verificar();
+  }
 }
 async function consultarCatalogoNuvem() {
   catalogoOnline = await desktopNuvem.nuvem("catalogo");
@@ -373,11 +429,90 @@ $("update-baixar").onclick = () =>
     $("update-baixar").dataset.portable === "true" ? "portable" : "baixar",
   );
 $("update-instalar").onclick = () => acaoUpdate("instalar");
+function podeAplicarRevisao() {
+  return !nuvemOcupada && !ocupado && !painelDebug?.ativo() && !apiAtiva &&
+    !$("run-livre").disabled && !document.querySelector("dialog[open]");
+}
+async function aplicarRevisoesAutomaticas(fontes, { incluirAberta } = {}) {
+  // Compartilha a fila com importação manual. Nunca exibe um diálogo em segundo plano.
+  const trabalho = filaImportacoes.then(async () => {
+    if (!podeAplicarRevisao()) throw Error("Aguarde a execução ou feche o diálogo antes de aplicar a revisão.");
+    const id = aula?.id;
+    const atualizaAberta = id && fontes.some((f) => JSON.parse(f.conteudo).id === id);
+    if (atualizaAberta && !incluirAberta)
+      throw Error("A aula foi aberta durante a consulta. A revisão será oferecida sem interromper sua atividade.");
+    if (aula) bloquear(true);
+    try {
+      await salvar();
+      const plano = await api("/api/aulas/preparar-importacao", { fontes });
+      if (plano.linhas.some((l) => !["existente", "igual"].includes(l.situacao)))
+        throw Error("A revisão automática não corresponde às aulas já recebidas.");
+      const chaves = plano.linhas.filter((l) => l.situacao === "existente").map((l) => l.chave);
+      const retorno = await api("/api/aulas/confirmar-importacao", { planoId: plano.planoId, chaves });
+      if (retorno.resumo.falhas) throw Error("Não foi possível aplicar todas as revisões. Seus códigos foram preservados.");
+      await carregarInicio(undefined, { manterTela: true });
+    } finally { if (aula) bloquear(false); }
+    if (atualizaAberta && aula?.id === id) {
+      const rota = document.body.dataset.rota;
+      await abrirAula(id, { retomar: true });
+      if (rota !== "aula") mostrarRota(rota);
+    }
+  });
+  filaImportacoes = trabalho.catch(() => {});
+  return trabalho;
+}
+function estadoRevisoes(estado) {
+  const banner = $("revisao-acervo"), texto = $("revisao-acervo-texto"), botao = $("aplicar-revisao-acervo");
+  botao.hidden = true;
+  if (estado.erro) {
+    banner.hidden = false;
+    texto.textContent = "Atualizações das aulas: " + estado.erro + " O material já recebido continua salvo. Tentaremos novamente quando houver conexão.";
+  } else if (estado.pendentes.length) {
+    banner.hidden = false; botao.hidden = false;
+    texto.textContent = "Seu professor publicou uma atualização para " + estado.pendentes.join(", ") + ". Seu código será mantido. Pare a execução ou o debugger e aplique quando estiver pronto.";
+  } else if (estado.aplicadas?.length) {
+    banner.hidden = false;
+    texto.textContent = "Atualização do professor recebida: " + estado.aplicadas.join(", ") + ". Seus códigos foram mantidos. Exercícios com critérios alterados precisam ser verificados novamente.";
+  } else if (estado.exigeAtualizacao) {
+    banner.hidden = false;
+    texto.textContent = "Há uma revisão de aula que exige atualizar o aplicativo. Acesse Conexões e atualizações.";
+  } else if (!banner.textContent.includes("Atualização do professor recebida")) banner.hidden = true;
+}
+async function verificarRevisoesAulas() {
+  if (perfil !== "aluno" || previa || !nuvemDisponivel() || nuvemOcupada || document.hidden) return;
+  const estado = await desktopNuvem.nuvem("estado");
+  if (estado.conectado) await sincronizadorAulas?.verificar();
+}
+$("aplicar-revisao-acervo").onclick = tratar(async () => {
+  if (!podeAplicarRevisao()) { aviso("Pare a execução ou o debugger e feche os diálogos antes de atualizar."); return; }
+  const botao = $("aplicar-revisao-acervo"); botao.disabled = true;
+  try { await sincronizadorAulas.aplicarAgora(); }
+  finally { botao.disabled = false; }
+});
 inicioCarregado
   .then(async () => {
     desktopNuvem?.aoAtualizar?.(renderizarEstadoUpdate);
     if (typeof desktopNuvem?.atualizacao === "function")
       renderizarEstadoUpdate(await desktopNuvem.atualizacao("estado"));
+    if (perfil === "aluno" && !previa && nuvemDisponivel()) {
+      sincronizadorAulas = HubAtualizacoesAcervo.criar({
+        listar: () => desktopNuvem.nuvem("catalogo"),
+        locais: () => bibliotecaCompleta,
+        receber: (ids) => desktopNuvem.nuvem("sincronizar", { ids, percursoIds: [] }),
+        aplicar: aplicarRevisoesAutomaticas,
+        protegidas: () => aula ? [aula.id] : [],
+        podeAplicar: podeAplicarRevisao,
+        aoEstado: estadoRevisoes,
+      });
+      setInterval(() => verificarRevisoesAulas().catch(() => {}), 120000);
+      let ultimaConsulta = 0;
+      const conferirAoVoltar = () => {
+        if (Date.now() - ultimaConsulta < 10000) return;
+        ultimaConsulta = Date.now(); verificarRevisoesAulas().catch(() => {});
+      };
+      window.addEventListener("focus", conferirAoVoltar);
+      window.addEventListener("online", conferirAoVoltar);
+    }
     await atualizarConexaoNuvem();
   })
   .catch((e) => mensagemNuvem(e.message, true));

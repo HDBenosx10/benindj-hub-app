@@ -1,18 +1,13 @@
-# BeninDJ Hub 0.13.1
+# BeninDJ Hub 0.14.0
 
-- Edição Professor inclui o planejamento do acervo atual: 46 aulas em 12 grupos, editável e distribuído separadamente do conteúdo.
+- Professor pode abrir uma aula e usar **Editar esta aula**. Na revisão do estúdio, **Salvar e enviar atualização** valida os gabaritos, salva a aula e permite escolher as turmas que já receberam seu conteúdo.
+- **Enviar atualização**, no cabeçalho da aula, publica a versão já salva. Salvar no acervo sem publicar continua mantendo a alteração privada.
+- Aluno conectado consulta revisões das aulas já recebidas ao abrir o aplicativo, voltar à janela, recuperar a conexão e a cada dois minutos enquanto a janela está visível. As revisões são recebidas sem trocar arquivos ou reinstalar o Hub.
+- Aula que está aberta não muda no meio da atividade: um aviso permite **Salvar e aplicar atualização**. Execução, debugger, servidor ativo e diálogos impedem a aplicação até o aluno parar essas operações.
+- Códigos e respostas são preservados. Somente atividades cujos critérios foram alterados exigem nova verificação. A importação guarda a versão anterior do conteúdo no histórico local.
+- Novas aulas e trilhas continuam exigindo a primeira importação pelo acervo ou por arquivo; a consulta automática atualiza apenas aulas que o aluno já possui.
+- Acervo do Professor corrige o exercício 9 da aula 09: geradores de senhas com estado entre chamadas e instâncias independentes, com contexto, exemplos e testes que rejeitam respostas triviais.
 
-- Trilhas passam a ser planejamentos criados pelo professor, separados do conteúdo das aulas. O Aluno não recebe estágios fixos incluídos no aplicativo.
-- Professor escolhe objetivo, aulas, grupos e ordem em Trilhas do professor. Pode exportar um arquivo .trilha-hub ou publicar apenas o planejamento para uma turma.
-- Aluno vê os títulos e etapas futuras, com o conteúdo bloqueado até a liberação de cada aula. Importar o planejamento não desbloqueia exercícios.
-- Preferências pessoais de área e linguagem são independentes dos percursos recebidos; a interface mostra a afinidade entre os dois.
-- Início orientado ao progresso real: começar, retomar aula/aba/atividade ou acompanhar próximas liberações. As últimas aulas importadas deixam de determinar os cartões iniciais.
-- Histórico de posição persistido no perfil local; códigos e aprovações anteriores são preservados sem inventar datas históricas.
-- Sincronização aceita planejamentos e aulas separadamente. Cada turma conserva a revisão de planejamento explicitamente publicada para ela.
-- Professor e Aluno continuam podendo coexistir, com pastas, caches, dados e identidades separados. O instalador do Aluno inclui apenas a aula 0, sem acervo privado nem currículo fixo.
+Atualize **Professor e Aluno para 0.14.0** uma vez para habilitar este fluxo. Depois disso, as correções de aulas são publicações do acervo e não exigem novas releases do aplicativo. O aluno precisa ter o convite ativado e pertencer à turma onde a revisão foi publicada. Quem recebeu aulas somente por arquivo deve primeiro conectar-se ao acervo do professor.
 
-Para validar, instale a 0.13.0 por cima da edição correspondente, sem desinstalar nem remover o perfil em APPDATA. É necessário atualizar Professor e Aluno para usar os novos planejamentos.
-
-O controle de acesso protege as próximas distribuições. Conteúdo já recebido continua funcionando offline; não existe bloqueio remoto de cópias já baixadas.
-
-Consulte o [guia de acervo, trilhas e atualizações](https://github.com/HDBenosx10/benindj-hub-app/blob/main/docs/acervo-e-atualizacoes.md).
+Instale por cima da edição correspondente, preservando o perfil do Windows. Instalador e portable continuam disponíveis; o instalador tem atualização pelo aplicativo. O serviço do acervo não precisa de nova configuração ou migração para esta versão.

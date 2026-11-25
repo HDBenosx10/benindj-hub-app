@@ -1208,7 +1208,7 @@ $("encerrar").onclick = tratar(async () => {
   );
 });
 
-async function carregarInicio(preferida) {
+async function carregarInicio(preferida, { manterTela = false } = {}) {
   const dados = await api(
     "/api/inicio" +
       (previa ? "?aula=" + encodeURIComponent(parametros.get("aula")) : ""),
@@ -1253,7 +1253,7 @@ async function carregarInicio(preferida) {
     elemento($("filtro-modulo"), "option", modulo).value = modulo;
   renderizarBiblioteca();
   renderizarInicio();
-  if (!preferida) mostrarRota("inicio");
+  if (!preferida && !manterTela) mostrarRota("inicio");
   if (perfil === "aluno" && !previa && !dadosJornada?.escolha)
     abrirEscolhaJornada();
 }

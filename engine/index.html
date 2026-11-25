@@ -17,6 +17,7 @@
     <script src="/jornada-ui.js" defer></script>
     <script src="/percurso.js" defer></script>
     <script src="/percurso-ui.js" defer></script>
+    <script src="/acervo-atualizacoes.js" defer></script>
     <script src="/nuvem-ui.js" defer></script>
     __ESTUDIO__
   </head>
@@ -66,6 +67,10 @@
       </header>
       <main>
         <div id="mensagem" role="status" aria-live="polite" hidden></div>
+        <aside id="revisao-acervo" class="revisao-acervo" hidden aria-label="Atualizações das aulas">
+          <p id="revisao-acervo-texto" role="status" aria-live="polite"></p>
+          <button id="aplicar-revisao-acervo" class="primary" hidden>Salvar e aplicar atualização</button>
+        </aside>
         <section id="inicio">
           <div id="resumo-jornada"></div>
           <div class="home-hero">
@@ -155,6 +160,8 @@
                 <p id="contexto" class="lead"></p>
               </div>
               <div id="acoes-professor" class="hero-actions" hidden>
+                <button id="editar-aula-professor">Editar esta aula</button>
+                <button id="publicar-revisao-professor">Enviar atualização</button>
                 <button id="previa">Visão do aluno</button
                 ><button id="liberar" class="primary">Liberar aula ↗</button>
               </div>
