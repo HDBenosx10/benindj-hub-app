@@ -292,7 +292,7 @@ function criarCliente({
         publicadas.push(
           await requisitar(c, "/v1/professor/aulas", {
             aula,
-            versaoMinima: "0.11.2",
+            versaoMinima: "0.14.2",
           }),
         );
       }

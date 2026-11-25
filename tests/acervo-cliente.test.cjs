@@ -170,7 +170,21 @@ test("Aluno recusa conexão administrativa e convite HTTP; professor remove gaba
     ],
   });
   assert.deepEqual(enviados[0].body.aula, { id: "aula-00", titulo: "Olá" });
+  assert.equal(enviados[0].body.versaoMinima, "0.14.2");
   assert.equal(enviados[1].body.turmaId, "turma");
+  await prof.cliente.executar("publicar", {
+    turmaId: "turma",
+    aulas: [
+      {
+        id: "aula-09",
+        titulo: "Revisada",
+        curadoria: { qualidade: "2026.11.integral-1" },
+        professor: { gabaritos: { privado: "não enviar" } },
+      },
+    ],
+  });
+  assert.equal(enviados[2].body.versaoMinima, "0.14.2");
+  assert.ok(!enviados[2].body.aula.professor);
   assert.ok(
     !JSON.stringify(await prof.cliente.executar("estado")).includes("segredo"),
   );

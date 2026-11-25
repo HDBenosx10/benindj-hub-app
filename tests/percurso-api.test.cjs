@@ -8,9 +8,18 @@ test("Trilha criada pelo professor acompanha exportação/importação; históri
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), "hub-percurso-api-")),
     backend = path.join(dir, "backend");
   await fs.cp(path.resolve("engine"), backend, { recursive: true });
-  const seed={id:'percurso-635be063-09e0-4e7b-9728-000000000001',nome:'Trilha inicial do acervo',objetivo:'backend',linguagem:'javascript',etapas:[{aulaId:'aula-00',grupo:'Introdução'}]};
-  await fs.mkdir(path.join(backend,'conteudo'),{recursive:true});
-  await fs.writeFile(path.join(backend,'conteudo/percursos.json'),JSON.stringify([seed]));
+  const seed = {
+    id: "percurso-635be063-09e0-4e7b-9728-000000000001",
+    nome: "Trilha inicial do acervo",
+    objetivo: "backend",
+    linguagem: "javascript",
+    etapas: [{ aulaId: "aula-00", grupo: "Introdução" }],
+  };
+  await fs.mkdir(path.join(backend, "conteudo"), { recursive: true });
+  await fs.writeFile(
+    path.join(backend, "conteudo/percursos.json"),
+    JSON.stringify([seed]),
+  );
   for (const nome of ["autoria", "coruja"])
     await fs.writeFile(
       path.join(backend, nome + ".cjs"),
@@ -114,7 +123,10 @@ test("Trilha criada pelo professor acompanha exportação/importação; históri
     };
   }
   const prof = await abrir("professor");
-  assert.equal((await prof.req('/api/percursos')).dado.percursos[0].id,seed.id);
+  assert.equal(
+    (await prof.req("/api/percursos")).dado.percursos[0].id,
+    seed.id,
+  );
   let aluno = await abrir("aluno");
   const plano = {
     nome: "APIs da turma de terça",
@@ -127,7 +139,7 @@ test("Trilha criada pelo professor acompanha exportação/importação; históri
   };
   const criado = await prof.req("/api/percursos", plano);
   assert.equal(criado.status, 200);
-  const id = criado.dado.percursos.find(p=>p.nome===plano.nome).id;
+  const id = criado.dado.percursos.find((p) => p.nome === plano.nome).id;
   const exportado = await prof.req("/api/aulas/exportar", {
     ids: ["aula-10", "aula-02"],
   });
@@ -198,10 +210,56 @@ test("Trilha criada pelo professor acompanha exportação/importação; históri
     0,
   );
   assert.equal(inicio.aulas.find((a) => a.numero === 2).estudo.iniciada, false);
+  const idExemplo = original.exercicios[0].id;
+  const tentativa = 'console.log("Hello world!");';
+  assert.equal(
+    (
+      await aluno.req("/api/testar", {
+        aulaId: "aula-00",
+        codigos: { [idExemplo]: tentativa },
+      })
+    ).status,
+    200,
+  );
+  assert.equal(
+    (await aluno.req("/api/inicio")).dado.aulas.find((a) => a.id === "aula-00")
+      .progresso.completa,
+    true,
+  );
+  const revisada = structuredClone(original);
+  revisada.exercicios[0].enunciado += " Texto revisado, mesma regra.";
+  revisada.exercicios[0].qualidade = { alvo: "contexto explicado" };
+  const revisao = await aluno.req("/api/aulas/preparar-importacao", {
+    fontes: [{ nome: "aula-00.aula-hub", conteudo: JSON.stringify(revisada) }],
+  });
+  assert.equal(
+    (
+      await aluno.req("/api/aulas/confirmar-importacao", {
+        planoId: revisao.dado.planoId,
+        chaves: [0],
+      })
+    ).dado.resumo.atualizadas,
+    1,
+  );
+  const preservada = (await aluno.req("/api/aula?aula=aula-00")).dado;
+  assert.equal(
+    (await aluno.req("/api/inicio")).dado.aulas.find((a) => a.id === "aula-00")
+      .progresso.completa,
+    true,
+  );
+  assert.equal(preservada.respostas.codigos[idExemplo], tentativa);
   await aluno.fechar();
-  await prof.req('/api/percursos',{...seed,nome:'Edição preservada do professor'});
+  await prof.req("/api/percursos", {
+    ...seed,
+    nome: "Edição preservada do professor",
+  });
   await prof.fechar();
-  const prof2=await abrir('professor');
-  assert.equal((await prof2.req('/api/percursos')).dado.percursos.find(p=>p.id===seed.id).nome,'Edição preservada do professor');
+  const prof2 = await abrir("professor");
+  assert.equal(
+    (await prof2.req("/api/percursos")).dado.percursos.find(
+      (p) => p.id === seed.id,
+    ).nome,
+    "Edição preservada do professor",
+  );
   await prof2.fechar();
 });

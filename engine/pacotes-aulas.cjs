@@ -32,6 +32,7 @@ function criarImportador({
   pasta,
   validarAula,
   antesDeAtualizar = async () => {},
+  depoisDeAtualizar = async () => {},
   trilhas = new Map(),
   salvarTrilha = async () => {},
 }) {
@@ -234,6 +235,19 @@ function criarImportador({
             await antesDeAtualizar(l.id, aulas.get(l.id), l.aula);
           }
           await fs.rename(temporario, destino);
+          if (l.anterior) {
+            try {
+              await depoisDeAtualizar(l.id, aulas.get(l.id), l.aula);
+            } catch (erro) {
+              await fs.writeFile(
+                temporario,
+                "\uFEFF" + JSON.stringify(aulas.get(l.id), null, 2),
+                "utf8",
+              );
+              await fs.rename(temporario, destino);
+              throw erro;
+            }
+          }
           aulas.set(l.id, l.aula);
           resultados.push({
             ...base,

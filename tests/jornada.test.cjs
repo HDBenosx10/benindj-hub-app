@@ -6,7 +6,40 @@ const {
   resumo,
   registrar,
   trilhaDaAula,
+  preservarAprovacoes,
 } = require("../engine/jornada.cjs");
+test("Revisão de texto preserva aprovação antiga, mas novo critério e código editado não ganham aprovação", () => {
+  const original = {
+    modo: "funcoes",
+    exercicios: [
+      {
+        id: "a",
+        titulo: "Antigo",
+        enunciado: "Texto anterior",
+        testes: [{ nome: "Antes", executar: "return 1;", esperado: 1 }],
+      },
+      { id: "b", testes: [{ executar: "return 2;", esperado: 2 }] },
+    ],
+  };
+  const salvo = { codigos: { a: "solucao a", b: "solucao b" } };
+  registrar(original, salvo, [
+    { exercicioId: "a", passou: true },
+    { exercicioId: "b", passou: true },
+  ]);
+  const nova = structuredClone(original);
+  nova.exercicios[0].titulo = "Novo contexto";
+  nova.exercicios[0].enunciado = "Explicação revisada";
+  nova.exercicios[0].qualidade = { alvo: "mesma regra" };
+  nova.exercicios[0].testes[0].nome = "Nome mais claro";
+  nova.exercicios[1].testes[0].esperado = 3;
+  assert.equal(preservarAprovacoes(original, nova, salvo), true);
+  assert.equal(resumo(nova, salvo).concluidos, 1);
+  const alterado = { codigos: { a: "solucao a" } };
+  registrar(original, alterado, [{ exercicioId: "a", passou: true }], "a");
+  alterado.codigos.a = "outra tentativa";
+  assert.equal(preservarAprovacoes(original, nova, alterado), false);
+  assert.equal(resumo(nova, alterado).concluidos, 0);
+});
 const aula = {
   numero: 1,
   modo: "funcoes",

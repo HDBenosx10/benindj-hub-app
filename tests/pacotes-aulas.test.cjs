@@ -56,6 +56,40 @@ test("exporta apenas seleção, ordenada e sem gabaritos", () => {
   assert.throws(() => montarPacote(catalogo, ["aula-01", "aula-01"], publico));
   assert.throws(() => montarPacote(catalogo, ["aula-99"], publico));
 });
+test("Falha ao persistir a migração mantém o conteúdo anterior e permite repetir a atualização", async (t) => {
+  const original = aula(1),
+    c = await contexto(t, [original]);
+  await fs.writeFile(
+    path.join(c.pasta, "aula-01.hub.json"),
+    JSON.stringify(original),
+  );
+  let falhar = true;
+  const imp = criarImportador({
+    aulas: c.aulas,
+    pasta: c.pasta,
+    validarAula() {},
+    depoisDeAtualizar: async () => {
+      if (falhar) throw Error("Gravação de progresso recusada");
+    },
+  });
+  const primeiro = imp.preparar([fonte(aula(1, "Texto revisado"))]);
+  assert.equal((await imp.confirmar(primeiro.planoId, [0])).resumo.falhas, 1);
+  assert.deepEqual(c.aulas.get(original.id), original);
+  assert.deepEqual(
+    JSON.parse(
+      (
+        await fs.readFile(path.join(c.pasta, "aula-01.hub.json"), "utf8")
+      ).replace(/^\uFEFF/, ""),
+    ),
+    original,
+  );
+  falhar = false;
+  const segundo = imp.preparar([fonte(aula(1, "Texto revisado"))]);
+  assert.equal(
+    (await imp.confirmar(segundo.planoId, [0])).resumo.atualizadas,
+    1,
+  );
+});
 test("lote misto importa válidas, informa falhas e é idempotente", async (t) => {
   const c = await contexto(t);
   const plano = c.preparar([

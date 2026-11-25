@@ -201,6 +201,20 @@ async function iniciar() {
       if (JSON.stringify(anterior.ambiente) !== JSON.stringify(nova.ambiente))
         await ambientes.parar(`aluno:${id}`);
     },
+    depoisDeAtualizar: async (id, anterior, nova) => {
+      const chave = `aluno:${id}`,
+        original = respostas[chave];
+      if (!original) return;
+      const migrado = structuredClone(original);
+      if (!jornada.preservarAprovacoes(anterior, nova, migrado)) return;
+      respostas[chave] = migrado;
+      try {
+        await persistir();
+      } catch (erro) {
+        respostas[chave] = original;
+        throw erro;
+      }
+    },
   });
 
   function visao(req) {

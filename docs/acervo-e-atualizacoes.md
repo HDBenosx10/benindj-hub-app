@@ -1,8 +1,8 @@
 # Acervo por turma e atualizações
 
-## Corrigir aulas já entregues · 0.14
+## Corrigir aulas já entregues · 0.14.2
 
-Depois da primeira atualização de Professor e Aluno para 0.14.0, correções de conteúdo não exigem trocar arquivos ou reinstalar o Hub.
+Depois da atualização de Professor e Aluno para 0.14.2, correções de conteúdo não exigem trocar arquivos ou reinstalar o Hub.
 
 No Professor, abra a aula e clique em **Editar esta aula**. Faça a alteração no estúdio, vá à etapa **Revisão** e escolha **Salvar e enviar atualização**. O aplicativo valida os gabaritos, salva a revisão e mostra as turmas que já receberam aquela aula. Marque os destinos e confirme em **Enviar atualização às turmas**. Para publicar uma alteração já salva, use **Enviar atualização** no cabeçalho da aula. **Salvar no acervo** continua sendo uma gravação privada, sem distribuição.
 
@@ -92,3 +92,5 @@ Depois da validação local, use o workflow **Gerar versão Windows**, escolha u
 O segredo `HUB_UPDATE_PRIVATE_KEY` deve existir nos dois repositórios. Guarde um backup seguro da chave original em `.local/update-signing-key.pem`; ela é ignorada pelo Git. Não crie uma chave nova para cada versão: os aplicativos instalados confiam na chave pública original. A chave privada nunca deve entrar em commit, executável ou conversa.
 
 Os testes desktop executados com `HUB_QA_REPORT` mantêm a janela oculta e usam um perfil temporário. Nenhum teste local exige abrir uma janela sobre a aula.
+
+Na 0.14.2, a importação preserva aprovações válidas quando só redação, nomes de cenários ou metadados mudam. Alterações no código do aluno, critérios executáveis ou ambiente não recebem aprovação por migração. Se a gravação dessa migração falhar, o conteúdo anterior é mantido para permitir nova tentativa. As novas publicações exigem Aluno 0.14.2 ou superior; instalações anteriores exibem a necessidade de atualizar antes de receber.

@@ -77,6 +77,40 @@ function resumo(aula, salvo = {}) {
     completa: ids.length > 0 && concluidos === ids.length,
   };
 }
+function preservarAprovacoes(anterior, nova, salvo) {
+  if (
+    anterior.modo !== "funcoes" ||
+    nova.modo !== "funcoes" ||
+    !salvo?.progresso
+  )
+    return false;
+  if (JSON.stringify(anterior.ambiente) !== JSON.stringify(nova.ambiente))
+    return false;
+  const criterios = (e) =>
+    JSON.stringify(
+      e.testes.map(({ executar, esperado, erroEsperado }) => ({
+        executar,
+        esperado,
+        erroEsperado,
+      })),
+    );
+  let mudou = false;
+  for (const e of anterior.exercicios) {
+    const atual = nova.exercicios.find((item) => item.id === e.id);
+    if (
+      atual &&
+      criterios(e) === criterios(atual) &&
+      salvo.progresso[e.id] === assinatura(anterior, salvo, e.id)
+    ) {
+      const novoHash = assinatura(nova, salvo, e.id);
+      if (novoHash !== salvo.progresso[e.id]) {
+        salvo.progresso[e.id] = novoHash;
+        mudou = true;
+      }
+    }
+  }
+  return mudou;
+}
 function registrar(aula, salvo, resultados, exercicioId) {
   salvo.progresso ??= {};
   const ids =
@@ -166,6 +200,7 @@ function registrarEstudo(
   return posicao(aula, salvo);
 }
 module.exports = {
+  preservarAprovacoes,
   trilhas,
   linguagens,
   validarEscolha,

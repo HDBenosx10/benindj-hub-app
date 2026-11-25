@@ -46,7 +46,7 @@ Seus objetivos pessoais, como aprender JavaScript com foco em back-end, ajudam a
 
 ## Seus códigos continuam com você
 
-Com Professor e Aluno na versão 0.14.0 ou superior, correções publicadas para a turma chegam pelo acervo conectado. Aulas já recebidas são atualizadas automaticamente; se a aula estiver aberta, um aviso permite salvar e aplicar a revisão. Não é preciso reinstalar o aplicativo a cada correção de conteúdo. [Veja o fluxo de atualização de aulas](docs/acervo-e-atualizacoes.md).
+Com Professor e Aluno na versão 0.14.2 ou superior, correções publicadas para a turma chegam pelo acervo conectado. Aulas já recebidas são atualizadas automaticamente; se a aula estiver aberta, um aviso permite salvar e aplicar a revisão. Não é preciso reinstalar o aplicativo a cada correção de conteúdo. [Veja o fluxo de atualização de aulas](docs/acervo-e-atualizacoes.md).
 
 As respostas são salvas automaticamente no perfil do usuário do Windows, fora da pasta de instalação. Atualizar o aplicativo preserva esse perfil. Antes de trocar de computador, use os recursos de exportação de respostas; eles também são úteis como backup.
 
