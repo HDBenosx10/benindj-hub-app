@@ -1,9 +1,16 @@
 "use strict";
-const { app, BrowserWindow, shell, dialog, ipcMain } = require("electron");
+const {
+  app,
+  BrowserWindow,
+  shell,
+  dialog,
+  ipcMain,
+  safeStorage,
+} = require("electron");
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const { spawn } = require("node:child_process");
-let janela, backend, endereco, token;
+let janela, backend, endereco, token, clienteAcervo, atualizador;
 const inicioProcesso = performance.now();
 let fechando = false;
 const pendentes = [];
@@ -22,9 +29,9 @@ const perfil =
     ? "professor"
     : "aluno";
 // Cada edição tem seu armazenamento; uma atualização não apaga respostas.
-app.setName(
-  perfil === "professor" ? "BeninDJ Hub Professor" : "BeninDJ Hub Aluno",
-);
+const identidade = require("./identidade.cjs").identidade(perfil);
+app.setName(identidade.nome);
+if (process.platform === "win32") app.setAppUserModelId(identidade.appId);
 app.setPath(
   "userData",
   process.env.HUB_TEST_DATA ?? path.join(app.getPath("appData"), app.getName()),
@@ -35,30 +42,39 @@ if (!somenteUma) {
 }
 function receberArquivos(args) {
   for (const arquivo of args) {
-    if (/\.(?:aula-hub|aula-acai)$/i.test(arquivo)) {
+    if (/\.(?:aulas-hub|aula-hub|aula-acai|trilha-hub)$/i.test(arquivo)) {
       pendentes.push(path.resolve(arquivo));
     }
   }
   entregarArquivos();
 }
+let entregandoArquivos = false;
 async function entregarArquivos() {
-  if (!janela || janela.webContents.isLoading()) {
-    return;
-  }
-  while (pendentes.length) {
-    const arquivo = pendentes.shift();
-    try {
-      const stat = await fs.stat(arquivo);
-      if (stat.size > 4000000) {
-        throw Error("Aula maior que 4 MB.");
+  if (entregandoArquivos || !janela || janela.webContents.isLoading()) return;
+  entregandoArquivos = true;
+  try {
+    while (pendentes.length) {
+      const arquivos = pendentes.splice(0, 100),
+        fontes = [];
+      let total = 0;
+      for (const arquivo of arquivos) {
+        const nome = path.basename(arquivo);
+        try {
+          const stat = await fs.stat(arquivo);
+          if (stat.size > 32000000 || total + stat.size > 32000000)
+            throw Error(
+              "O lote ultrapassa 32 MB. Importe menos arquivos por vez.",
+            );
+          total += stat.size;
+          fontes.push({ nome, conteudo: await fs.readFile(arquivo, "utf8") });
+        } catch (erro) {
+          fontes.push({ nome, erro: erro.message });
+        }
       }
-      const conteudo = JSON.parse(
-        (await fs.readFile(arquivo, "utf8")).replace(/^\uFEFF/, ""),
-      );
-      janela.webContents.send("aula-aberta", conteudo);
-    } catch (e) {
-      dialog.showErrorBox("Não foi possível abrir a aula", e.message);
+      janela.webContents.send("aulas-abertas", fontes);
     }
+  } finally {
+    entregandoArquivos = false;
   }
 }
 app.on("second-instance", (_e, args) => {
@@ -150,6 +166,85 @@ async function iniciar() {
     ),
   );
   const dados = app.getPath("userData");
+  const seguro = {
+    async criptografar(texto) {
+      if (!(await safeStorage.isAsyncEncryptionAvailable()))
+        throw Error("A proteção de credenciais do Windows está indisponível.");
+      return safeStorage.encryptStringAsync(texto);
+    },
+    async descriptografar(bytes) {
+      return (await safeStorage.decryptStringAsync(bytes)).result;
+    },
+  };
+  clienteAcervo = require("./acervo-cliente.cjs").criarCliente({
+    pasta: dados,
+    seguro,
+    perfil,
+    versao: app.getVersion(),
+  });
+  const enviarEstado = (estado) => {
+    if (janela && !janela.isDestroyed())
+      janela.webContents.send("hub-atualizacao", estado);
+  };
+  atualizador = require("./atualizador.cjs").criarAtualizador({
+    updater: require("electron-updater").autoUpdater,
+    perfil,
+    versao: app.getVersion(),
+    publicKey: require("./update-key.json").publicKey,
+    portable: !!process.env.PORTABLE_EXECUTABLE_FILE,
+    empacotado: app.isPackaged,
+    feedProfessor: () => clienteAcervo.feedProfessor(),
+    aoMudar: enviarEstado,
+    antesDeInstalar: async () => {
+      await salvarAntesDeSair();
+    },
+  });
+  function remetenteValido(evento) {
+    if (
+      evento.sender !== janela?.webContents ||
+      new URL(evento.sender.getURL()).origin !== endereco
+    )
+      throw Error("Origem não autorizada.");
+  }
+  ipcMain.handle("hub-acervo", async (evento, op, dado) => {
+    remetenteValido(evento);
+    if (
+      typeof op !== "string" ||
+      JSON.stringify(dado ?? {}).length > 32_000_000
+    )
+      throw Error("Operação inválida.");
+    return clienteAcervo.executar(op, dado);
+  });
+  ipcMain.handle("hub-updater", async (evento, op) => {
+    remetenteValido(evento);
+    if (op === "estado") return atualizador.estado();
+    if (op === "verificar") return atualizador.verificar();
+    if (op === "baixar") return atualizador.baixar();
+    if (op === "instalar") return atualizador.instalar();
+    if (op === "portable") {
+      const conferido = atualizador.portableConferida();
+      const escolha = await dialog.showSaveDialog(janela, {
+        title: "Salvar nova versão portable",
+        defaultPath: path.join(
+          app.getPath("downloads"),
+          conferido.arquivo.nome,
+        ),
+        filters: [{ name: "Aplicativo Windows", extensions: ["exe"] }],
+      });
+      if (escolha.canceled) return { cancelado: true };
+      return require("./baixar-portable.cjs").baixarPortable({
+        ...conferido,
+        destino: escolha.filePath,
+        progresso: (percent) =>
+          enviarEstado({
+            ...atualizador.estado(),
+            fase: "baixando-portable",
+            progresso: percent,
+          }),
+      });
+    }
+    throw Error("Operação de atualização desconhecida.");
+  });
   if (!process.env.HUB_TEST_DATA)
     await require("./migrate-profile.cjs").migrarPerfil(
       app.getPath("appData"),
@@ -235,7 +330,7 @@ async function iniciar() {
     height: 980,
     minWidth: 920,
     minHeight: 650,
-    show: true,
+    show: !process.env.HUB_QA_REPORT,
     title:
       config.perfil === "professor"
         ? "BeninDJ Hub · Professor"
@@ -291,6 +386,10 @@ async function iniciar() {
         "cs50.harvard.edu",
         "fullstackopen.com",
         "www.theodinproject.com",
+        "docs.npmjs.com",
+        "git-scm.com",
+        "developer.chrome.com",
+        "cheatsheetseries.owasp.org",
       ].includes(alvo.hostname)
     ) {
       shell.openExternal(url);
@@ -310,7 +409,7 @@ async function iniciar() {
     evento.preventDefault();
     app.quit();
   });
-  janela.once("ready-to-show", () => janela.show());
+  janela.once("ready-to-show", () => { if (!process.env.HUB_QA_REPORT) janela.show(); });
   backend.once("exit", (codigo) => {
     if (process.env.HUB_QA_REPORT)
       require("node:fs").appendFileSync(
@@ -335,6 +434,17 @@ async function iniciar() {
     }
   });
   await janela.loadURL(endereco);
+  if (
+    app.isPackaged &&
+    !process.env.HUB_QA_REPORT &&
+    !process.env.HUB_TEST_DATA
+  ) {
+    const timerAtualizacao = setTimeout(
+      () => atualizador.verificar().catch(() => {}),
+      8000,
+    );
+    timerAtualizacao.unref();
+  }
   receberArquivos(process.argv);
   if (process.env.HUB_QA_REPORT) {
     await fs.writeFile(

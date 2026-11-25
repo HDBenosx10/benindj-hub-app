@@ -5,62 +5,67 @@
   "titulo": "Hello world!",
   "modulo": "Primeiros passos",
   "modo": "funcoes",
-  "foco": "Seu primeiro programa",
-  "contexto": "Escreva uma mensagem e veja o JavaScript responder no console.",
-  "desafio": "Exiba Hello world! no console.",
+  "foco": "Do código à mensagem",
+  "contexto": "Você vai escrever uma mensagem de boas-vindas para quem abriu seu programa. O editor é o lugar onde as instruções são escritas; o console é o lugar onde veremos a mensagem produzida. Nesta primeira aula não haverá formulário, banco ou servidor: apenas uma instrução e seu resultado.",
+  "desafio": "Escolha uma atividade, explique a entrada e experimente sua tentativa antes de verificar. As últimas atividades incluem uma investigação e uma transferência de contexto.",
   "objetivos": [
-    "Encontrar o editor e executar um programa.",
-    "Usar console.log para mostrar uma mensagem.",
-    "Distinguir executar de verificar uma atividade."
+    "Compreender: do código à mensagem.",
+    "Compreender: executar e conferir são ações diferentes."
   ],
   "conceitos": [
-    "JavaScript executa as instruções que você escreve. console.log mostra um valor no console.",
-    "Textos ficam entre aspas. Por exemplo, console.log(\"Olá!\") mostra a mensagem Olá!.",
-    "Executar deixa você experimentar. Verificar confere o objetivo combinado para esta atividade.",
-    "Modelo mental: Expressar uma instrução observável.",
-    "Investigue este erro: Confundir o texto do programa com sua saída. Preveja o comportamento, execute um caso mínimo e explique a evidência."
+    "Um programa é uma sequência de instruções. JavaScript é a linguagem em que escreveremos essas instruções. O computador executa o que está escrito, por isso maiúsculas, aspas e pontuação precisam ser observadas.",
+    "console.log é uma operação que mostra um valor no console. Os parênteses delimitam o que queremos mostrar. Um texto escrito entre aspas é chamado de string; as aspas fazem parte do código, mas não da mensagem mostrada.",
+    "Executar roda a sua tentativa. Você pode trocar a mensagem e observar o que acontece sem precisar acertar um desafio. Uma mensagem de erro também é um resultado útil: ela informa algo que o programa não conseguiu interpretar ou executar.",
+    "Verificar compara o comportamento com o pedido da atividade. Uma frase diferente pode ser um programa válido e ainda não atender ao enunciado. Nesta aula, compare letra por letra antes de verificar."
   ],
-  "exemplo": "console.log(\"Meu primeiro programa\");\n",
+  "exemplo": "console.log(\"Bem-vinda ao laboratório!\");\n",
   "exemploExplicado": [
-    "console.log é uma chamada que mostra uma mensagem.",
-    "O texto está entre aspas; elas não aparecem no console.",
-    "Troque a mensagem para observar outra saída."
+    "A instrução mostra Bem-vinda ao laboratório! em uma linha do console.",
+    "Trocar o texto entre aspas muda a mensagem; retirar uma das aspas impede interpretar a instrução."
   ],
   "prerequisitos": [],
   "construcao": [
     {
-      "titulo": "Escreva",
-      "texto": "No editor, use console.log com um texto entre aspas."
+      "titulo": "Acompanhar o exemplo · 1",
+      "texto": "A instrução mostra Bem-vinda ao laboratório! em uma linha do console."
     },
     {
-      "titulo": "Execute",
-      "texto": "Clique em Executar e leia a mensagem no console."
-    },
-    {
-      "titulo": "Confira",
-      "texto": "Escreva exatamente Hello world! e clique em Verificar."
+      "titulo": "Acompanhar o exemplo · 2",
+      "texto": "Trocar o texto entre aspas muda a mensagem; retirar uma das aspas impede interpretar a instrução."
     }
   ],
   "roteiro": [
     {
-      "tempo": "5 min",
-      "titulo": "Explorar",
-      "acao": "Mostre o editor, peça uma mensagem e execute."
+      "tempo": "Abertura",
+      "titulo": "Apresentar a situação",
+      "acao": "Você vai escrever uma mensagem de boas-vindas para quem abriu seu programa. O editor é o lugar onde as instruções são escritas; o console é o lugar onde veremos a mensagem produzida. Nesta primeira aula não haverá formulário, banco ou servidor: apenas uma instrução e seu resultado."
     },
     {
-      "tempo": "5 min",
-      "titulo": "Explicar",
-      "acao": "Compare código escrito, saída e verificação."
+      "tempo": "Retomada",
+      "titulo": "Conferir pré-requisitos",
+      "acao": "Nenhum conhecimento de programação é necessário. Localize o editor, o botão Executar e a área do console."
+    },
+    {
+      "tempo": "Explicação",
+      "titulo": "Acompanhar o exemplo",
+      "acao": "A instrução mostra Bem-vinda ao laboratório! em uma linha do console. Trocar o texto entre aspas muda a mensagem; retirar uma das aspas impede interpretar a instrução."
+    },
+    {
+      "tempo": "Prática em mais de um encontro",
+      "titulo": "Construir, investigar e transferir",
+      "acao": "Trabalhe uma atividade com apoio e retire a ajuda nas seguintes. Use esta dificuldade para escolher uma intervenção: Confundir a instrução console.log com o texto que ela mostra."
+    },
+    {
+      "tempo": "Fechamento",
+      "titulo": "Demonstrar autonomia",
+      "acao": "Escreva duas mensagens em linhas diferentes. Antes de executar, diga em que ordem elas aparecerão."
     }
   ],
   "fontes": [
     {
-      "titulo": "Harvard CS50x",
-      "url": "https://cs50.harvard.edu/x/"
-    },
-    {
-      "titulo": "The Odin Project — Full Stack JavaScript",
-      "url": "https://www.theodinproject.com/paths/full-stack-javascript"
+      "titulo": "MDN — primeiros passos",
+      "url": "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Guide/Introduction",
+      "orientacao": "Leia a apresentação da linguagem e os primeiros exemplos; não é preciso instalar ferramentas para esta atividade."
     }
   ],
   "exercicios": [
@@ -68,10 +73,10 @@
       "id": "hello-world",
       "titulo": "Sua primeira mensagem",
       "tipoExecucao": "script",
-      "enunciado": "Escreva um programa que mostre exatamente Hello world! no console. Use console.log e coloque o texto entre aspas. Primeiro experimente com Executar; depois confira com Verificar.",
+      "enunciado": "Você vai escrever uma mensagem de boas-vindas para quem abriu seu programa. O editor é o lugar onde as instruções são escritas; o console é o lugar onde veremos a mensagem produzida. Nesta primeira aula não haverá formulário, banco ou servidor: apenas uma instrução e seu resultado.\n\nEscreva um programa que mostre exatamente Hello world! no console. Use console.log e coloque o texto entre aspas. Primeiro experimente com Executar; depois confira com Verificar.",
       "codigoInicial": "// Escreva sua primeira mensagem aqui.\n",
       "experimento": "",
-      "nivel": "Primeiro contato",
+      "nivel": "Prática com apoio",
       "testes": [
         {
           "nome": "Mostra Hello world! no console",
@@ -80,40 +85,113 @@
             "Hello world!"
           ]
         }
-      ]
+      ],
+      "contrato": {
+        "versao": 1,
+        "objetivo": "Sua primeira mensagem",
+        "assinaturas": [],
+        "parametros": [],
+        "semParametros": "O programa não recebe argumentos nem solicita digitação. A mensagem deve ser escrita no código.",
+        "retorno": {
+          "tipo": "Saída no console",
+          "descricao": "Mostre exatamente Hello world! uma vez, com as maiúsculas, o espaço e o ponto de exclamação indicados. Não há uma função com retorno para implementar."
+        },
+        "regras": [
+          "A mensagem deve ser texto, entre aspas no programa.",
+          "As aspas delimitam a string e não aparecem na saída.",
+          "Executar permite experimentar; Verificar compara a mensagem com o objetivo."
+        ],
+        "exemplos": [
+          {
+            "entrada": "Nenhuma entrada externa. Execute o programa que você escreveu.",
+            "saida": "Hello world!",
+            "explicacao": "O console recebe a mensagem como uma linha de texto. A saída não é um array nem o corpo de um teste."
+          }
+        ],
+        "guia": [
+          {
+            "titulo": "Entender e prever",
+            "texto": "Leia a entrada e identifique a saída antes de executar. Escreva um programa que mostre exatamente Hello world! no console. Use console.log e coloque o texto entre aspas. Primeiro experimente com Executar; depois confira com Verificar."
+          },
+          {
+            "titulo": "Experimentar sua hipótese",
+            "texto": "Use uma entrada pequena no rascunho e acompanhe o cálculo. A mensagem deve ser texto, entre aspas no programa."
+          },
+          {
+            "titulo": "Conferir e adaptar",
+            "texto": "Depois de executar, compare com os exemplos e use Verificar. Explique por que a solução continua válida quando os dados mudam. Atenção nesta matéria: Confundir a instrução console.log com o texto que ela mostra."
+          }
+        ],
+        "pistas": [
+          "A mensagem deve ser texto, entre aspas no programa.",
+          "Confira especialmente: Confundir a instrução console.log com o texto que ela mostra."
+        ],
+        "descricao": [
+          "Você vai escrever uma mensagem de boas-vindas para quem abriu seu programa. O editor é o lugar onde as instruções são escritas; o console é o lugar onde veremos a mensagem produzida. Nesta primeira aula não haverá formulário, banco ou servidor: apenas uma instrução e seu resultado.",
+          "Escreva um programa que mostre exatamente Hello world! no console. Use console.log e coloque o texto entre aspas. Primeiro experimente com Executar; depois confira com Verificar."
+        ],
+        "enunciadoBase": "Escreva um programa que mostre exatamente Hello world! no console. Use console.log e coloque o texto entre aspas. Primeiro experimente com Executar; depois confira com Verificar.",
+        "contextoProprio": "Você vai escrever uma mensagem de boas-vindas para quem abriu seu programa. O editor é o lugar onde as instruções são escritas; o console é o lugar onde veremos a mensagem produzida. Nesta primeira aula não haverá formulário, banco ou servidor: apenas uma instrução e seu resultado."
+      },
+      "dica": "A mensagem deve ser texto, entre aspas no programa.\nConfira especialmente: Confundir a instrução console.log com o texto que ela mostra."
     }
   ],
   "versaoConteudo": "2026-11-23-hub",
   "trilha": "comum",
   "curadoria": {
-    "versao": "2026.11",
-    "modeloMental": "Expressar uma instrução observável",
-    "erroAlvo": "Confundir o texto do programa com sua saída",
-    "transferencia": "Troque a mensagem, preveja a saída e execute um arquivo fora do Hub",
+    "versao": "2026.11.revamp-1",
+    "modeloMental": "Do código à mensagem",
+    "erroAlvo": "Confundir a instrução console.log com o texto que ela mostra.",
+    "transferencia": "Escreva duas mensagens em linhas diferentes. Antes de executar, diga em que ordem elas aparecerão.",
     "referencias": [
       {
-        "titulo": "Harvard CS50x",
-        "url": "https://cs50.harvard.edu/x/"
-      },
-      {
-        "titulo": "The Odin Project — Full Stack JavaScript",
-        "url": "https://www.theodinproject.com/paths/full-stack-javascript"
+        "titulo": "MDN — primeiros passos",
+        "url": "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Guide/Introduction",
+        "orientacao": "Leia a apresentação da linguagem e os primeiros exemplos; não é preciso instalar ferramentas para esta atividade."
       }
     ]
   },
   "materiaisComplementares": {
-    "guia": "Objetivo: Expressar uma instrução observável.\nPré-requisitos: nenhum.\nLeia o contrato da atividade antes de codificar. Preveja um caso normal, um caso vazio e uma entrada inválida.\nErro para investigar: Confundir o texto do programa com sua saída.\nApós os testes verdes, explique uma decisão sem consultar a solução.",
-    "foraDoHub": "Exporte o projeto em Fora do Hub e extraia o ZIP em uma pasta nova. Instale Node 24.13 ou superior e execute node iniciar.cjs. Para verificar os critérios, use node verificar.cjs. Leia o LEIA-ME. Registre dependências, comandos e hipóteses em um README. A configuração inicial é exportada; o estado experimental do banco não é.\nTransferência: Troque a mensagem, preveja a saída e execute um arquivo fora do Hub.",
-    "desafiosTransferencia": "Troque a mensagem, preveja a saída e execute um arquivo fora do Hub.\nCritério de passagem: a solução cobre os casos combinados; o aluno explica entradas, saídas e efeitos; consegue adaptar o problema sem copiar o gabarito.",
+    "guia": "Situação: Você vai escrever uma mensagem de boas-vindas para quem abriu seu programa. O editor é o lugar onde as instruções são escritas; o console é o lugar onde veremos a mensagem produzida. Nesta primeira aula não haverá formulário, banco ou servidor: apenas uma instrução e seu resultado.\nPré-requisitos: Nenhum conhecimento de programação é necessário. Localize o editor, o botão Executar e a área do console.\nConceitos: Do código à mensagem; Executar e conferir são ações diferentes.\nDificuldade para investigar: Confundir a instrução console.log com o texto que ela mostra.",
+    "foraDoHub": "Use Fora do Hub para exportar seu código atual. Extraia o ZIP em uma pasta própria e leia o LEIA-ME. Com Node 24.13 ou superior, execute node iniciar.cjs ID-DA-ATIVIDADE; node verificar.cjs confere os critérios públicos. O ZIP inclui configuração inicial, não o estado experimental dos bancos da bancada. Documente como outra pessoa pode repetir a execução.\nTransferência específica: Escreva duas mensagens em linhas diferentes. Antes de executar, diga em que ordem elas aparecerão.",
+    "desafiosTransferencia": "Escreva duas mensagens em linhas diferentes. Antes de executar, diga em que ordem elas aparecerão.",
     "referencias": [
       {
-        "titulo": "Harvard CS50x",
-        "url": "https://cs50.harvard.edu/x/"
-      },
-      {
-        "titulo": "The Odin Project — Full Stack JavaScript",
-        "url": "https://www.theodinproject.com/paths/full-stack-javascript"
+        "titulo": "MDN — primeiros passos",
+        "url": "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Guide/Introduction",
+        "orientacao": "Leia a apresentação da linguagem e os primeiros exemplos; não é preciso instalar ferramentas para esta atividade."
       }
     ]
-  }
+  },
+  "estudo": [
+    {
+      "titulo": "Do código à mensagem",
+      "paragrafos": [
+        "Um programa é uma sequência de instruções. JavaScript é a linguagem em que escreveremos essas instruções. O computador executa o que está escrito, por isso maiúsculas, aspas e pontuação precisam ser observadas.",
+        "console.log é uma operação que mostra um valor no console. Os parênteses delimitam o que queremos mostrar. Um texto escrito entre aspas é chamado de string; as aspas fazem parte do código, mas não da mensagem mostrada."
+      ]
+    },
+    {
+      "titulo": "Executar e conferir são ações diferentes",
+      "paragrafos": [
+        "Executar roda a sua tentativa. Você pode trocar a mensagem e observar o que acontece sem precisar acertar um desafio. Uma mensagem de erro também é um resultado útil: ela informa algo que o programa não conseguiu interpretar ou executar.",
+        "Verificar compara o comportamento com o pedido da atividade. Uma frase diferente pode ser um programa válido e ainda não atender ao enunciado. Nesta aula, compare letra por letra antes de verificar."
+      ]
+    }
+  ],
+  "preRequisitosTexto": "Nenhum conhecimento de programação é necessário. Localize o editor, o botão Executar e a área do console.",
+  "revisao": {
+    "previsao": "Antes de executar o exemplo, escreva o que espera observar e acompanhe os valores que mudam.",
+    "diagnostico": "Confundir a instrução console.log com o texto que ela mostra.",
+    "transferencia": "Escreva duas mensagens em linhas diferentes. Antes de executar, diga em que ordem elas aparecerão."
+  },
+  "duracao": "Um primeiro encontro curto",
+  "progressao": [
+    "Entender o problema",
+    "Prever uma entrada",
+    "Construir uma tentativa",
+    "Investigar a diferença",
+    "Verificar os critérios",
+    "Explicar e adaptar"
+  ]
 }

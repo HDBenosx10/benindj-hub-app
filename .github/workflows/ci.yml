@@ -2,7 +2,9 @@ name: Verificar alterações
 on:
   push:
     branches: [main]
+    paths-ignore: ['README.md', 'docs/**']
   pull_request:
+    paths-ignore: ['README.md', 'docs/**']
 permissions:
   contents: read
 jobs:

@@ -7,7 +7,7 @@ on:
       versao:
         description: 'Versão nova (ex.: 0.7.0 ou 0.8.0-beta.1)'
         required: true
-        default: '0.11.2'
+        default: '0.13.1'
         type: string
       publicar:
         description: 'Publicar imediatamente? Desmarcado cria rascunho.'
@@ -28,6 +28,7 @@ jobs:
     timeout-minutes: 35
     permissions:
       contents: write
+      actions: read
     env:
       HUB_RELEASE_VERSION: ${{ inputs.versao || github.ref_name }}
       HUB_PUBLISH: ${{ github.event_name == 'push' || inputs.publicar }}
@@ -43,6 +44,10 @@ jobs:
           node-version: '24.13.0'
           cache: npm
       - run: npm ci
+      - name: Conferir assinatura antes de montar
+        run: node scripts/verificar-chave-ci.cjs
+        env:
+          HUB_UPDATE_PRIVATE_KEY: ${{ secrets.HUB_UPDATE_PRIVATE_KEY }}
       - name: Validar versão ainda não utilizada
         run: node scripts/release-version.cjs
         working-directory: .
@@ -52,6 +57,10 @@ jobs:
         working-directory: .
       - name: Garantir pacote com apenas Hello World
         run: node scripts/check-package.cjs
+      - name: Conferir identidade e cache exclusivos da edição
+        run: node scripts/check-identidade.cjs
+      - name: Testar migração da pasta compartilhada sem afetar a outra edição
+        run: node scripts/testar-migracao-instalador.cjs
       - name: Abrir executável e conferir execução e persistência
         run: node scripts/smoke-desktop.cjs "dist/win-unpacked/BeninDJ Hub Aluno.exe"
         working-directory: .
@@ -62,6 +71,10 @@ jobs:
         working-directory: .
       - run: node scripts/build-info.cjs
         working-directory: .
+      - name: Assinar e conferir manifesto do updater
+        run: node scripts/assinar-update.cjs
+        env:
+          HUB_UPDATE_PRIVATE_KEY: ${{ secrets.HUB_UPDATE_PRIVATE_KEY }}
       - uses: actions/upload-artifact@v7
         with:
           name: benindj-hub-aluno-${{ inputs.versao || github.ref_name }}
@@ -69,6 +82,9 @@ jobs:
             dist/*.exe
             dist/SHA256SUMS.txt
             dist/BUILD-INFO.json
+            dist/*.yml
+            dist/*.blockmap
+            dist/update-manifest-*
           if-no-files-found: error
       - name: Criar release com a versão escolhida
         run: node scripts/publish-release.cjs
@@ -81,3 +97,9 @@ jobs:
         run: node scripts/limpar-rascunhos.cjs
         env:
           GH_TOKEN: ${{ github.token }}
+      - name: Registrar comprovante da publicação
+        if: always()
+        run: node scripts/registrar-publicacao.cjs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HUB_RUN_STATUS: ${{ job.status }}

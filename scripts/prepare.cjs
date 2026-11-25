@@ -53,7 +53,9 @@ exports.preparar = async (perfil = "aluno", professorRoot) => {
   await fs.rm(base, { recursive: true, force: true });
   await fs.mkdir(backend, { recursive: true });
   await fs.cp(path.join(raiz, "engine"), backend, { recursive: true });
-  await require("./editor.cjs").gerarEditor(path.join(backend,"vendor"));
+  if (perfil === "aluno")
+    await fs.rm(path.join(backend, "curriculo.json"), { force: true });
+  await require("./editor.cjs").gerarEditor(path.join(backend, "vendor"));
   await fs.mkdir(path.join(backend, "aulas"), { recursive: true });
   await fs.copyFile(
     path.join(raiz, "aulas", "aula-00.aula-hub"),
@@ -85,6 +87,21 @@ exports.preparar = async (perfil = "aluno", professorRoot) => {
     await fs.writeFile(
       path.join(backend, "conteudo", "aulas.json"),
       JSON.stringify(aulas),
+      "utf8",
+    );
+    const percursos = [];
+    for (const nome of (await fs.readdir(path.join(privado, "trilhas")))
+      .filter((n) => n.endsWith(".json"))
+      .sort()) {
+      const p = JSON.parse(
+        await fs.readFile(path.join(privado, "trilhas", nome), "utf8"),
+      );
+      require("../engine/percurso.js").manifesto(p, aulas);
+      percursos.push(p);
+    }
+    await fs.writeFile(
+      path.join(backend, "conteudo", "percursos.json"),
+      JSON.stringify(percursos),
       "utf8",
     );
   }

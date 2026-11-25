@@ -210,6 +210,7 @@ function renderizarBiblioteca() {
   $("aulas").replaceChildren();
   $("aula-compacta").replaceChildren();
   let encontrados = 0;
+  aulasVisiveis = [];
   for (const item of biblioteca) {
     const opcao = elemento($("aula-compacta"), "option", item.titulo);
     opcao.value = item.id;
@@ -222,7 +223,30 @@ function renderizarBiblioteca() {
         .includes(busca)
     )
       continue;
-    const b = botao($("aulas"), "", () => abrirAula(item.id), "lesson-card");
+    aulasVisiveis.push(item.id);
+    const container = elemento(
+      $("aulas"),
+      "div",
+      undefined,
+      "lesson-selectable",
+    );
+    if (modoSelecaoAulas && perfil === "professor") {
+      const label = elemento(container, "label", undefined, "lesson-selection");
+      const check = elemento(label, "input");
+      check.type = "checkbox";
+      check.checked = aulasSelecionadas.has(item.id);
+      check.onchange = () => {
+        if (check.checked) aulasSelecionadas.add(item.id);
+        else aulasSelecionadas.delete(item.id);
+        atualizarSelecaoAulas();
+      };
+      elemento(
+        label,
+        "span",
+        `Selecionar aula ${String(item.numero).padStart(2, "0")} — ${item.titulo}`,
+      );
+    }
+    const b = botao(container, "", () => abrirAula(item.id), "lesson-card");
     elemento(
       b,
       "span",
@@ -232,12 +256,21 @@ function renderizarBiblioteca() {
     elemento(b, "span", item.modulo, "lesson-module");
     elemento(b, "h3", item.titulo);
     elemento(b, "p", item.foco);
+    if (perfil === "aluno")
+      elemento(
+        b,
+        "span",
+        `${estadoDaAula(item)} · ${item.progresso?.concluidos ?? 0}/${item.progresso?.total ?? 0} desafios validados`,
+        "lesson-progress",
+      );
     elemento(b, "span", "Abrir aula ↗", "lesson-link");
     encontrados++;
   }
   $("catalogo-vazio").hidden = encontrados !== 0;
+  atualizarSelecaoAulas();
 }
 function mostrarRota(rota) {
+  if (rota === "inicio" && perfil) renderizarInicio();
   document.body.classList.remove("resource-drawer-open");
   if (aba !== "ambiente") $("ambiente").hidden = true;
   const ids = {
@@ -247,17 +280,19 @@ function mostrarRota(rota) {
     estudio: "estudio",
     coruja: "assistente",
     jornada: "jornada",
+    conexao: "conexao",
   };
   for (const id of Object.values(ids)) $(id).hidden = id !== ids[rota];
   document.body.dataset.rota = rota;
   document.body.classList.remove("no-estudio");
   $("rota-titulo").textContent = {
+    conexao: "Conexões e atualizações",
     inicio: "Início",
     aulas: perfil === "professor" ? "Acervo" : "Minhas aulas",
     aula: aula?.titulo ?? "Aula",
     estudio: "Criar aula",
     coruja: "DEV Coruja",
-    jornada: "Minha trilha",
+    jornada: perfil==='professor'?'Trilhas do professor':'Trilhas recebidas',
   }[rota];
   document
     .querySelectorAll("[data-rota]")
@@ -270,48 +305,28 @@ function mostrarRota(rota) {
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 function renderizarInicio() {
-  const professor = perfil === "professor";
-  $("inicio-titulo").textContent = professor
-    ? "Seu espaço para ensinar."
-    : "Seu próximo passo começa aqui.";
-  $("inicio-descricao").textContent = professor
-    ? "Prepare uma aula, crie com a DEV Coruja e compartilhe quando estiver pronto."
-    : "Explore uma ideia, escreva seu código e aprenda fazendo. Um passo de cada vez.";
-  $("continuar-aula").textContent = professor
-    ? "＋ Criar uma aula"
-    : "Começar a aprender ↗";
+  if (perfil === "aluno") {
+    renderizarInicioAluno();
+    renderizarJornada();
+    return;
+  }
+  $("home-percurso").hidden = true;
+  $("inicio-titulo").textContent = "Seu espaço para ensinar.";
+  $("inicio-descricao").textContent =
+    "Organize suas trilhas, prepare as aulas e compartilhe o percurso no ritmo de cada turma.";
+  $("continuar-aula").textContent = "＋ Criar uma aula";
   $("continuar-aula").onclick = tratar(async () => {
-    if (professor) {
-      rascunhoAula = undefined;
-      await abrirEstudio();
-    } else {
-      const proxima =
-        biblioteca.find((a) => !a.progresso?.completa) ?? biblioteca[0];
-      if (proxima) await abrirAula(proxima.id);
-    }
+    rascunhoAula = undefined;
+    await abrirEstudio();
   });
-  $("home-acervo").textContent = professor
-    ? "Explorar acervo →"
-    : "Ver minhas aulas →";
-  $("home-label").textContent = professor
-    ? "SEU ACERVO"
-    : "SEU PONTO DE PARTIDA";
-  $("home-heading").textContent = professor
-    ? "Ensinar começa com uma boa aula."
-    : "Sua jornada";
-  $("home-total").textContent =
-    biblioteca.length +
-    " " +
-    (biblioteca.length === 1 ? "aula disponível" : "aulas disponíveis");
-  $("home-nota").textContent = professor
-    ? "Você decide o ritmo. Somente a aula exportada é enviada ao aluno."
-    : "Novas aulas aparecem aqui quando você importar um arquivo enviado pelo professor.";
+  $("home-acervo").textContent = "Explorar acervo →";
+  $("home-label").textContent = "SEU ACERVO";
+  $("home-heading").textContent = "Ensinar começa com uma boa aula.";
+  $("home-total").textContent = biblioteca.length + " aulas no acervo";
+  $("home-nota").textContent =
+    "Crie as trilhas em Trilhas do professor. Grupos e sequência acompanham somente as aulas que você decidir compartilhar.";
   $("home-cards").replaceChildren();
-  renderizarJornada();
-  const recentes = professor
-    ? biblioteca.filter((a) => [0, 12, 35].includes(a.numero))
-    : biblioteca.slice(-3);
-  for (const item of recentes) {
+  for (const item of HubPercurso.ordenar(biblioteca).slice(0, 3)) {
     const b = botao(
       $("home-cards"),
       "",
@@ -326,22 +341,9 @@ function renderizarInicio() {
     );
     elemento(b, "h3", item.titulo);
     elemento(b, "p", item.foco);
-    if (item.progresso)
-      elemento(
-        b,
-        "span",
-        item.progresso.completa
-          ? "✓ Concluída"
-          : `${item.progresso.concluidos}/${item.progresso.total} desafios validados`,
-        "lesson-progress",
-      );
-    elemento(
-      b,
-      "span",
-      item.progresso?.completa ? "✓ Concluída · revisar →" : "Continuar →",
-      "lesson-link",
-    );
+    elemento(b, "span", "Preparar aula →", "lesson-link");
   }
+  renderizarJornada();
 }
 
 function mostrarAba(nome) {
@@ -371,6 +373,7 @@ function mostrarAba(nome) {
     .forEach((b) =>
       b.setAttribute("aria-selected", String(b.dataset.aba === nome)),
     );
+  registrarPosicao();
 }
 
 function renderizarPreparacao() {
@@ -451,100 +454,6 @@ function renderizarPreparacao() {
   botao(fecho, "Começar a explicação", () => mostrarAba("estudar"), "primary");
 }
 
-function renderizarEstudo() {
-  const raiz = $("estudar");
-  raiz.replaceChildren();
-  const contexto = card(raiz, aula.foco);
-  elemento(contexto, "p", aula.contexto);
-  const objetivos = elemento(contexto, "ul", undefined, "objetivos");
-  aula.objetivos.forEach((texto) => elemento(objetivos, "li", texto));
-  const teoria = card(raiz, "Entender antes de implementar");
-  aula.conceitos.forEach((texto) => elemento(teoria, "p", texto));
-  if (aula.rastro) {
-    elemento(teoria, "h3", "O caminho dos dados nesta aplicação");
-    const fluxo = elemento(teoria, "div", undefined, "flow");
-    aula.rastro.forEach((texto) => elemento(fluxo, "span", texto));
-  }
-  const exemplo = card(raiz, "Exemplo para construir e explicar");
-  if (aula.exemploArquivo) {
-    elemento(exemplo, "p", aula.exemploArquivo, "secondary");
-  }
-  elemento(exemplo, "pre", aula.exemplo, "code");
-  const observacoes = elemento(exemplo, "ul", undefined, "objetivos");
-  aula.exemploExplicado.forEach((texto) => elemento(observacoes, "li", texto));
-  if (aula.modo === "funcoes") {
-    const saida = elemento(
-      exemplo,
-      "pre",
-      "Preveja o resultado antes de executar.",
-      "console",
-    );
-    botao(exemplo, "Executar exemplo", async () => {
-      const retorno = await api("/api/exemplo", comDados());
-      saida.textContent =
-        retorno.resultados
-          .flatMap((teste) =>
-            teste.passou ? teste.registros : [teste.recebido],
-          )
-          .join("\n") || "Exemplo concluído.";
-    });
-  } else if (perfil === "professor" && aula.projeto.tipo === "http") {
-    elemento(
-      exemplo,
-      "p",
-      "Na demonstração, execute a implementação de referência e envie as requisições da aula. Depois volte aos arquivos iniciais para construir a solução com o aluno.",
-    );
-    botao(exemplo, "Executar demonstração da etapa", () =>
-      iniciarProjeto(true),
-    );
-  }
-  const construindo = card(raiz, "Construção guiada");
-  const passos = elemento(construindo, "div", undefined, "steps");
-  for (const passo of aula.construcao) {
-    const bloco = elemento(passos, "div", undefined, "step");
-    elemento(bloco, "h3", passo.titulo);
-    elemento(bloco, "p", passo.texto);
-  }
-  elemento(
-    construindo,
-    "p",
-    "Após cada passo, preveja e observe o resultado antes da próxima mudança.",
-    "callout",
-  );
-  botao(
-    construindo,
-    "Ir para a prática",
-    () => mostrarAba("praticar"),
-    "primary",
-  );
-  if (aula.tarefas) {
-    const contrato = card(raiz, "Contrato da implementação");
-    for (const tarefa of aula.tarefas) {
-      elemento(contrato, "h3", tarefa.titulo);
-      elemento(contrato, "p", tarefa.texto);
-    }
-  }
-  if (aula.publicacao) {
-    const publico = card(raiz, "Planejamento de publicação com o professor");
-    elemento(
-      publico,
-      "p",
-      "Os testes desta unidade verificam configuração, logs e o fluxo local. A publicação requer uma prática acompanhada em um provedor.",
-    );
-    const lista = elemento(publico, "ul", undefined, "objetivos");
-    aula.publicacao.forEach((texto) => elemento(lista, "li", texto));
-  }
-  const fontes = elemento(raiz, "details", undefined, "card");
-  elemento(fontes, "summary", "Documentação para aprofundar");
-  for (const fonte of aula.fontes) {
-    const p = elemento(fontes, "p");
-    const link = elemento(p, "a", fonte.titulo);
-    link.href = fonte.url;
-    link.target = "_blank";
-    link.rel = "noreferrer";
-  }
-}
-
 function renderizarCorrecao() {
   const raiz = $("corrigir");
   raiz.replaceChildren();
@@ -606,13 +515,14 @@ async function salvar() {
   if (!aula) {
     return;
   }
+  await filaEstudo;
   sincronizarEditor();
   const versao = revisao;
   const id = aula.id;
   $("salvo").textContent = "Salvando…";
   const salvo = await api("/api/salvar", comDados());
-  const item = biblioteca.find((a) => a.id === id);
-  if (item && salvo.progresso) item.progresso = salvo.progresso;
+  atualizarMetadadosAula(id, salvo);
+  if (document.body.dataset.rota === "inicio") renderizarInicio();
   renderizarProgressoAula();
   if (id === aula.id && versao === revisao) {
     $("salvo").textContent = "Salvo localmente";
@@ -739,6 +649,7 @@ function renderizarPratica() {
       if (aula.modo === "funcoes") exercicioAtual = Number(select.value);
       else missaoAtual = Number(select.value);
       renderizarPratica();
+      await registrarPosicao();
     });
   }
   const projeto = aula.modo === "projeto";
@@ -807,11 +718,12 @@ function mostrarObservacao(nome) {
     );
 }
 
-async function abrirAula(id) {
+async function abrirAula(id, opcoes = {}) {
   if (ocupado) {
     return;
   }
   await painelDebug.parar();
+  await filaEstudo;
   await salvar();
   if (apiAtiva && aula) {
     await api("/api/projeto/parar", { aulaId: aula.id });
@@ -829,9 +741,24 @@ async function abrirAula(id) {
   respostas = dados.respostas;
   respostas.experimentos ??= {};
   resultados = [];
-  exercicioAtual = 0;
-  missaoAtual = 0;
-  arquivoAtual = aula.projeto?.arquivoInicial;
+  const retomada = dados.estudo ?? {};
+  exercicioAtual =
+    aula.modo === "funcoes"
+      ? Math.max(
+          0,
+          aula.exercicios.findIndex((e) => e.id === retomada.atividadeId),
+        )
+      : 0;
+  missaoAtual =
+    aula.modo === "projeto"
+      ? Math.max(
+          0,
+          (aula.missoes ?? []).findIndex((e) => e.id === retomada.atividadeId),
+        )
+      : 0;
+  arquivoAtual = aula.projeto?.arquivos.some((f) => f.nome === retomada.arquivo)
+    ? retomada.arquivo
+    : aula.projeto?.arquivoInicial;
   apiAtiva = false;
   apiDesatualizada = false;
   sessao = undefined;
@@ -840,7 +767,7 @@ async function abrirAula(id) {
   $("titulo").textContent = aula.titulo;
   $("etiqueta").textContent =
     `AULA ${String(aula.numero).padStart(2, "0")} · ${aula.modulo ?? (aula.modo === "projeto" ? "PROJETO" : "FUNDAMENTOS")}`;
-  $("contexto").textContent = aula.contexto;
+  $("contexto").textContent = aula.foco ?? aula.contexto;
   $("estado-projeto").textContent =
     "Clique em Executar projeto para abrir sua API local.";
   $("badge-projeto").textContent = "Parado";
@@ -856,7 +783,15 @@ async function abrirAula(id) {
   renderizarEstudo();
   renderizarPratica();
   renderizarBiblioteca();
-  mostrarAba("estudar");
+  mostrarAba(
+    opcoes.retomar &&
+      ["estudar", "praticar", "ambiente", "transferencia"].includes(
+        retomada.aba,
+      )
+      ? retomada.aba
+      : "estudar",
+  );
+  await filaEstudo;
   localStorage.setItem("ultima-aula-" + perfil, id);
   window.scrollTo({ top: 0, behavior: "instant" });
 }
@@ -1003,6 +938,7 @@ $("arquivo").onchange = tratar(async () => {
   await salvar();
   arquivoAtual = $("arquivo").value;
   renderizarEditor();
+  await registrarPosicao();
 });
 editorCodigo.oninput = () => {
   if (!aula) return;
@@ -1173,7 +1109,31 @@ $("baixar-respostas").onclick = tratar(async () => {
 });
 $("importar").onclick = () => $("arquivo-importado").click();
 $("arquivo-importado").onchange = tratar(async () => {
-  const arquivo = $("arquivo-importado").files[0];
+  const arquivos = [...$("arquivo-importado").files];
+  $("arquivo-importado").value = "";
+  if (arquivos.reduce((n, f) => n + f.size, 0) > 32000000)
+    throw Error("Selecione até 32 MB por lote.");
+  if (!arquivos.length) return;
+  const fontes = await Promise.all(
+    arquivos.map(async (f) => {
+      try {
+        return { nome: f.name, conteudo: await f.text() };
+      } catch (erro) {
+        return { nome: f.name, erro: erro.message };
+      }
+    }),
+  );
+  let respostaUnica;
+  if (fontes.length === 1 && fontes[0].conteudo) {
+    try {
+      respostaUnica = JSON.parse(fontes[0].conteudo.replace(/^\uFEFF/, ""));
+    } catch {}
+  }
+  if (respostaUnica?.tipo !== "resposta") {
+    await importarFontesEmLote(fontes);
+    return;
+  }
+  const arquivo = arquivos[0];
   if (!arquivo) {
     return;
   }
@@ -1255,18 +1215,12 @@ async function carregarInicio(preferida) {
   );
   perfil = dados.perfil;
   dadosJornada = dados.jornada;
-  bibliotecaCompleta = dados.aulas;
-  biblioteca = dados.aulas.filter(
-    (a) =>
-      perfil === "professor" ||
-      !dadosJornada?.escolha ||
-      a.trilha === "comum" ||
-      a.trilha === dadosJornada.escolha.trilha,
-  );
+  bibliotecaCompleta = HubPercurso.ordenar(dados.aulas);
+  biblioteca = HubPercurso.ordenar(dados.aulas);
   $("versao-app").textContent = "v" + (dados.versaoApp ?? "0.7.0");
   $("perfil").textContent = perfil === "professor" ? "Professor" : "Aluno";
   $("importar").textContent =
-    perfil === "professor" ? "↓ Importar respostas" : "↓ Importar aula";
+    perfil === "professor" ? "↓ Importar respostas" : "↓ Importar aulas";
   $("motor").hidden = perfil !== "professor";
   $("acoes-professor").hidden = perfil !== "professor";
   $("aba-preparar").hidden = perfil !== "professor";
@@ -1311,151 +1265,6 @@ const inicioCarregado = new Promise((resolve) =>
     aviso(erro.message + " Abra o laboratório pelo aplicativo.", true),
   );
 
-function renderizarBriefing(exercicio) {
-  const missao = aula.missoes?.[missaoAtual];
-  $("desafio-nome").textContent =
-    exercicio?.titulo ?? missao?.titulo ?? aula.titulo;
-  if (missao) {
-    $("enunciado").textContent = missao.enunciado;
-  }
-  const dados = $("dados-desafio");
-  dados.replaceChildren();
-  elemento(dados, "h4", "Por que isso existe");
-  elemento(dados, "p", aula.contexto);
-  if (exercicio?.nivel) {
-    elemento(dados, "p", exercicio.nivel, "tag");
-  }
-  if (missao) {
-    elemento(dados, "h4", "O que observar");
-    elemento(dados, "p", missao.observar);
-    elemento(
-      dados,
-      "p",
-      "Missão " +
-        (missaoAtual + 1) +
-        " de " +
-        aula.missoes.length +
-        " · observação manual, separada dos testes.",
-      "secondary",
-    );
-    botao(
-      dados,
-      respostas.experimentos?.[missao.id] === "observado"
-        ? "Retomar observação"
-        : "Registrei a observação",
-      async () => {
-        respostas.experimentos ??= {};
-        respostas.experimentos[missao.id] =
-          respostas.experimentos[missao.id] === "observado" ? "" : "observado";
-        await salvar();
-        renderizarPratica();
-      },
-    );
-  }
-  if (exercicio) {
-    const teste = exercicio.testes[0];
-    elemento(dados, "h4", "Exemplo de uso");
-    elemento(dados, "pre", teste.executar, "code");
-    elemento(
-      dados,
-      "h4",
-      Object.hasOwn(teste, "erroEsperado")
-        ? "Erro esperado"
-        : "Resultado esperado",
-    );
-    elemento(
-      dados,
-      "pre",
-      Object.hasOwn(teste, "erroEsperado")
-        ? teste.erroEsperado
-        : fmt(teste.esperado),
-      "console",
-    );
-    elemento(dados, "h4", "A solução precisa atender");
-    const lista = elemento(dados, "ul");
-    exercicio.testes.forEach((t) => elemento(lista, "li", t.nome));
-    const chave = exercicio.id;
-    respostas.experimentos ??= {};
-    if (respostas.experimentos[chave] === undefined) {
-      respostas.experimentos[chave] =
-        exercicio.experimento ??
-        "const resultado = await (async () => {\n" +
-          teste.executar +
-          "\n})();\nconsole.log(resultado);";
-    }
-    $("rascunho").value = respostas.experimentos[chave];
-    $("modo-experimento").value = "desafio";
-    $("meus-experimentos").hidden = exercicio.tipoExecucao === "script";
-    $("console-livre").textContent =
-      "Escreva sua hipótese e execute. Isso não verifica nem aprova testes.";
-  } else {
-    elemento(dados, "h4", "Arquivos desta etapa");
-    aula.projeto.arquivos.forEach((f) =>
-      elemento(
-        dados,
-        "p",
-        f.nome +
-          " · " +
-          (f.editavel ? "você implementa" : "apoio para leitura"),
-      ),
-    );
-    if (aula.tarefas?.length) {
-      const contrato = elemento(dados, "details");
-      elemento(contrato, "summary", "Contrato completo da etapa");
-      for (const t of aula.tarefas) {
-        elemento(contrato, "h4", t.titulo);
-        elemento(contrato, "p", t.texto);
-      }
-    }
-    elemento(dados, "h4", "Como experimentar");
-    elemento(
-      dados,
-      "p",
-      aula.projeto.tipo === "http"
-        ? "Execute o projeto, envie suas requisições e observe a resposta real. Os testes são uma ação separada."
-        : "Edite os arquivos e execute um dos comandos no terminal abaixo. Confira o console e o arquivo gerado antes dos testes.",
-    );
-  }
-  const navegacao = elemento(dados, "div", undefined, "grupo");
-  const indice = exercicio ? exercicioAtual : missaoAtual;
-  const total = exercicio
-    ? aula.exercicios.length
-    : (aula.missoes?.length ?? 1);
-  elemento(
-    dados,
-    "p",
-    `${exercicio ? "Desafio" : "Missão"} ${indice + 1} de ${total}`,
-    "secondary",
-  );
-  if (indice > 0) {
-    botao(navegacao, "← Anterior", async () => {
-      await salvar();
-      if (exercicio) {
-        exercicioAtual--;
-      } else {
-        missaoAtual--;
-      }
-      renderizarPratica();
-    });
-  }
-  if (indice < total - 1) {
-    botao(navegacao, "Próximo →", async () => {
-      await salvar();
-      if (exercicio) {
-        exercicioAtual++;
-      } else {
-        missaoAtual++;
-      }
-      renderizarPratica();
-    });
-  }
-  const pistas = $("pistas-desafio");
-  pistas.replaceChildren();
-  for (const p of aula.construcao) {
-    elemento(pistas, "strong", p.titulo);
-    elemento(pistas, "p", p.texto);
-  }
-}
 $("voltar-conceito").onclick = () => mostrarAba("estudar");
 $("rascunho").oninput = () => {
   if (aula?.modo !== "funcoes") {
@@ -1494,17 +1303,16 @@ $("run-livre").onclick = tratar(async () => {
 });
 
 if (window.laboratorioDesktop) {
-  window.laboratorioDesktop.aoAbrirAula(
-    tratar(async (dado) => {
-      await inicioCarregado;
-      if (perfil !== "aluno") {
-        throw new Error("Abra este arquivo na edição Aluno.");
-      }
-      const retorno = await api("/api/importar-aula", dado);
-      await carregarInicio(retorno.id);
-      aviso("Aula aberta. Comece pela explicação.");
-    }),
-  );
+  const desktop = window.laboratorioDesktop;
+  const receber = tratar(async (fontes) => {
+    await inicioCarregado;
+    await importarFontesEmLote(fontes);
+  });
+  if (desktop.aoAbrirAulas) desktop.aoAbrirAulas(receber);
+  else
+    desktop.aoAbrirAula((dado) =>
+      receber([{ nome: "Aula recebida", conteudo: JSON.stringify(dado) }]),
+    );
 }
 
 if (window.laboratorioDesktop) {

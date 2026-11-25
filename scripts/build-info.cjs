@@ -20,6 +20,8 @@ async function gerar() {
     motorCommit: commit(path.resolve(__dirname, "..")),
     geradoEm: new Date().toISOString(),
     plataforma: "Windows x64",
+    origem: process.env.GITHUB_SHA ? "github-actions" : "montagem-local",
+    alteracoesLocais: process.env.GITHUB_SHA ? false : execFileSync("git", ["status", "--porcelain"], {encoding:"utf8",windowsHide:true}).trim().length > 0,
   };
   await fs.mkdir(pasta, { recursive: true });
   await fs.writeFile(

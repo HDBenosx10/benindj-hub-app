@@ -1,29 +1,18 @@
-# BeninDJ Hub 0.11.2
+# BeninDJ Hub 0.13.1
 
-- Painel Debug recolhível à direita do editor, com controles sempre acessíveis durante a inspeção.
-- Breakpoints na margem ou por número de linha, confirmação da instrução executável e destaque da próxima linha.
-- Continuar/pausar (F8), próxima linha (F10), entrar (F11), sair (Shift+F11) e parar, usando o inspector real do Node em outro processo.
-- Expressões observadas, variáveis locais, blocos, closures e seleção de quadros da pilha. Observações recusam efeitos colaterais e têm limite de tempo.
-- Projetos CommonJS e APIs: breakpoints entre arquivos, abertura automática do arquivo pausado e cliente HTTP para investigar rotas com os recursos reais da aula.
-- Testes do executável verificam breakpoints, avanço, valores, preservação das respostas e fechamento durante uma pausa. O encerramento aguarda as conexões sem forçar a saída do runtime no Windows.
+- Edição Professor inclui o planejamento do acervo atual: 46 aulas em 12 grupos, editável e distribuído separadamente do conteúdo.
 
-Leia o [guia de depuração](https://github.com/HDBenosx10/benindj-hub-app/blob/main/docs/depuracao.md) para uso e limites. Debug acompanha JavaScript; JSON, SQL nativo e comandos npm/Git usam seus fluxos próprios. Depurar pode alterar os recursos, como a execução normal, e não concede aprovação nos desafios.
+- Trilhas passam a ser planejamentos criados pelo professor, separados do conteúdo das aulas. O Aluno não recebe estágios fixos incluídos no aplicativo.
+- Professor escolhe objetivo, aulas, grupos e ordem em Trilhas do professor. Pode exportar um arquivo .trilha-hub ou publicar apenas o planejamento para uma turma.
+- Aluno vê os títulos e etapas futuras, com o conteúdo bloqueado até a liberação de cada aula. Importar o planejamento não desbloqueia exercícios.
+- Preferências pessoais de área e linguagem são independentes dos percursos recebidos; a interface mostra a afinidade entre os dois.
+- Início orientado ao progresso real: começar, retomar aula/aba/atividade ou acompanhar próximas liberações. As últimas aulas importadas deixam de determinar os cartões iniciais.
+- Histórico de posição persistido no perfil local; códigos e aprovações anteriores são preservados sem inventar datas históricas.
+- Sincronização aceita planejamentos e aulas separadamente. Cada turma conserva a revisão de planejamento explicitamente publicada para ela.
+- Professor e Aluno continuam podendo coexistir, com pastas, caches, dados e identidades separados. O instalador do Aluno inclui apenas a aula 0, sem acervo privado nem currículo fixo.
 
-## Editor e correção de cores incluídos
+Para validar, instale a 0.13.0 por cima da edição correspondente, sem desinstalar nem remover o perfil em APPDATA. É necessário atualizar Professor e Aluno para usar os novos planejamentos.
 
-- Corrige o mapeamento Dracula Pro: const, let, var e function em rosa, sem itálico; comentários sem itálico e parâmetros em laranja itálico.
-- Editor, exemplos e gabaritos usam as mesmas regras corrigidas. A referência consultada foi a extensão VS Code do repositório Dracula Pro do usuário.
+O controle de acesso protege as próximas distribuições. Conteúdo já recebido continua funcionando offline; não existe bloqueio remoto de cópias já baixadas.
 
-
-- Novo editor CodeMirror, com parser JavaScript e paleta consultada no Dracula Pro.
-- Destaque coerente de funções, strings, regex, comentários e interpolações; linguagens próprias para arquivos JSON e SQL.
-- Botão Formatar e atalho Shift+Alt+F para JavaScript/JSON, usando Prettier offline e indentação de dois espaços.
-- Ctrl+Z desfaz a formatação. Código com sintaxe incompleta é preservado, com indicação do ponto a revisar.
-- Exemplos e gabaritos seguem o mesmo destaque. Arquivos de apoio continuam somente para leitura.
-- Teste automático de atualização da versão 0.9, conferindo códigos, aulas, progresso e SQLite persistente.
-
-## Atualização e dados
-
-No mesmo computador e usuário do Windows, portátil e instalador preservam os dados em `%APPDATA%\BeninDJ Hub Aluno` (ou Professor), fora do executável. Não apague essa pasta ao atualizar. Recursos em memória são temporários. O aplicativo Aluno continua incluindo apenas Hello World; aulas futuras dependem de liberação do professor.
-
-Use o arquivo com Instalador para instalar/atualizar pelos atalhos. O outro .exe é portátil.
+Consulte o [guia de acervo, trilhas e atualizações](https://github.com/HDBenosx10/benindj-hub-app/blob/main/docs/acervo-e-atualizacoes.md).

@@ -27,141 +27,7 @@ function barraProgresso(parent, valor, texto) {
   progress.setAttribute("aria-label", texto);
 }
 function renderizarJornada() {
-  if (!dadosJornada) return;
-  const escolha = dadosJornada.escolha;
-  const trilha = dadosJornada.trilhas.find((t) => t.id === escolha?.trilha);
-  const resumo = $("resumo-jornada");
-  resumo.replaceChildren();
-  if (perfil === "professor") {
-    const exemplo = card(resumo, "Veja SQL e API simulada funcionando juntos");
-    elemento(
-      exemplo,
-      "p",
-      "Abra o modelo técnico, revise os recursos e confira o gabarito antes de liberar ao aluno.",
-    );
-    botao(exemplo, "Abrir exemplo SQL + mock de API", async () => {
-      await abrirEstudio();
-      const modelo = await api("/api/autoria/modelo-backend", {});
-      rascunhoAula = modelo.aula;
-      etapaEdicao = 3;
-      renderizarEstudio();
-      agendarRascunho();
-    });
-    const aulaComBanco = biblioteca.find((a) => a.numero === 40);
-    if (aulaComBanco)
-      botao(
-        exemplo,
-        "Abrir aula 40: banco e mock",
-        () => abrirAula(aulaComBanco.id),
-        "primary",
-      );
-  }
-  const lista = biblioteca;
-  const feitas = lista.filter((a) => a.progresso?.completa).length;
-  if (perfil === "aluno" && escolha) {
-    const painel = elemento(resumo, "div", undefined, "journey-summary");
-    elemento(painel, "strong", `${trilha.nome} · JavaScript`);
-    elemento(
-      painel,
-      "span",
-      `${feitas}/${lista.length} aulas liberadas concluídas`,
-    );
-    botao(painel, "Ver jornada →", () => {
-      renderizarJornada();
-      mostrarRota("jornada");
-    });
-  }
-  const raiz = $("jornada");
-  raiz.replaceChildren();
-  elemento(raiz, "p", "SEU PERCURSO", "eyebrow");
-  elemento(
-    raiz,
-    "h1",
-    trilha ? trilha.nome + " com JavaScript" : "Escolha seu próximo destino",
-  );
-  elemento(
-    raiz,
-    "p",
-    "Fundamentos em comum, depois a especialização. Seu professor libera cada aula; escolher uma trilha não libera conteúdo futuro.",
-    "lead",
-  );
-  botao(
-    raiz,
-    escolha
-      ? "Alterar trilha ou consultar linguagens"
-      : "Escolher trilha e linguagem",
-    abrirEscolhaJornada,
-  );
-  if (trilha?.estado === "planejada")
-    elemento(
-      raiz,
-      "p",
-      "Esta especialização está em preparação. Você já pode estudar o núcleo comum com JavaScript.",
-      "planning-note",
-    );
-  barraProgresso(
-    raiz,
-    lista.length ? (feitas / lista.length) * 100 : 0,
-    `${feitas} de ${lista.length} aulas liberadas concluídas · este número não representa toda a trilha`,
-  );
-  const grupos = new Map();
-  for (const m of dadosJornada.curriculo?.modulos ?? []) {
-    if (m.trilha === "comum" || m.trilha === (escolha?.trilha ?? "backend"))
-      grupos.set(
-        (m.trilha === "comum" ? "Núcleo comum · " : "Especialização · ") +
-          m.nome,
-        [],
-      );
-  }
-  for (const a of lista) {
-    const modulo =
-      (a.trilha === "comum" ? "Núcleo comum · " : "Especialização · ") +
-      (a.modulo ?? "Projetos");
-    if (!grupos.has(modulo)) grupos.set(modulo, []);
-    grupos.get(modulo).push(a);
-  }
-  for (const [nome, aulas] of grupos) {
-    const bloco = card(raiz, nome);
-    const modulo = dadosJornada.curriculo?.modulos.find((m) =>
-      nome.endsWith("· " + m.nome),
-    );
-    if (modulo) {
-      const competencias = elemento(bloco, "ul");
-      modulo.competencias.forEach((c) => elemento(competencias, "li", c));
-    }
-    if (!aulas.length) {
-      elemento(
-        bloco,
-        "p",
-        modulo?.planejado
-          ? "Em preparação · ainda sem aulas executáveis"
-          : "Aguardando liberação do professor · nenhuma aula recebida",
-        "secondary",
-      );
-      continue;
-    }
-    const concluidas = aulas.filter((a) => a.progresso?.completa).length;
-    barraProgresso(
-      bloco,
-      (concluidas / aulas.length) * 100,
-      `${concluidas}/${aulas.length} aulas disponíveis neste módulo`,
-    );
-    for (const a of aulas)
-      botao(
-        bloco,
-        `${a.progresso?.completa ? "✓" : "○"} ${a.titulo} · ${a.progresso?.concluidos ?? 0}/${a.progresso?.total ?? 0} desafios`,
-        () => abrirAula(a.id),
-        "journey-lesson",
-      );
-  }
-  const referencias = card(raiz, "Referências do percurso");
-  elemento(referencias, "p", dadosJornada.curriculo?.limites ?? "");
-  for (const ref of dadosJornada.curriculo?.referencias ?? []) {
-    const link = elemento(referencias, "a", ref.titulo, "curriculum-source");
-    link.href = ref.url;
-    link.target = "_blank";
-    link.rel = "noopener noreferrer";
-  }
+  renderizarPercursos();
 }
 function abrirEscolhaJornada() {
   if (document.querySelector("#escolha-jornada")) return;
@@ -170,14 +36,14 @@ function abrirEscolhaJornada() {
   dialogo.className = "journey-dialog";
   const form = elemento(dialogo, "form");
   elemento(form, "p", "BEM-VINDO AO BENINDJ HUB", "eyebrow");
-  elemento(form, "h2", "O que você quer construir?");
+  elemento(form, "h2", "Seus objetivos de estudo");
   elemento(
     form,
     "p",
-    "Escolha uma direção. Você pode mudar depois sem perder seu trabalho.",
+    "Escolha sua área de interesse. Isso ajuda a encontrar percursos do professor e não libera aulas. Você pode mudar depois.",
   );
   const trilhas = elemento(form, "fieldset");
-  elemento(trilhas, "legend", "Sua trilha");
+  elemento(trilhas, "legend", "Área de interesse");
   for (const t of dadosJornada.trilhas) {
     const label = elemento(trilhas, "label", undefined, "track-choice");
     const radio = elemento(label, "input");
@@ -187,12 +53,7 @@ function abrirEscolhaJornada() {
     radio.required = true;
     radio.checked = t.id === (dadosJornada.escolha?.trilha ?? "backend");
     const texto = elemento(label, "div");
-    elemento(
-      texto,
-      "strong",
-      t.nome +
-        (t.estado === "planejada" ? " · Em preparação" : " · Disponível"),
-    );
+    elemento(texto, "strong", t.nome);
     elemento(texto, "p", t.descricao);
   }
   const label = elemento(form, "label", "Linguagem principal", "campo");
@@ -215,7 +76,7 @@ function abrirEscolhaJornada() {
   );
   const erro = elemento(form, "p");
   erro.setAttribute("role", "alert");
-  const salvar = elemento(form, "button", "Começar minha jornada", "primary");
+  const salvar = elemento(form, "button", "Salvar meus objetivos", "primary");
   salvar.type = "submit";
   if (dadosJornada.escolha)
     botao(form, "Cancelar", () => {

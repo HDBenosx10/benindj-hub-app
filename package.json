@@ -1,6 +1,6 @@
 {
   "name": "benindj-hub-app",
-  "version": "0.11.2",
+  "version": "0.13.1",
   "private": true,
   "description": "Ambiente de aprendizagem e autoria de programação",
   "author": "BeninDJ Hub",
@@ -25,6 +25,11 @@
     "electron-builder": "26.18.0",
     "esbuild": "0.28.2",
     "extract-zip": "2.0.1",
+    "js-yaml": "4.3.2",
     "prettier": "3.10.1"
+  },
+  "dependencies": {
+    "electron-updater": "6.8.12",
+    "semver": "7.8.6"
   }
 }

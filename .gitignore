@@ -15,3 +15,4 @@ professor/
 .DS_Store
 
 /.qa/
+/.local/

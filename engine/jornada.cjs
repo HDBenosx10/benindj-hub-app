@@ -5,21 +5,20 @@ const trilhas = [
     id: "backend",
     nome: "Back-end",
     estado: "disponivel",
-    descricao: "Regras, APIs, dados e integrações com JavaScript.",
+    descricao: "Interesse em regras de negócio, APIs, dados e integrações.",
   },
   {
     id: "frontend",
     nome: "Front-end",
     estado: "planejada",
     descricao:
-      "Interfaces, acessibilidade e aplicações no navegador. Conteúdo específico em preparação.",
+      "Interesse em interfaces, acessibilidade e aplicações no navegador.",
   },
   {
     id: "ia",
     nome: "Inteligência artificial",
     estado: "planejada",
-    descricao:
-      "Dados, avaliação e integração de modelos. Conteúdo específico em preparação.",
+    descricao: "Interesse em dados, avaliação e integração de modelos.",
   },
 ];
 const linguagens = [
@@ -38,6 +37,10 @@ function validarEscolha(dado) {
     trilha: dado.trilha,
     linguagem: "javascript",
     escolhidaEm: new Date().toISOString(),
+    ...(typeof dado.percursoId === "string" &&
+    /^percurso-[a-f0-9-]{36}$/.test(dado.percursoId)
+      ? { percursoId: dado.percursoId }
+      : {}),
   };
 }
 function trilhaDaAula(aula) {
@@ -50,8 +53,14 @@ function trilhaDaAula(aula) {
 }
 function assinatura(aula, salvo, id) {
   const exercicio = aula.exercicios?.find((e) => e.id === id);
+  // A reorganização do material de leitura não muda os critérios já aprovados.
+  const regra =
+    exercicio &&
+    Object.fromEntries(
+      Object.entries(exercicio).filter(([campo]) => campo !== "contrato"),
+    );
   const valor = exercicio
-    ? [exercicio, salvo.codigos?.[id], aula.ambiente]
+    ? [regra, salvo.codigos?.[id], aula.ambiente]
     : [aula.projeto, aula.testes, aula.ambiente, salvo.arquivos];
   return createHash("sha256").update(JSON.stringify(valor)).digest("hex");
 }
@@ -95,6 +104,67 @@ function registrar(aula, salvo, resultados, exercicioId) {
   }
   return resumo(aula, salvo);
 }
+function posicao(aula, salvo = {}) {
+  const p = resumo(aula, salvo),
+    s = salvo.estudo ?? {};
+  const atividades =
+    aula.modo === "funcoes" ? aula.exercicios : (aula.missoes ?? []);
+  const indice = atividades.findIndex((e) => e.id === s.atividadeId);
+  const primeiroPendente =
+    aula.modo === "funcoes"
+      ? atividades.findIndex(
+          (e) => salvo.progresso?.[e.id] !== assinatura(aula, salvo, e.id),
+        )
+      : 0;
+  const atual = indice >= 0 ? indice : Math.max(0, primeiroPendente);
+  const mudou =
+    (aula.exercicios ?? []).some(
+      (e) =>
+        typeof salvo.codigos?.[e.id] === "string" &&
+        salvo.codigos[e.id] !== e.codigoInicial,
+    ) ||
+    (aula.projeto?.arquivos ?? []).some(
+      (f) =>
+        f.editavel &&
+        typeof salvo.arquivos?.[f.nome] === "string" &&
+        salvo.arquivos[f.nome] !== f.codigo,
+    );
+  return {
+    iniciada: !!s.iniciadaEm || mudou || p.concluidos > 0,
+    iniciadaEm: s.iniciadaEm ?? null,
+    atualizadaEm: s.atualizadaEm ?? null,
+    aba: s.aba ?? "estudar",
+    atividadeId: atividades[atual]?.id ?? null,
+    atividadeTitulo: atividades[atual]?.titulo ?? null,
+    indiceAtividade: atual,
+    totalAtividades: atividades.length,
+    arquivo: s.arquivo ?? aula.projeto?.arquivoInicial ?? null,
+  };
+}
+function registrarEstudo(
+  aula,
+  salvo,
+  dado = {},
+  agora = new Date().toISOString(),
+) {
+  const atual = posicao(aula, salvo),
+    atividades =
+      aula.modo === "funcoes" ? aula.exercicios : (aula.missoes ?? []);
+  salvo.estudo = {
+    iniciadaEm: salvo.estudo?.iniciadaEm ?? agora,
+    atualizadaEm: agora,
+    aba: ["estudar", "praticar", "ambiente", "transferencia"].includes(dado.aba)
+      ? dado.aba
+      : atual.aba,
+    atividadeId: atividades.some((e) => e.id === dado.atividadeId)
+      ? dado.atividadeId
+      : atual.atividadeId,
+    arquivo: aula.projeto?.arquivos.some((f) => f.nome === dado.arquivo)
+      ? dado.arquivo
+      : atual.arquivo,
+  };
+  return posicao(aula, salvo);
+}
 module.exports = {
   trilhas,
   linguagens,
@@ -102,4 +172,6 @@ module.exports = {
   trilhaDaAula,
   resumo,
   registrar,
+  posicao,
+  registrarEstudo,
 };

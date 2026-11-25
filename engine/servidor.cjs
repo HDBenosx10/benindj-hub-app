@@ -58,6 +58,7 @@ function validarAula(aula) {
   )
     throw Error("Identificador de exercício inválido.");
   validarAmbiente(aula.ambiente);
+  require("./conteudo.js").validar(aula);
   validarMateriais(aula.materiaisComplementares);
   return aula;
 }
@@ -139,6 +140,12 @@ async function iniciar() {
   }
   let gravacao = Promise.resolve();
   const jornada = require("./jornada.cjs");
+  const percurso = require("./percurso.js");
+  const planosProfessor = () => respostas["percursos:professor"] ?? [];
+  const aulaParaAluno = (a) => publico(a);
+  const trilhasRecebidas = new Map(
+    (respostas["percursos:aluno"] ?? []).map((p) => [p.id, p]),
+  );
   async function persistir() {
     const texto = JSON.stringify(respostas, null, 2);
     gravacao = gravacao
@@ -149,6 +156,25 @@ async function iniciar() {
       });
     await gravacao;
   }
+  if (professor) {
+    let iniciais = [];
+    try {
+      iniciais = await lerJson(
+        path.join(__dirname, "conteudo", "percursos.json"),
+      );
+    } catch (e) {
+      if (e.code !== "ENOENT") throw e;
+    }
+    let alterado = false;
+    for (const p of iniciais) {
+      percurso.manifesto(p, [...catalogo.values()]);
+      if (!planosProfessor().some((atual) => atual.id === p.id)) {
+        respostas["percursos:professor"] = [...planosProfessor(), p];
+        alterado = true;
+      }
+    }
+    if (alterado) await persistir();
+  }
   const ativos = new Map();
   const ambientes = require("./ambiente-gerenciador.cjs").criarGerenciador(
     path.join(pastaDados, "ambientes"),
@@ -157,6 +183,25 @@ async function iniciar() {
   const depuracoes = new Map();
   let iniciandoDebug = false;
   let encerrando = false;
+  const importadorAulas = require("./pacotes-aulas.cjs").criarImportador({
+    aulas: liberadas,
+    pasta: path.join(raiz, "aulas"),
+    validarAula,
+    trilhas: trilhasRecebidas,
+    salvarTrilha: async (trilha) => {
+      const atuais = respostas["percursos:aluno"] ?? [];
+      respostas["percursos:aluno"] = [
+        ...atuais.filter((p) => p.id !== trilha.id),
+        trilha,
+      ];
+      await persistir();
+    },
+    antesDeAtualizar: async (id, anterior, nova) => {
+      await pararChave(`aluno:${id}`);
+      if (JSON.stringify(anterior.ambiente) !== JSON.stringify(nova.ambiente))
+        await ambientes.parar(`aluno:${id}`);
+    },
+  });
 
   function visao(req) {
     return professor && req.headers["x-lab-visao"] !== "aluno"
@@ -204,6 +249,7 @@ async function iniciar() {
       arquivos,
       experimentos: salvo.experimentos ?? {},
       progresso: salvo.progresso ?? {},
+      estudo: salvo.estudo ?? null,
     };
   }
   async function salvar(req, aula, dado) {
@@ -253,8 +299,10 @@ async function iniciar() {
     let tamanho = 0;
     for await (const parte of req) {
       tamanho += parte.length;
-      if (tamanho > 4000000) {
-        throw new Error("O arquivo excede o limite de 4 MB.");
+      const limite =
+        req.url === "/api/aulas/preparar-importacao" ? 96_000_000 : 4_000_000;
+      if (tamanho > limite) {
+        throw new Error(`O envio excede o limite de ${limite / 1_000_000} MB.`);
       }
       partes.push(parte);
     }
@@ -291,7 +339,13 @@ async function iniciar() {
         "/vendor/editor-tema.css": "vendor/editor-tema.css",
         "/ambiente-ui.js": "ambiente-ui.js",
         "/jornada-ui.js": "jornada-ui.js",
+        "/percurso.js": "percurso.js",
+        "/percurso-ui.js": "percurso-ui.js",
         "/debug-ui.js": "debug-ui.js",
+        "/conteudo.js": "conteudo.js",
+        "/leitura-ui.js": "leitura-ui.js",
+        "/lotes-ui.js": "lotes-ui.js",
+        "/nuvem-ui.js": "nuvem-ui.js",
         "/estilo.css": "estilo.css",
         ...(professor
           ? {
@@ -338,6 +392,53 @@ async function iniciar() {
         await persistir();
         return json(res, 200, { escolha });
       }
+      if (url.pathname === "/api/percursos/exportar") {
+        if (visao(req) !== "professor")
+          return json(res, 403, {
+            erro: "Somente o professor exporta planejamentos.",
+          });
+        const plano = planosProfessor().find(
+          (p) => p.id === url.searchParams.get("id"),
+        );
+        if (!plano) throw Error("Trilha não encontrada.");
+        return json(
+          res,
+          200,
+          percurso.manifesto(plano, [...catalogo.values()]),
+        );
+      }
+      if (url.pathname === "/api/percursos") {
+        if (visao(req) !== "professor")
+          return json(res, 403, {
+            erro: "Somente o professor organiza trilhas.",
+          });
+        if (req.method === "GET")
+          return json(res, 200, { percursos: planosProfessor() });
+        if (req.method !== "POST") throw Error("Use GET ou POST.");
+        const d = await corpo(req),
+          atuais = planosProfessor();
+        if (d.acao === "excluir") {
+          respostas["percursos:professor"] = atuais.filter(
+            (p) => p.id !== d.id,
+          );
+        } else {
+          const validado = percurso.validar(d, [...catalogo.keys()]);
+          if (d.id && !atuais.some((p) => p.id === d.id))
+            throw Error("Trilha não encontrada.");
+          if (!d.id && atuais.length >= 100)
+            throw Error("Limite de 100 trilhas por acervo.");
+          const p = {
+            ...validado,
+            id: d.id ?? "percurso-" + crypto.randomUUID(),
+          };
+          respostas["percursos:professor"] = [
+            ...atuais.filter((a) => a.id !== p.id),
+            p,
+          ];
+        }
+        await persistir();
+        return json(res, 200, { percursos: planosProfessor() });
+      }
       if (req.method === "GET" && url.pathname === "/api/inicio") {
         let mapa = lista(req);
         if (
@@ -355,7 +456,10 @@ async function iniciar() {
             escolha: respostas["jornada:" + visao(req)] ?? null,
             trilhas: jornada.trilhas,
             linguagens: jornada.linguagens,
-            curriculo: require("./curriculo.json"),
+            percursos:
+              visao(req) === "professor"
+                ? planosProfessor()
+                : [...trilhasRecebidas.values()],
           },
           aulas: [...mapa.values()].map((aula) => ({
             id: aula.id,
@@ -366,6 +470,12 @@ async function iniciar() {
             modulo: aula.modulo,
             trilha: jornada.trilhaDaAula(aula),
             progresso: jornada.resumo(aula, dadosDaAula(req, aula)),
+            revisaoOnline: aula.distribuicao?.dados?.revisao ?? null,
+            percursos:
+              visao(req) === "professor"
+                ? percurso.descrever(planosProfessor(), aula.id)
+                : (aula.percursos ?? []),
+            estudo: jornada.posicao(aula, dadosDaAula(req, aula)),
           })),
           versao: 3,
         });
@@ -388,15 +498,14 @@ async function iniciar() {
           );
         }
         const aula = validarAula(await corpo(req));
-        await pararChave(`aluno:${aula.id}`);
-        await ambientes.parar(`aluno:${aula.id}`);
-        await ambientes.obter(`aluno:${aula.id}`, aula);
-        await fs.writeFile(
-          path.join(raiz, "aulas", aula.id + ".hub.json"),
-          "\uFEFF" + JSON.stringify(aula, null, 2),
-          "utf8",
-        );
-        liberadas.set(aula.id, aula);
+        const plano = importadorAulas.preparar([
+          { nome: aula.id + ".aula-hub", conteudo: JSON.stringify(aula) },
+        ]);
+        if (plano.linhas[0].situacao !== "igual") {
+          const resultado = await importadorAulas.confirmar(plano.planoId, [0]);
+          if (resultado.resumo.falhas)
+            throw Error(resultado.resultados[0].motivo);
+        }
         return json(res, 200, { id: aula.id, titulo: aula.titulo });
       }
       if (req.method === "POST" && url.pathname === "/api/encerrar") {
@@ -418,6 +527,40 @@ async function iniciar() {
         return;
       }
       const dado = req.method === "POST" ? await corpo(req) : {};
+      if (req.method === "POST" && url.pathname === "/api/aulas/exportar") {
+        if (visao(req) !== "professor")
+          return json(res, 403, { erro: "Exportação exclusiva do professor." });
+        const pacote = require("./pacotes-aulas.cjs").montarPacote(
+          catalogo,
+          dado.ids,
+          aulaParaAluno,
+        );
+        res.writeHead(200, {
+          "Content-Type": "application/json; charset=utf-8",
+          "Content-Disposition": `attachment; filename="BeninDJ-Hub-${pacote.aulas.length}-aulas.aulas-hub"`,
+          "Cache-Control": "no-store",
+        });
+        return res.end("\uFEFF" + JSON.stringify(pacote, null, 2));
+      }
+      if (
+        req.method === "POST" &&
+        [
+          "/api/aulas/preparar-importacao",
+          "/api/aulas/confirmar-importacao",
+        ].includes(url.pathname)
+      ) {
+        if (professor)
+          return json(res, 403, {
+            erro: "Importe as aulas na edição Aluno. No Professor, use o acervo e a prévia.",
+          });
+        return json(
+          res,
+          200,
+          url.pathname.endsWith("preparar-importacao")
+            ? importadorAulas.preparar(dado.fontes)
+            : await importadorAulas.confirmar(dado.planoId, dado.chaves),
+        );
+      }
       if (
         url.pathname.startsWith("/api/autoria/") ||
         url.pathname.startsWith("/api/coruja/")
@@ -527,6 +670,7 @@ async function iniciar() {
         return json(res, 200, {
           aula: visao(req) === "professor" ? aula : publico(aula),
           respostas: dadosDaAula(req, aula),
+          estudo: jornada.posicao(aula, dadosDaAula(req, aula)),
         });
       }
       if (req.method === "GET" && url.pathname === "/api/exportar-aula") {
@@ -537,7 +681,7 @@ async function iniciar() {
           "Content-Type": "application/json; charset=utf-8",
           "Content-Disposition": `attachment; filename="${aula.id}.aula-hub"`,
         });
-        res.end("\uFEFF" + JSON.stringify(publico(aula), null, 2));
+        res.end("\uFEFF" + JSON.stringify(aulaParaAluno(aula), null, 2));
         return;
       }
       if (url.pathname.startsWith("/api/ambiente/")) {
@@ -605,7 +749,15 @@ async function iniciar() {
           salvo: true,
           respostas: salvo,
           progresso: jornada.resumo(aula, salvo),
+          estudo: jornada.posicao(aula, salvo),
         });
+      }
+      if (req.method === "POST" && url.pathname === "/api/estudo") {
+        const salvo = dadosDaAula(req, aula),
+          estudo = jornada.registrarEstudo(aula, salvo, dado);
+        respostas[chave(req, aula)] = salvo;
+        await persistir();
+        return json(res, 200, { estudo });
       }
       if (req.method === "POST" && url.pathname === "/api/executar") {
         if (typeof dado.codigo !== "string" || dado.codigo.length > 200000) {

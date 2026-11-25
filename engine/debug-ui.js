@@ -317,6 +317,7 @@ window.HubDebug = function criarPainelDebug(opcoes) {
   function contextoAtualizado() {
     const novo = contextoAtual();
     if (chave(novo) !== chave(contexto)) {
+      recolher();
       clearInterval(intervalo);
       intervalo = null;
       versao++;
@@ -346,15 +347,16 @@ window.HubDebug = function criarPainelDebug(opcoes) {
     if (!ativo()) $("debug-calls").value = $("rascunho").value;
     desenhar();
   }
+  function recolher() {
+    $("debug-content").hidden = true;
+    $("debug-panel").classList.remove("aberto");
+    $("debug-toggle").setAttribute("aria-expanded", "false");
+    $("debug-toggle").title = "Abrir debugger";
+    $("debug-toggle").querySelector(".debug-chevron").textContent = "‹";
+  }
   $("debug-toggle").onclick = () => {
     if ($("debug-content").hidden) abrir();
-    else {
-      $("debug-content").hidden = true;
-      $("debug-panel").classList.remove("aberto");
-      $("debug-toggle").setAttribute("aria-expanded", "false");
-      $("debug-toggle").title = "Abrir painel de debug";
-      $("debug-toggle").querySelector(".debug-chevron").textContent = "‹";
-    }
+    else recolher();
   };
   $("debug-start").onclick = () => agir(iniciar);
   document

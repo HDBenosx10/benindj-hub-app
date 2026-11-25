@@ -24,6 +24,7 @@ const assert = require("node:assert/strict");
   const nomes = await fs.readdir(pasta);
   for (const nome of [
     "conteudo",
+    "curriculo.json",
     "professor",
     "gabaritos",
     "autoria.cjs",

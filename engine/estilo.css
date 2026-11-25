@@ -2263,3 +2263,462 @@ body.resource-drawer-open #ambiente > .card:first-of-type h2 {
   margin-right: 18px;
   margin-bottom: 8px;
 }
+
+/* Leitura da atividade: espaço para o contrato, sem fragmentar o código. */
+.bancada,
+body[data-aba="praticar"] .bancada {
+  grid-template-columns: minmax(360px, 0.85fr) minmax(0, 1.25fr);
+  gap: 18px;
+}
+.bancada.leitura-recolhida,
+body[data-aba="praticar"] .bancada.leitura-recolhida {
+  grid-template-columns: 44px minmax(0, 1fr);
+}
+.briefing,
+body:has(.debug-panel.aberto)[data-aba="praticar"] .briefing {
+  padding: 0;
+  min-width: 0;
+  max-height: calc(100dvh - 145px);
+  overflow: auto;
+  position: sticky;
+  top: 16px;
+}
+#leitura-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 13px 18px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: #292736;
+  color: #f8f8f2;
+  border-radius: 8px 8px 0 0;
+  font-size: 14px;
+  text-align: left;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+.leitura-chevron {
+  margin-left: auto;
+  color: #9580ff;
+  font-size: 20px;
+}
+#leitura-conteudo {
+  padding: 22px;
+}
+.briefing.recolhido {
+  overflow: hidden;
+}
+.briefing.recolhido #leitura-toggle {
+  writing-mode: vertical-rl;
+  width: 42px;
+  min-height: 160px;
+  padding: 14px 10px;
+  gap: 14px;
+  border-bottom: 0;
+  border-radius: 8px;
+  position: static;
+}
+.briefing h3 {
+  font-size: 21px;
+  line-height: 1.4;
+  margin: 6px 0 20px;
+}
+.briefing p,
+.briefing li,
+.briefing > p:not(.eyebrow) {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #d3cfdf;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+.briefing details {
+  padding: 13px 0;
+  font-size: 15px;
+}
+.briefing summary {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #f8f8f2;
+}
+.briefing h4 {
+  font-size: 13px;
+  letter-spacing: 0;
+  text-transform: none;
+  margin: 19px 0 8px;
+  color: #b9aaff;
+}
+.briefing pre {
+  font-size: 13px;
+  line-height: 1.75;
+  white-space: pre;
+  word-break: normal;
+  overflow-wrap: normal;
+  overflow: auto;
+  max-width: 100%;
+  padding: 14px;
+}
+.briefing ul {
+  padding-left: 20px;
+}
+.briefing button {
+  font-size: 12px;
+}
+.parametro-atividade {
+  padding: 13px 0;
+  border-bottom: 1px solid #45415877;
+}
+.parametro-atividade > code {
+  color: #80ffea;
+  font-size: 14px;
+}
+.parametro-atividade > p {
+  margin: 7px 0 0;
+}
+.tipo-parametro {
+  display: block;
+  margin-top: 4px;
+  color: #aaa5c0;
+  font:
+    12px/1.5 Consolas,
+    monospace;
+  overflow-wrap: anywhere;
+}
+.tipo-retorno {
+  color: #80ffea;
+  font-size: 13px;
+}
+.navegacao-atividade {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+}
+.navegacao-atividade p {
+  flex-basis: 100%;
+}
+#estudar .secao-leitura > summary {
+  font-size: 19px;
+  line-height: 1.5;
+  color: #f8f8f2;
+}
+#estudar .secao-leitura > p {
+  max-width: 85ch;
+  font-size: 15px;
+  line-height: 1.8;
+}
+#estudar .secao-leitura > pre {
+  white-space: pre;
+  overflow: auto;
+}
+#estudar .conceito-atividade {
+  padding: 15px 0;
+  border-bottom: 1px solid var(--line);
+}
+@media (max-width: 1250px) {
+  .bancada:not(.leitura-recolhida),
+  body[data-aba="praticar"] .bancada:not(.leitura-recolhida) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .briefing,
+  body:has(.debug-panel.aberto)[data-aba="praticar"] .briefing {
+    position: static;
+    max-height: 52dvh;
+  }
+}
+@media (min-width: 1251px) and (max-width: 1679px) {
+  body:has(.debug-panel.aberto)[data-aba="praticar"]
+    .bancada:not(.leitura-recolhida) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  body:has(.debug-panel.aberto)[data-aba="praticar"] .briefing {
+    position: static;
+    max-height: 48dvh;
+  }
+}
+@media (max-width: 760px) {
+  .bancada.leitura-recolhida,
+  body[data-aba="praticar"] .bancada.leitura-recolhida {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .briefing.recolhido #leitura-toggle {
+    width: 100%;
+    min-height: 0;
+    writing-mode: horizontal-tb;
+    padding: 10px 16px;
+  }
+  #leitura-conteudo {
+    padding: 18px;
+  }
+}
+body:has(.debug-panel.aberto)[data-aba="praticar"] .bancada.leitura-recolhida {
+  grid-template-columns: 44px minmax(0, 1fr);
+}
+@media (max-width: 760px) {
+  body:has(.debug-panel.aberto)[data-aba="praticar"]
+    .bancada.leitura-recolhida {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.lesson-selectable {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.lesson-selectable .lesson-card {
+  width: 100%;
+  flex: 1;
+}
+.lesson-selection {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 13px;
+}
+.dialogo-lote {
+  background: var(--panel, #22212c);
+  color: var(--text, #f8f8f2);
+  border: 1px solid #6272a4;
+  border-radius: 14px;
+  width: min(800px, 92vw);
+  max-height: 85vh;
+  padding: 24px;
+}
+.dialogo-lote::backdrop {
+  background: #0009;
+}
+.dialogo-lote footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 16px;
+}
+#itens-importacao {
+  max-height: 48vh;
+  overflow: auto;
+}
+.item-importacao {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid #6272a455;
+}
+.item-importacao > span {
+  flex: 1;
+  min-width: 0;
+}
+.item-importacao small {
+  display: block;
+  margin-top: 5px;
+}
+.item-importacao p {
+  margin: 6px 0;
+  line-height: 1.5;
+}
+
+/* Aula como leitura contínua; painéis só para recursos secundários. */
+.aula-artigo {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 12px 16px 48px;
+}
+.aula-artigo > h2 {
+  margin: 10px 0 18px;
+  font-size: 28px;
+}
+.aula-artigo p {
+  font-size: 16px;
+  line-height: 1.85;
+  max-width: 78ch;
+  color: #d3cfdf;
+}
+.aula-artigo .aula-contexto {
+  font-size: 18px;
+  color: #f8f8f2;
+}
+.aula-artigo .aula-previos {
+  padding-left: 16px;
+  border-left: 2px solid #9580ff;
+  font-size: 14px;
+}
+.aula-artigo .secao-leitura {
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: transparent;
+  border-radius: 0;
+  padding: 18px 0;
+  margin: 18px 0 0;
+}
+#estudar .aula-artigo .secao-leitura > summary {
+  font-size: 16px;
+}
+.aula-artigo .conceito-aula {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  margin: 30px 0;
+}
+.aula-artigo h3 {
+  font-size: 22px;
+  margin: 24px 0 12px;
+}
+.aula-artigo pre {
+  white-space: pre;
+  overflow: auto;
+  max-width: 100%;
+  font-size: 14px;
+  line-height: 1.8;
+}
+.aula-artigo .conceito-atividade > span {
+  display: block;
+  margin-top: 6px;
+}
+.referencia-aula {
+  padding: 14px 0;
+}
+.referencia-aula > p {
+  margin: 4px 0;
+  font-size: 14px;
+}
+.briefing .ajuda-contrato {
+  font-size: 13px;
+  color: #aaa5c0;
+}
+.leitura-argumentos {
+  border-left: 2px solid #80ffea;
+  padding-left: 12px;
+}
+
+#conexao { max-width:1100px; margin:0 auto; }
+#conexao .card { margin:20px 0; }
+#conexao form label { display:flex; flex-direction:column; gap:8px; margin:12px 0; }
+#conexao .grupo { align-items:end; }
+#conexao .grupo label { flex:1; min-width:200px; }
+#conexao form > button { margin-top:10px; }
+.nuvem-cabecalho { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+.nuvem-secao { margin-top:20px; padding:16px 0; border-top:1px solid var(--line); }
+.nuvem-selecao { max-height:320px; overflow:auto; margin:16px 0; }
+.nuvem-selecao label { display:flex; gap:12px; padding:9px 0; align-items:flex-start; }
+.nuvem-selecao input { width:auto; margin-top:4px; }
+.nuvem-linha { display:flex; flex-wrap:wrap; gap:12px; align-items:center; padding:14px 0; border-bottom:1px solid var(--line); }
+.nuvem-linha strong { flex:1; min-width:180px; }
+.nuvem-linha button { font-size:12px; }
+#convite-gerado-texto { width:100%; }
+#update-progresso { width:100%; margin:12px 0; }
+.home-percurso { padding:20px 0; margin-bottom:24px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+.home-percurso p { margin:8px 0; }
+.home-percurso progress { width:100%; height:8px; accent-color:#9580ff; margin:14px 0 8px; }
+.percurso-contagem, .percurso-preferencia { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px; }
+.continue-card .secondary { display:block; font-size:12px; margin:8px 0; }
+.percurso-editor { width:min(920px,94vw); max-height:90dvh; }
+.percurso-editor form > label { display:flex; flex-direction:column; gap:6px; margin:16px 0; }
+.percurso-aulas-editor { max-height:42dvh; overflow:auto; margin:18px 0; }
+.percurso-aula-editor { display:grid; grid-template-columns:minmax(180px,1.5fr) minmax(100px,1fr) 36px 36px; align-items:center; gap:8px; padding:10px 0; border-top:1px solid var(--line); }
+.percurso-aula-editor label { display:flex; gap:10px; align-items:center; }
+.percurso-aula-editor input[type=checkbox] { width:auto; }
+.percurso-aula-editor button { padding:8px; }
+.aula-bloqueada { opacity:.72; border-style:dashed; cursor:default; }
+.journey-lesson.aula-bloqueada { display:flex; flex-direction:column; align-items:flex-start; gap:6px; padding:14px; border:1px dashed #67627d; border-radius:8px; opacity:1; }
+.continue-card.aula-bloqueada:disabled { opacity:1; border:1px dashed #67627d; color:var(--muted); background:#22212c; }
+.journey-lesson.aula-bloqueada .secondary { display:block; margin-top:6px; }
+#jornada > .card { margin:22px 0; }
+#jornada .card > .primary { margin:12px; }
+
+/* Mantém o editor estável: abrir leitura/debug não empilha meia aula acima dele. */
+.bancada,
+body[data-aba="praticar"] .bancada {
+  position: relative;
+  align-items: start;
+  grid-template-columns: minmax(350px, 0.8fr) minmax(0, 1.4fr);
+}
+.bancada-codigo {
+  min-width: 0;
+}
+.editor-debug-layout {
+  position: relative;
+}
+.editor-top {
+  flex-wrap: wrap;
+  min-height: 44px;
+  gap: 8px;
+}
+.editor-actions {
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.editor-actions .grupo {
+  flex-wrap: wrap;
+}
+body[data-aba="praticar"] .briefing {
+  position: sticky;
+  top: 12px;
+  max-height: 75dvh;
+}
+body[data-aba="praticar"] .bancada {
+  min-height: 75dvh;
+}
+@media (min-width: 1181px) {
+  body:has(.debug-panel.aberto)[data-aba="praticar"]
+    .bancada:not(.leitura-recolhida) {
+    grid-template-columns: minmax(350px, 0.8fr) minmax(0, 1.4fr);
+  }
+  body:has(.debug-panel.aberto)[data-aba="praticar"] .briefing {
+    position: sticky;
+    top: 12px;
+    max-height: 75dvh;
+  }
+}
+@media (min-width: 761px) and (max-width: 1180px) {
+  .bancada:not(.leitura-recolhida),
+  body[data-aba="praticar"] .bancada:not(.leitura-recolhida),
+  body:has(.debug-panel.aberto)[data-aba="praticar"]
+    .bancada:not(.leitura-recolhida) {
+    grid-template-columns: 44px minmax(0, 1fr);
+  }
+  body[data-aba="praticar"] .briefing:not(.recolhido) {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: min(460px, calc(100vw - 110px));
+    max-height: 75dvh;
+    z-index: 8;
+    box-shadow: 12px 12px 40px #0008;
+    background: #22212c;
+  }
+  body[data-aba="praticar"] .bancada:not(.leitura-recolhida) > .bancada-codigo {
+    grid-column: 2;
+  }
+}
+@media (min-width: 721px) and (max-width: 1679px) {
+  .debug-panel.aberto {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: min(320px, 80%);
+    z-index: 9;
+    box-shadow: -8px 8px 28px #0008;
+  }
+}
+@media (max-width: 760px) {
+  .bancada,
+  body[data-aba="praticar"] .bancada,
+  body:has(.debug-panel.aberto)[data-aba="praticar"]
+    .bancada:not(.leitura-recolhida) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  body[data-aba="praticar"] .briefing {
+    position: static;
+    max-height: 44dvh;
+  }
+  .aula-artigo {
+    padding: 4px 0 24px;
+  }
+}
