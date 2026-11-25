@@ -73,7 +73,7 @@
       "id": "hello-world",
       "titulo": "Sua primeira mensagem",
       "tipoExecucao": "script",
-      "enunciado": "Você vai escrever uma mensagem de boas-vindas para quem abriu seu programa. O editor é o lugar onde as instruções são escritas; o console é o lugar onde veremos a mensagem produzida. Nesta primeira aula não haverá formulário, banco ou servidor: apenas uma instrução e seu resultado.\n\nEscreva um programa que mostre exatamente Hello world! no console. Use console.log e coloque o texto entre aspas. Primeiro experimente com Executar; depois confira com Verificar.",
+      "enunciado": "Você vai testar a primeira comunicação do programa com quem o executa. A mensagem combinada permite distinguir uma execução correta de um texto diferente.\n\nEscreva um programa que mostre exatamente Hello world! no console. Use console.log e coloque o texto entre aspas. Primeiro experimente com Executar; depois confira com Verificar.",
       "codigoInicial": "// Escreva sua primeira mensagem aqui.\n",
       "experimento": "",
       "nivel": "Prática com apoio",
@@ -127,16 +127,24 @@
           "Confira especialmente: Confundir a instrução console.log com o texto que ela mostra."
         ],
         "descricao": [
-          "Você vai escrever uma mensagem de boas-vindas para quem abriu seu programa. O editor é o lugar onde as instruções são escritas; o console é o lugar onde veremos a mensagem produzida. Nesta primeira aula não haverá formulário, banco ou servidor: apenas uma instrução e seu resultado.",
+          "Você vai testar a primeira comunicação do programa com quem o executa. A mensagem combinada permite distinguir uma execução correta de um texto diferente.",
           "Escreva um programa que mostre exatamente Hello world! no console. Use console.log e coloque o texto entre aspas. Primeiro experimente com Executar; depois confira com Verificar."
         ],
         "enunciadoBase": "Escreva um programa que mostre exatamente Hello world! no console. Use console.log e coloque o texto entre aspas. Primeiro experimente com Executar; depois confira com Verificar.",
-        "contextoProprio": "Você vai escrever uma mensagem de boas-vindas para quem abriu seu programa. O editor é o lugar onde as instruções são escritas; o console é o lugar onde veremos a mensagem produzida. Nesta primeira aula não haverá formulário, banco ou servidor: apenas uma instrução e seu resultado."
+        "contextoProprio": "Você vai testar a primeira comunicação do programa com quem o executa. A mensagem combinada permite distinguir uma execução correta de um texto diferente."
       },
-      "dica": "A mensagem deve ser texto, entre aspas no programa.\nConfira especialmente: Confundir a instrução console.log com o texto que ela mostra."
+      "dica": "A mensagem deve ser texto, entre aspas no programa.\nConfira especialmente: Confundir a instrução console.log com o texto que ela mostra.",
+      "qualidade": {
+        "versao": "2026.11.integral-1",
+        "alvo": "Sua primeira mensagem",
+        "evidencia": [
+          "Mostra Hello world! no console"
+        ],
+        "tecnica": "A execução confere comportamento. Na discussão, o professor confere e pede explicação da técnica solicitada; testes de saída não provam a sintaxe utilizada."
+      }
     }
   ],
-  "versaoConteudo": "2026-11-23-hub",
+  "versaoConteudo": "2026-11-25-revisao-integral",
   "trilha": "comum",
   "curadoria": {
     "versao": "2026.11.revamp-1",
@@ -149,7 +157,8 @@
         "url": "https://developer.mozilla.org/pt-BR/docs/Web/JavaScript/Guide/Introduction",
         "orientacao": "Leia a apresentação da linguagem e os primeiros exemplos; não é preciso instalar ferramentas para esta atividade."
       }
-    ]
+    ],
+    "qualidade": "2026.11.integral-1"
   },
   "materiaisComplementares": {
     "guia": "Situação: Você vai escrever uma mensagem de boas-vindas para quem abriu seu programa. O editor é o lugar onde as instruções são escritas; o console é o lugar onde veremos a mensagem produzida. Nesta primeira aula não haverá formulário, banco ou servidor: apenas uma instrução e seu resultado.\nPré-requisitos: Nenhum conhecimento de programação é necessário. Localize o editor, o botão Executar e a área do console.\nConceitos: Do código à mensagem; Executar e conferir são ações diferentes.\nDificuldade para investigar: Confundir a instrução console.log com o texto que ela mostra.",
