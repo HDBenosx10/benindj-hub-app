@@ -48,6 +48,58 @@ function conferirArvore(arvore, requisito) {
     };
   const alvo = candidatos[0];
   const regra = requisito.regra;
+  if (
+    [
+      "desestruturacao-objeto",
+      "desestruturacao-com-padrao",
+      "rest-parametro",
+      "rest-objeto",
+      "rest-array",
+      "spread-objeto",
+    ].includes(regra)
+  ) {
+    let encontrou =
+      regra === "rest-parametro" &&
+      alvo.params.some((p) => p.type === "RestElement");
+    const conferir = (n) => {
+      if (n.type === "ObjectPattern") {
+        if (regra === "desestruturacao-objeto") encontrou = true;
+        if (
+          regra === "desestruturacao-com-padrao" &&
+          n.properties.some(
+            (p) =>
+              p.type === "Property" && p.value?.type === "AssignmentPattern",
+          )
+        )
+          encontrou = true;
+        if (
+          regra === "rest-objeto" &&
+          n.properties.some((p) => p.type === "RestElement")
+        )
+          encontrou = true;
+      }
+      if (
+        regra === "rest-array" &&
+        n.type === "ArrayPattern" &&
+        n.elements.some((p) => p?.type === "RestElement")
+      )
+        encontrou = true;
+      if (
+        regra === "spread-objeto" &&
+        n.type === "ObjectExpression" &&
+        n.properties.some((p) => p.type === "SpreadElement")
+      )
+        encontrou = true;
+    };
+    visitar(alvo.body, conferir);
+    for (const p of alvo.params) visitar(p, conferir);
+    return {
+      passou: encontrou,
+      mensagem: encontrou
+        ? "Estrutura técnica encontrada. Confira também o comportamento e o fluxo com o professor."
+        : `Use ${tecnicasDisponiveis[regra]} na própria função ${requisito.funcao}.`,
+    };
+  }
   if (regra.startsWith("sem-metodo-")) {
     const proibido = regra.slice("sem-metodo-".length);
     let encontrou = false;

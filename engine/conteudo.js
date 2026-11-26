@@ -34,6 +34,12 @@
     "metodo-some": "Chamada direta de .some",
     "metodo-every": "Chamada direta de .every",
     "metodo-catch": "Chamada direta de .catch",
+    "desestruturacao-objeto": "Desestruturação de objeto",
+    "desestruturacao-com-padrao": "Desestruturação de objeto com valor padrão",
+    "rest-parametro": "Parâmetro rest",
+    "rest-objeto": "Rest em desestruturação de objeto",
+    "rest-array": "Rest em desestruturação de array",
+    "spread-objeto": "Spread em um objeto novo",
   };
   function validarTecnica(t) {
     const identificador = (s) =>

@@ -12,6 +12,52 @@ const caso = (r) => ({
   esperado: true,
   tecnica: r,
 });
+test("Desestruturação, rest e spread distinguem seus contextos e ignoram helpers", () => {
+  for (const [codigo, regraNome] of [
+    [
+      "function resolver(p){const {estoque=0}=p;return estoque;}",
+      "desestruturacao-com-padrao",
+    ],
+    [
+      "function resolver({estoque=0}){return estoque;}",
+      "desestruturacao-com-padrao",
+    ],
+    [
+      "function resolver(p){const {nome}=p;return nome;}",
+      "desestruturacao-objeto",
+    ],
+    ["function resolver(...p){return p.length;}", "rest-parametro"],
+    ["function resolver(p){const {segredo,...r}=p;return r;}", "rest-objeto"],
+    ["function resolver(p){const [a,...r]=p;return r;}", "rest-array"],
+    ["function resolver(p){return {...p};}", "spread-objeto"],
+  ])
+    assert.equal(confere(codigo, regra(regraNome)), true, regraNome);
+  assert.equal(
+    confere(
+      "function resolver(p){const {estoque}=p;return estoque||0;}",
+      regra("desestruturacao-com-padrao"),
+    ),
+    false,
+  );
+  assert.equal(
+    confere(
+      "function resolver(p){function auxiliar(...r){return r;}return p;}",
+      regra("rest-parametro"),
+    ),
+    false,
+  );
+  assert.equal(
+    confere("function resolver(p){return [...p];}", regra("rest-array")),
+    false,
+  );
+  assert.equal(
+    confere(
+      "function resolver(p){function auxiliar(){return {...p};}return p;}",
+      regra("spread-objeto"),
+    ),
+    false,
+  );
+});
 test("toSorted exigido distingue método real de sort, comentário e string", () => {
   assert.equal(
     confere(

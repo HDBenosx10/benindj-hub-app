@@ -40,6 +40,8 @@ A análise é estrutural, não uma prova de fluxo de dados ou de execução de c
 
 ## Distribuição e progresso
 
+As regras `desestruturacao-objeto`, `desestruturacao-com-padrao`, `rest-parametro`, `rest-objeto`, `rest-array` e `spread-objeto` distinguem os contextos sintáticos. Desestruturação é reconhecida no corpo ou nos parâmetros da função-alvo; helpers internos não satisfazem o requisito. O padrão exige uma propriedade com inicializador em ObjectPattern. Rest em parâmetro não é spread em chamada; rest de array não é uma cópia com spread. Nenhuma dessas regras prova sozinha que a variável extraída ou o padrão escolhido contribuiu para o resultado: confira valores, ausência, campos permitidos, referências e mutação nos testes e na explicação do aluno.
+
 A próxima versão do runtime com esse recurso é **0.15.0**. Aulas com técnica exigida são exportadas no formato 4; versões antigas que só aceitam formato 3 recusam a importação. O acervo online exige no mínimo 0.15.0 para essas aulas. Atualize aplicativo e API antes de publicá-las. Não há liberação automática de conteúdos por acrescentar um requisito.
 
 Adicionar ou mudar uma regra técnica exige nova verificação da questão. O código salvo do aluno permanece preservado. Questões antigas, sem requisito técnico, conservam o funcionamento anterior.
