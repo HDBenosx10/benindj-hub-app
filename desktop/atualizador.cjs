@@ -51,6 +51,7 @@ function criarAtualizador({
   portable = false,
   empacotado = true,
   fetchImpl = fetch,
+  plataforma = process.platform,
 }) {
   let estado = { fase: "ocioso", versaoAtual: versao, portable },
     ocupado = false,
@@ -83,7 +84,7 @@ function criarAtualizador({
     }
   });
   async function verificar() {
-    if (process.platform === "darwin")
+    if (plataforma === "darwin")
       return mudar("manual", {
         mensagem: "No macOS, baixe a nova versão pela página de releases e substitua o aplicativo em Aplicativos. Seus dados ficam preservados. A atualização automática ainda não está disponível para Mac.",
       });

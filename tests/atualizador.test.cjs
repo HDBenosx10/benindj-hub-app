@@ -16,6 +16,7 @@ function cenario({
   portable = false,
   alterarInfo = false,
   antesDeInstalar = async () => {},
+  plataforma = "win32",
 } = {}) {
   const par = crypto.generateKeyPairSync("ed25519"),
     dados = Buffer.from("executável de teste");
@@ -52,6 +53,7 @@ function cenario({
   const requests = [];
   const atualizador = criarAtualizador({
     updater: u,
+    plataforma,
     perfil,
     portable,
     versao: "0.11.2",
@@ -91,6 +93,14 @@ test("Manifesto adulterado, edição incorreta e pré-release são recusados", (
   assert.throws(() =>
     validarManifesto(raw, sig, c.par.publicKey, "aluno", "0.11.2"),
   );
+});
+test("macOS informa atualização manual sem consultar ou baixar executáveis Windows", async () => {
+  const c = cenario({ plataforma: "darwin" });
+  assert.equal((await c.atualizador.verificar()).fase, "manual");
+  assert.equal(c.requests.length, 0);
+  assert.equal(c.chamadas.length, 0);
+  await assert.rejects(c.atualizador.baixar());
+  await assert.rejects(c.atualizador.instalar());
 });
 test("Só baixa após conferir manifesto e metadados; instalação salva antes de reiniciar", async () => {
   let salvo = false;
