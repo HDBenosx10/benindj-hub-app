@@ -48,6 +48,27 @@ function conferirArvore(arvore, requisito) {
     };
   const alvo = candidatos[0];
   const regra = requisito.regra;
+  if (regra === "sem-metodo-reverse") {
+    let encontrou = false;
+    visitar(
+      alvo.body,
+      (n) => {
+        if (n.type !== "CallExpression" || n.callee.type !== "MemberExpression")
+          return;
+        const nome = n.callee.computed
+          ? n.callee.property.value
+          : n.callee.property.name;
+        if (nome === "reverse") encontrou = true;
+      },
+      true,
+    );
+    return {
+      passou: !encontrou,
+      mensagem: encontrou
+        ? `A função ${requisito.funcao} não deve chamar reverse, inclusive em funções auxiliares internas.`
+        : "Nenhuma chamada direta de reverse foi encontrada. Os testes de comportamento são avaliados separadamente.",
+    };
+  }
   let passou = {
     arrow: alvo.type === "ArrowFunctionExpression",
     declaracao: alvo.type === "FunctionDeclaration",
@@ -71,6 +92,19 @@ function conferirArvore(arvore, requisito) {
     // Não contar funções decorativas nem helpers não relacionados. O contrato
     // pede a técnica no corpo da função-alvo; delegação é uma regra diferente.
     visitar(alvo.body, (n) => {
+      const ehLaco = (node) =>
+        [
+          "ForStatement",
+          "ForOfStatement",
+          "ForInStatement",
+          "WhileStatement",
+          "DoWhileStatement",
+        ].includes(node.type);
+      if (regra === "laco" && ehLaco(n)) passou = true;
+      if (regra === "lacos-aninhados" && ehLaco(n))
+        visitar(n.body, (interno) => {
+          if (ehLaco(interno)) passou = true;
+        });
       if (n.type === tipos[regra] && !(n.type === "ForOfStatement" && n.await))
         passou = true;
       if (

@@ -23,6 +23,8 @@ O motor interpreta esse caso como análise estrutural: não executa o corpo retu
 
 - `arrow`, `declaracao`, `expressao`, `async`: forma da própria função indicada. O alvo deve ser uma declaração no nível principal ou uma variável inicializada diretamente com função; atribuições dinâmicas e aliases não são resolvidos.
 - `for`: família dos laços for, inclusive for…of e for…in. `for-of`, `while`, `do-while`: a construção específica no corpo da função-alvo.
+- `laco`: qualquer laço de repetição no corpo. `lacos-aninhados`: um laço cujo corpo contém outro laço; dois laços em sequência não atendem, nem um laço escondido em uma função auxiliar.
+- `sem-metodo-reverse`: recusa chamadas diretas de `.reverse()` ou `["reverse"]()`, inclusive em helpers internos da função indicada. Não resolve aliases nem caminhos dinâmicos; a preservação e a identidade da saída também precisam de testes de comportamento.
 - `await`, `try-catch`, `finally`: a construção no corpo da função indicada. Um finally sozinho não satisfaz try-catch.
 - `recursao`: presença de chamada direta pelo nome da função ou pelo nome interno de uma expressão function. Recursão indireta e aliases não são resolvidos.
 - `arrow-interna`, `arrow-interna-expressao`, `arrow-interna-bloco`: variável local inicializada com arrow e uma chamada ao seu nome no corpo da função-alvo. As duas últimas distinguem retorno de expressão e corpo em bloco.

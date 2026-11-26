@@ -12,6 +12,64 @@ const caso = (r) => ({
   esperado: true,
   tecnica: r,
 });
+test("Laços aninhados não se confundem com laços irmãos; reverse não é permitido nem em helper interno", () => {
+  assert.equal(
+    confere(
+      "function resolver(v){for(const x of v){for(const y of x){}}return v;}",
+      regra("lacos-aninhados"),
+    ),
+    true,
+  );
+  assert.equal(
+    confere(
+      "function resolver(v){for(const x of v){}for(const x of v){}return v;}",
+      regra("lacos-aninhados"),
+    ),
+    false,
+  );
+  assert.equal(
+    confere(
+      "function resolver(v){for(const x of v){function ignorada(){while(false){}}}return v;}",
+      regra("lacos-aninhados"),
+    ),
+    false,
+  );
+  assert.equal(
+    confere(
+      "function resolver(v){while(v.length>0){break;}return v;}",
+      regra("laco"),
+    ),
+    true,
+  );
+  assert.equal(
+    confere(
+      "function resolver(v){const s=[];for(const x of v)s.push(x);return s;}",
+      regra("sem-metodo-reverse"),
+    ),
+    true,
+  );
+  assert.equal(
+    confere(
+      'function resolver(v){return v["reverse"]();}',
+      regra("sem-metodo-reverse"),
+    ),
+    false,
+  );
+  assert.equal(
+    confere(
+      "function resolver(v){function helper(){return v.reverse();}return helper();}",
+      regra("sem-metodo-reverse"),
+    ),
+    false,
+  );
+  assert.equal(
+    confere(
+      'function resolver(v){const texto="v.reverse()";/* .reverse() */return v;}',
+      regra("sem-metodo-reverse"),
+    ),
+    true,
+  );
+});
 test("Arrow é conferida na função indicada; comentário, texto e função decorativa não satisfazem", () => {
   for (const c of [
     "const resolver=x=>x*2;",
