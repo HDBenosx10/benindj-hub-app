@@ -49,6 +49,39 @@ function conferirArvore(arvore, requisito) {
   const alvo = candidatos[0];
   const regra = requisito.regra;
   if (
+    ["json-parse", "json-stringify", "math-round", "intl-data"].includes(regra)
+  ) {
+    const [objeto, metodo] = {
+      "json-parse": ["JSON", "parse"],
+      "json-stringify": ["JSON", "stringify"],
+      "math-round": ["Math", "round"],
+      "intl-data": ["Intl", "DateTimeFormat"],
+    }[regra];
+    let encontrou = false;
+    visitar(alvo.body, (n) => {
+      if (!(
+        n.type === "CallExpression" ||
+        (regra === "intl-data" && n.type === "NewExpression")
+      ))
+        return;
+      const m = n.callee;
+      if (
+        m.type !== "MemberExpression" ||
+        m.object.type !== "Identifier" ||
+        m.object.name !== objeto
+      )
+        return;
+      if ((m.computed ? m.property.value : m.property.name) === metodo)
+        encontrou = true;
+    });
+    return {
+      passou: encontrou,
+      mensagem: encontrou
+        ? "Chamada encontrada. Comportamento e contribuição para o resultado são critérios separados."
+        : `Use ${objeto}.${metodo} na própria função ${requisito.funcao}.`,
+    };
+  }
+  if (
     [
       "desestruturacao-objeto",
       "desestruturacao-com-padrao",

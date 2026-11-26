@@ -12,6 +12,40 @@ const caso = (r) => ({
   esperado: true,
   tecnica: r,
 });
+test("APIs nativas exigidas reconhecem namespace e forma de construção", () => {
+  for (const [codigo, r] of [
+    ["function resolver(t){return JSON.parse(t);}", "json-parse"],
+    ['function resolver(d){return JSON["stringify"](d);}', "json-stringify"],
+    ["function resolver(n){return Math.round(n);}", "math-round"],
+    [
+      'function resolver(){return new Intl.DateTimeFormat("pt-BR");}',
+      "intl-data",
+    ],
+    ['function resolver(){return Intl.DateTimeFormat("pt-BR");}', "intl-data"],
+  ])
+    assert.equal(confere(codigo, regra(r)), true, r);
+  assert.equal(
+    confere(
+      "function resolver(t){return outra.parse(t);}",
+      regra("json-parse"),
+    ),
+    false,
+  );
+  assert.equal(
+    confere(
+      "function resolver(t){function auxiliar(){return JSON.parse(t);}return t;}",
+      regra("json-parse"),
+    ),
+    false,
+  );
+  assert.equal(
+    confere(
+      "function resolver(t){return JSON.stringify(t);}",
+      regra("json-parse"),
+    ),
+    false,
+  );
+});
 test("Desestruturação, rest e spread distinguem seus contextos e ignoram helpers", () => {
   for (const [codigo, regraNome] of [
     [

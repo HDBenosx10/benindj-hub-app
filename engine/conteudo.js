@@ -40,6 +40,11 @@
     "rest-objeto": "Rest em desestruturação de objeto",
     "rest-array": "Rest em desestruturação de array",
     "spread-objeto": "Spread em um objeto novo",
+    "json-parse": "Chamada de JSON.parse",
+    "json-stringify": "Chamada de JSON.stringify",
+    "math-round": "Chamada de Math.round",
+    "intl-data": "Uso de Intl.DateTimeFormat",
+    "metodo-formatToParts": "Chamada direta de .formatToParts",
   };
   function validarTecnica(t) {
     const identificador = (s) =>
