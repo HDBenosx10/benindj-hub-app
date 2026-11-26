@@ -4,9 +4,9 @@
 
 **Aprenda programação escrevendo, executando e entendendo seu próprio código.**
 
-Laboratório para Windows com aulas do seu professor, editor JavaScript, exercícios verificáveis e ferramentas de back-end no mesmo ambiente.
+Laboratório para Windows e macOS com aulas do seu professor, editor JavaScript, exercícios verificáveis e ferramentas de back-end no mesmo ambiente.
 
-[Baixar para Windows](https://github.com/HDBenosx10/benindj-hub-app/releases/latest) · [Guia do laboratório](docs/ambientes/README.md) · [Reportar um problema](https://github.com/HDBenosx10/benindj-hub-app/issues)
+[Baixar o Hub](https://github.com/HDBenosx10/benindj-hub-app/releases/latest) · [Instalação no Mac](docs/MACOS.md) · [Guia do laboratório](docs/ambientes/README.md) · [Reportar um problema](https://github.com/HDBenosx10/benindj-hub-app/issues)
 
 </div>
 
@@ -48,7 +48,7 @@ Seus objetivos pessoais, como aprender JavaScript com foco em back-end, ajudam a
 
 Com Professor e Aluno na versão 0.14.2 ou superior, correções publicadas para a turma chegam pelo acervo conectado. Aulas já recebidas são atualizadas automaticamente; se a aula estiver aberta, um aviso permite salvar e aplicar a revisão. Não é preciso reinstalar o aplicativo a cada correção de conteúdo. [Veja o fluxo de atualização de aulas](docs/acervo-e-atualizacoes.md).
 
-As respostas são salvas automaticamente no perfil do usuário do Windows, fora da pasta de instalação. Atualizar o aplicativo preserva esse perfil. Antes de trocar de computador, use os recursos de exportação de respostas; eles também são úteis como backup.
+As respostas são salvas automaticamente no perfil do usuário, fora da pasta de instalação. Atualizar o aplicativo preserva esse perfil. Antes de trocar de computador, use os recursos de exportação de respostas; eles também são úteis como backup.
 
 A edição instalada permite consultar, baixar e aplicar atualizações pelo aplicativo. Os pacotes de atualização são conferidos com assinatura e hash antes da instalação. Na edição portable, a atualização é feita substituindo o executável pelo novo download verificado.
 
@@ -67,7 +67,9 @@ A interface utiliza uma paleta baseada no Dracula Pro do proprietário do projet
 <details>
 <summary><strong>Desenvolvimento e publicação</strong></summary>
 
-Requisitos de desenvolvimento: Windows, Git e Node 24.13 ou superior.
+No macOS, escolha o DMG **arm64** para Apple Silicon ou **x64** para Intel e arraste o aplicativo para Aplicativos. A primeira distribuição não é notarizada pela Apple e tem atualização manual do aplicativo; consulte o [guia do Mac](docs/MACOS.md) para a primeira abertura. A sincronização das aulas pelo acervo continua disponível.
+
+Requisitos de desenvolvimento: Windows ou macOS, Git e Node 24.13 ou superior.
 
 ```sh
 npm ci
