@@ -381,7 +381,13 @@ async function criarSessao(opcoes) {
       objectGroup: "hub-observacoes",
     });
     emExecucao();
-    await comando(metodo);
+    try {
+      await comando(metodo);
+    } catch (erro) {
+      // A mensagem IPC de conclusão pode chegar antes da resposta CDP ao
+      // último passo/continuar. O programa terminou normalmente nesse caso.
+      if (estado.status !== "concluido") throw erro;
+    }
   }
   async function requisitar(dado) {
     if (!estado.base || finais.has(estado.status))
@@ -463,11 +469,11 @@ async function criarSessao(opcoes) {
       if (m.tipo === "fim")
         void parar(m.erro ? "erro" : "concluido", m.erro ?? null);
     });
-    filho.once("exit", () => {
+    filho.once("close", (codigo, sinal) => {
       clearTimeout(prazo);
       reject(Error("Processo de debug encerrado."));
       if (!finais.has(estado.status))
-        void parar("erro", "O programa encerrou a sessão.");
+        void parar("erro", `O programa encerrou a sessão (código ${codigo}, sinal ${sinal ?? "nenhum"}).`);
     });
   });
   try {
