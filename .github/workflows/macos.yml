@@ -1,0 +1,85 @@
+name: Gerar pacotes macOS
+on:
+  workflow_dispatch:
+    inputs:
+      versao:
+        description: Versão de uma release já publicada (sem v)
+        default: '0.14.2'
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: macos-${{ github.repository }}-${{ inputs.versao }}
+  cancel-in-progress: false
+env:
+  HUB_RELEASE_VERSION: ${{ inputs.versao }}
+  HUB_PROFILE: aluno
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            arch: arm64
+          - runner: macos-15-intel
+            arch: x64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: benindj-hub-app
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: benindj-hub-app
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24.13.0'
+          cache: npm
+          cache-dependency-path: benindj-hub-app/package-lock.json
+      - name: Conferir release de destino
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release view "v$HUB_RELEASE_VERSION" --repo "$GITHUB_REPOSITORY" --json tagName
+      - run: npm ci
+      - run: npm test
+      - name: Montar DMG e ZIP nativos
+        run: npm run build
+      - name: Conferir isolamento do pacote Aluno
+        run: node scripts/check-package.cjs ".build/payload/backend"
+      - name: Testar aplicativo, debugger, SQLite e persistência
+        run: node scripts/smoke-desktop.cjs "dist/mac${{ matrix.arch == 'arm64' && '-arm64' || '' }}/BeninDJ Hub Aluno.app/Contents/MacOS/BeninDJ Hub Aluno"
+      - name: Assinar manifesto de integridade
+        run: node scripts/macos-release.cjs
+        env:
+          HUB_UPDATE_PRIVATE_KEY: ${{ secrets.HUB_UPDATE_PRIVATE_KEY }}
+      - uses: actions/upload-artifact@v7
+        with:
+          name: macos-${{ matrix.arch }}
+          path: |
+            benindj-hub-app/dist/*-macOS-*.dmg
+            benindj-hub-app/dist/*-macOS-*.zip
+            benindj-hub-app/dist/*-macOS-*.json
+            benindj-hub-app/dist/*-macOS-*.sig
+          if-no-files-found: error
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: macos-*
+          path: pacotes
+          merge-multiple: true
+      - name: Acrescentar pacotes à release existente
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "v$HUB_RELEASE_VERSION" pacotes/* docs/MACOS.md --repo "$GITHUB_REPOSITORY"

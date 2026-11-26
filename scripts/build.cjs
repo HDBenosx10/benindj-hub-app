@@ -11,10 +11,11 @@ process.env.ELECTRON_BUILDER_COMPRESSION_LEVEL ??= "3";
   const raiz = path.resolve(__dirname, "..");
   const base = await preparar(perfil, privado);
   const titulo = professor ? "Professor" : "Aluno";
+  const mac = process.platform === "darwin";
   await build({
-    targets: Platform.WINDOWS.createTarget(
-      process.argv.includes("--dir") ? ["dir"] : ["nsis", "portable"],
-      Arch.x64,
+    targets: (mac ? Platform.MAC : Platform.WINDOWS).createTarget(
+      process.argv.includes("--dir") ? ["dir"] : mac ? ["dmg", "zip"] : ["nsis", "portable"],
+      mac && process.arch === "arm64" ? Arch.arm64 : Arch.x64,
     ),
     publish: "never",
     config: {
@@ -55,6 +56,13 @@ process.env.ELECTRON_BUILDER_COMPRESSION_LEVEL ??= "3";
         verifyUpdateCodeSignature: false,
         icon: path.join(raiz, "assets", "app.ico"),
         target: ["nsis", "portable"],
+      },
+      mac: {
+        identity: "-",
+        notarize: false,
+        hardenedRuntime: false,
+        category: "public.app-category.education",
+        artifactName: "BeninDJ-Hub-" + titulo + "-${version}-macOS-${arch}.${ext}",
       },
       portable: {
         artifactName: "BeninDJ-Hub-" + titulo + "-${version}-Windows-x64.exe",

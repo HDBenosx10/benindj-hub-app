@@ -169,7 +169,7 @@ async function iniciar() {
   const seguro = {
     async criptografar(texto) {
       if (!(await safeStorage.isAsyncEncryptionAvailable()))
-        throw Error("A proteção de credenciais do Windows está indisponível.");
+        throw Error("A proteção de credenciais do sistema está indisponível.");
       return safeStorage.encryptStringAsync(texto);
     },
     async descriptografar(bytes) {
@@ -277,7 +277,7 @@ async function iniciar() {
     );
   }
   backend = spawn(
-    path.join(base, "runtime", "node.exe"),
+    path.join(base, "runtime", process.platform === "win32" ? "node.exe" : "node"),
     [path.join(origem, "servidor.cjs")],
     {
       windowsHide: true,
