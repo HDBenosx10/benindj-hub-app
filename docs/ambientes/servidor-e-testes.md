@@ -40,3 +40,13 @@ Cada cenário começa com uma pasta e recursos novos. As ações de um mesmo cen
 Em funções, `recursos` também está disponível no código e no corpo do teste. Cada caso ganha um ambiente novo. Um teste pode preparar condições explicitamente com `await recursos.sqlite(...).script(...)`, executar a função e retornar o valor esperado. Não inclua a solução no código inicial ou nos exemplos.
 
 A conferência do professor executa os gabaritos de funções e projetos HTTP. Só salve a aula após verificar a solução e uma tentativa incorreta. Testes aprovados verificam os contratos descritos, não substituem revisão de código e explicação do raciocínio.
+
+## Executar o cliente
+
+Quando a aula oferece `cliente.cjs`, a bancada permite escolher `consultarProdutos` ou `criarProduto` em **Função do cliente** e usar **Executar cliente.cjs**. A criação recebe o objeto do campo **Corpo JSON**; a base local e a sessão atual são fornecidas. O botão **Enviar requisição** continua sendo o explorador direto da API, útil para confirmar o efeito de uma chamada feita pelo código do aluno.
+
+## Cenários com duas sessões
+
+Uma ação de login com `"token": "primeira"` guarda uma sessão nomeada. Use `"autorizado": "primeira"` nas ações que devem reutilizá-la. Isso permite testar revogação, isolamento e escopo por usuário sem usar sempre a última sessão. `true` conserva o comportamento anterior de sessão atual. Recursos com estes novos critérios exigem o próximo runtime, 0.15.0; não distribua essas aulas a um aplicativo antigo.
+
+As verificações de logs conferem método, pathname, status final e duração numérica contra as respostas observadas, além de recusar campos e dados sensíveis. A verificação de senhas confere também uma derivação scrypt independente nos parâmetros didáticos do laboratório; formato do hash sozinho não prova algoritmo ou verificação correta. Isso não certifica segurança de produção nem constância temporal de toda a aplicação.

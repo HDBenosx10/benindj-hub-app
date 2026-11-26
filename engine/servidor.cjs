@@ -929,11 +929,7 @@ async function iniciar() {
         ) {
           throw new Error("Inicie o projeto que contém cliente.cjs.");
         }
-        const valor = await ativo.projeto.modulo(
-          "cliente.cjs",
-          "consultarProdutos",
-          [ativo.projeto.base, dado.token],
-        );
+        const valor = await projetos.executarCliente(ativo.projeto, dado);
         return json(res, 200, { valor, logs: ativo.projeto.logs });
       }
       if (req.method === "POST" && url.pathname === "/api/projeto/sql") {

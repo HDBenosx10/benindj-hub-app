@@ -54,14 +54,16 @@ function zip(arquivos) {
 const iniciar = `"use strict";
 const fs=require('node:fs/promises');const path=require('node:path');
 (async()=>{
- const aula=require('./aula.json');const host=await require('./.hub/recursos-host.cjs').abrir({pasta:path.join(__dirname,'.dados'),definicao:aula.ambiente});
+ const aula=require('./aula.json');
+ const configuracao=aula.modo==='projeto'&&aula.projeto.tipo==='http'&&require('node:fs').existsSync(path.join(__dirname,'config.cjs'))?require('./config.cjs').lerConfiguracao(process.env):{porta:Number(process.env.PORT??3000),host:'127.0.0.1'};
+ const host=await require('./.hub/recursos-host.cjs').abrir({pasta:path.join(__dirname,'.dados'),definicao:aula.ambiente});
  const recursos=require('./.hub/recursos-cliente.cjs').criarCliente(host.conexao);
  const fechar=async()=>{await host.parar();process.exit(0);};process.on('SIGINT',fechar);process.on('SIGTERM',fechar);
  if(aula.modo==='projeto' && aula.projeto.tipo==='http'){
   const compartilhado=host.conexao.recursos.some(r=>r.id==='banco'&&r.tipo==='sqlite'&&r.modo==='arquivo');
   const caminhoBanco=compartilhado?await recursos.sqlite('banco').caminhoArquivo():path.join(__dirname,'hub.sqlite');
   const servidor=await require('./app.cjs').criarServidor({caminhoBanco,recursos});
-  servidor.listen(Number(process.env.PORT??3000),'127.0.0.1',()=>console.log('Seu servidor: http://127.0.0.1:'+servidor.address().port));
+  servidor.listen(configuracao.porta,configuracao.host,()=>console.log('Seu servidor: http://'+configuracao.host+':'+servidor.address().port));
   process.on('SIGINT',()=>servidor.closeAllConnections());
  }else if(aula.modo==='projeto'){
   const comando=aula.projeto.comandos.find(c=>c.id===(process.argv[2]??aula.projeto.comandos[0].id));if(!comando)throw Error('Comando inexistente.');
@@ -78,7 +80,7 @@ const verificar = `"use strict";
 const fs=require('node:fs/promises');const path=require('node:path');
 (async()=>{const aula=require('./aula.json');let resultados=[];
 if(aula.modo==='funcoes'){for(const e of aula.exercicios){const codigo=await fs.readFile(path.join(__dirname,'exercicios',e.id+'.js'),'utf8');resultados.push(...await require('./.hub/avaliacao-ambiente.cjs').avaliarComAmbiente(codigo,e.testes,aula.ambiente));}}
-else{const arquivos={};for(const f of aula.projeto.arquivos)arquivos[f.nome]=await fs.readFile(path.join(__dirname,f.nome),'utf8');resultados=aula.projeto.tipo==='http'?await require('./.hub/projetos.cjs').testarProjeto(aula,arquivos):await require('./.hub/oficinas.cjs').testarOficina(aula,arquivos,__dirname);}
+else{const arquivos={};for(const f of aula.projeto.arquivos)arquivos[f.nome]=await fs.readFile(path.join(__dirname,f.nome==='iniciar.cjs'?'entrada.cjs':f.nome),'utf8');resultados=aula.projeto.tipo==='http'?await require('./.hub/projetos.cjs').testarProjeto(aula,arquivos):await require('./.hub/oficinas.cjs').testarOficina(aula,arquivos,__dirname);}
 for(const r of resultados)console.log((r.passou?'✓ ':'✗ ')+r.nome+(r.passou?'':'\\n'+r.recebido));process.exitCode=resultados.every(r=>r.passou)?0:1;
 })().catch(e=>{console.error(e);process.exitCode=1;});
 `;
@@ -113,6 +115,8 @@ exports.exportar = async function exportar(aula, respostas, ambiente) {
     "recursos-cliente.cjs",
     "avaliacao-ambiente.cjs",
     "motor-exercicios.cjs",
+    "tecnicas.cjs",
+    "conteudo.js",
     "projetos.cjs",
     "projeto-worker.cjs",
     "oficinas.cjs",
@@ -121,9 +125,26 @@ exports.exportar = async function exportar(aula, respostas, ambiente) {
       path.join(__dirname, nome),
       "utf8",
     );
+  // No aplicativo empacotado tecnicas.cjs já contém o parser. Em desenvolvimento,
+  // inclua sua distribuição CommonJS para o ZIP continuar independente do workspace.
+  try {
+    const parser = require.resolve("acorn");
+    arquivos[".hub/node_modules/acorn/index.js"] = await fs.readFile(
+      parser,
+      "utf8",
+    );
+    const licenca = path.resolve(path.dirname(parser), "../LICENSE");
+    arquivos[".hub/node_modules/acorn/LICENSE"] = await fs.readFile(
+      licenca,
+      "utf8",
+    );
+  } catch (erro) {
+    if (erro.code !== "MODULE_NOT_FOUND") throw erro;
+  }
   if (aula.modo === "projeto")
     for (const f of aula.projeto.arquivos)
-      arquivos[f.nome] = respostas.arquivos?.[f.nome] ?? f.codigo;
+      arquivos[f.nome === "iniciar.cjs" ? "entrada.cjs" : f.nome] =
+        respostas.arquivos?.[f.nome] ?? f.codigo;
   else
     for (const e of aula.exercicios)
       arquivos["exercicios/" + e.id + ".js"] =
@@ -131,6 +152,9 @@ exports.exportar = async function exportar(aula, respostas, ambiente) {
   const material = publica.materiaisComplementares ?? {};
   arquivos["LEIA-ME.md"] =
     `# ${aula.titulo}\n\n## Executar sem o Hub\n\n1. Instale Node.js 24.13 ou superior: https://nodejs.org/\n2. Extraia esta pasta e abra-a no VS Code ou outro editor.\n3. No terminal da pasta, execute: node iniciar.cjs\n4. Para conferir os mesmos critérios públicos: node verificar.cjs\n\n${aula.modo === "funcoes" ? "Você também pode escolher uma atividade: node iniciar.cjs ID-DA-ATIVIDADE. Os códigos ficam em exercicios/. O runner fornece recursos por parâmetro; leia iniciar.cjs para entender essa passagem." : aula.projeto.tipo !== "http" ? "Este projeto usa comandos de terminal. Execute node iniciar.cjs ID-DO-COMANDO para escolher um dos comandos definidos em aula.json. Oficinas de Git requerem Git instalado." : "O app.cjs exporta criarServidor({ recursos, caminhoBanco }). O runner fornece os recursos e abre o servidor na porta 3000, configurável por PORT. Use curl, fetch ou seu cliente HTTP. Ctrl+C encerra o processo."}\n\n## O que acompanha o projeto\n\nSeu código atual, critérios públicos e configuração de recursos. Gabaritos privados, chave da OpenAI e dados experimentais dos bancos não são exportados. Os recursos começam com os dados iniciais definidos na aula. A pasta .hub contém apenas JavaScript de apoio, sem dependência do Electron; leia seus arquivos e depois substitua os adaptadores por integrações próprias. Bancos em memória se perdem ao encerrar; bancos em arquivo ficam em .dados/.\n\n## Guia complementar\n\n${material.guia ?? "Antes de alterar o projeto, explique entradas, saídas e estado. Faça uma mudança por vez, observe os erros e escreva casos de fronteira."}\n\n## Próximos passos fora da plataforma\n\n${material.foraDoHub ?? "Recrie uma operação em um projeto Node vazio, escreva um teste com node:test e documente como outra pessoa pode executá-lo."}\n\n## Desafios de transferência\n\n${material.desafiosTransferencia ?? "Troque o domínio dos dados e reproduza a mesma regra sem copiar o código. Acrescente um cenário de erro e um de concorrência."}\n\n## Referências\n\n${(material.referencias ?? []).map((r) => "- " + r.titulo + ": " + r.url).join("\n")}\n`;
+  if (aula.modo === "projeto" && aula.projeto.tipo === "http")
+    arquivos["LEIA-ME.md"] +=
+      "\n## Driver e entrada original\n\nUse node iniciar.cjs para executar com os recursos locais definidos na aula. Quando há config.cjs, o driver valida o ambiente antes de iniciar. A entrada pedagógica original foi preservada como entrada.cjs para leitura; ela não substitui automaticamente o driver de recursos. O verificador usa essa entrada original nos cenários isolados. Não é necessário instalar pacotes para a análise técnica exportada.\n";
   return zip(arquivos);
 };
 exports.zip = zip;

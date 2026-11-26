@@ -13,6 +13,8 @@ A aba Fora do Hub tem duas funções: aprofundar o conteúdo da aula e permitir 
 
 Os recursos recomeçam com a configuração e os dados iniciais. SQL executado só no painel e documentos inseridos só durante experimentos não viram automaticamente código exportado. Se a construção do banco for parte da entrega, registre-a num arquivo SQL ou no programa.
 
+Em oficinas com comandos, escolha `node iniciar.cjs ID-DO-COMANDO`, usando os ids de `aula.json`. Em HTTP, `iniciar.cjs` é o driver que prepara recursos; a entrada original da aula fica em `entrada.cjs` para leitura. Quando há `config.cjs`, o driver valida a configuração antes de iniciar. `verificar.cjs` usa a entrada original nos cenários isolados. O ZIP inclui o avaliador de técnicas e seu parser para funcionar sem instalar pacotes.
+
 ## Material que o professor deve produzir
 
 **Guia:** explique o problema, os conhecimentos necessários, o fluxo dos dados, o estado e o significado dos erros. Inclua perguntas que peçam uma previsão e evidências para investigar.

@@ -344,12 +344,14 @@ async function testarProjeto(aula, arquivos) {
     const pasta = await fs.mkdtemp(path.join(os.tmpdir(), "hub-teste-"));
     let projeto;
     const trilha = [];
+    const respostasObservadas = [];
     let esperado = "";
     try {
       projeto = await abrirProjeto(pasta, arquivos, {
         ambiente: aula.ambiente,
       });
       let token;
+      const tokensNomeados = new Map();
       if (teste.cliente) {
         const cliente = teste.cliente;
         esperado =
@@ -428,7 +430,15 @@ async function testarProjeto(aula, arquivos) {
         }
         if (acao.paralelo) {
           const respostas = await Promise.all(
-            acao.paralelo.map((item) => requisitar(projeto, item, token)),
+            acao.paralelo.map((item) =>
+              requisitar(
+                projeto,
+                item,
+                typeof item.autorizado === "string"
+                  ? tokensNomeados.get(item.autorizado)
+                  : token,
+              ),
+            ),
           );
           const statuses = respostas.map((item) => item.status).sort();
           esperado = inspect(acao.statuses);
@@ -445,7 +455,18 @@ async function testarProjeto(aula, arquivos) {
           (acao.json !== undefined
             ? "\n" + inspect(acao.json, { depth: 5 })
             : "");
-        const resposta = await requisitar(projeto, acao, token);
+        const resposta = await requisitar(
+          projeto,
+          acao,
+          typeof acao.autorizado === "string"
+            ? tokensNomeados.get(acao.autorizado)
+            : token,
+        );
+        respostasObservadas.push({
+          metodo: acao.metodo,
+          caminho: new URL(acao.caminho, "http://localhost").pathname,
+          status: resposta.status,
+        });
         trilha.push(
           `${acao.metodo} ${acao.caminho} → ${resposta.status}\n${inspect(resposta.json, { depth: 5 })}`,
         );
@@ -464,6 +485,8 @@ async function testarProjeto(aula, arquivos) {
           ) {
             throw new Error("Sessão sem token válido e expiração futura.");
           }
+          if (typeof acao.token === "string")
+            tokensNomeados.set(acao.token, token);
         }
       }
       if (teste.banco) {
@@ -494,6 +517,48 @@ async function testarProjeto(aula, arquivos) {
             "Verifique salt independente e hash de 64 bytes em hexadecimal.",
           );
         }
+        const derivar = require("node:util").promisify(crypto.scrypt);
+        for (const linha of linhas) {
+          if (!/^[a-f0-9]{32}$/.test(linha.salt))
+            throw new Error("Salt deve representar 16 bytes em hexadecimal.");
+          const esperado = await derivar(
+            "hub-laboratorio-2026",
+            linha.salt,
+            64,
+            { N: 16384, r: 8, p: 1 },
+          );
+          if (!crypto.timingSafeEqual(esperado, Buffer.from(linha.hash, "hex")))
+            throw new Error(
+              "O registro precisa corresponder à derivação scrypt com os parâmetros da aula.",
+            );
+        }
+        const novo = await projeto.modulo("senhas.cjs", "criarRegistro", [
+          "outra-senha-de-teste",
+        ]);
+        const nativo = await derivar("outra-senha-de-teste", novo.salt, 64, {
+          N: 16384,
+          r: 8,
+          p: 1,
+        });
+        if (novo.hash !== nativo.toString("hex"))
+          throw new Error(
+            "CriarRegistro precisa derivar o argumento recebido, sem senha fixa.",
+          );
+        for (const [senha, registro, esperado] of [
+          ["outra-senha-de-teste", novo, true],
+          ["incorreta", novo, false],
+          ["outra-senha-de-teste", { salt: novo.salt, hash: "00" }, false],
+        ]) {
+          if (
+            (await projeto.modulo("senhas.cjs", "verificarSenha", [
+              senha,
+              registro,
+            ])) !== esperado
+          )
+            throw new Error(
+              "Confira senha correta, incorreta e hash de tamanho incompatível.",
+            );
+        }
         trilha.push(
           "Dois salts independentes e hashes derivados, sem senha em texto.",
         );
@@ -517,6 +582,40 @@ async function testarProjeto(aula, arquivos) {
             "Registre método, caminho sem query, status e duração, preservando os dados sensíveis.",
           );
         }
+        const textoCompleto = projeto.logs.join("\n");
+        if (
+          [token, ...tokensNomeados.values()].some(
+            (t) => t && textoCompleto.includes(t),
+          )
+        )
+          throw new Error("Token de sessão não deve aparecer nos logs.");
+        if (
+          textoCompleto.includes("hub-laboratorio-2026") ||
+          textoCompleto.includes("nao-registrar")
+        )
+          throw new Error(
+            "Logs não devem registrar credenciais ou query sensível.",
+          );
+        const estruturados = logs.map((l) => JSON.parse(l));
+        if (
+          estruturados.length !== respostasObservadas.length ||
+          estruturados.some((l, i) => {
+            const r = respostasObservadas[i];
+            return (
+              !r ||
+              l.metodo !== r.metodo ||
+              l.caminho !== r.caminho ||
+              l.status !== r.status ||
+              !Number.isFinite(l.duracaoMs) ||
+              l.duracaoMs < 0 ||
+              Object.keys(l).sort().join(",") !==
+                "caminho,duracaoMs,metodo,status"
+            );
+          })
+        )
+          throw new Error(
+            "Cada log deve corresponder à resposta concluída, com método, pathname, status final e duração numérica não negativa.",
+          );
         trilha.push(...logs);
       }
       if (teste.config) {
@@ -536,6 +635,45 @@ async function testarProjeto(aula, arquivos) {
           throw new Error("A configuração vazia deveria ser rejeitada.");
         }
         trilha.push("Configuração válida aceita e porta vazia recusada.");
+        if (teste.config.completa) {
+          for (const [ambiente, esperado] of [
+            [{}, { host: "127.0.0.1", porta: 3000 }],
+            [
+              { HOST: " localhost ", PORT: "1" },
+              { host: "localhost", porta: 1 },
+            ],
+            [{ PORT: "65535" }, { host: "127.0.0.1", porta: 65535 }],
+          ]) {
+            const r = await projeto.modulo("config.cjs", "lerConfiguracao", [
+              ambiente,
+            ]);
+            if (!isDeepStrictEqual(r, esperado))
+              throw new Error(
+                "Confira padrões, host limpo e limites inclusivos da porta.",
+              );
+          }
+          for (const [ambiente, mensagem] of [
+            [{ PORT: null }, "PORT inválida"],
+            [{ PORT: "65536" }, "PORT inválida"],
+            [{ PORT: "2x" }, "PORT inválida"],
+            [{ PORT: "0" }, "PORT inválida"],
+            [{ HOST: null }, "HOST inválido"],
+            [{ HOST: " " }, "HOST inválido"],
+            [{ HOST: 12 }, "HOST inválido"],
+          ]) {
+            let erro;
+            try {
+              await projeto.modulo("config.cjs", "lerConfiguracao", [ambiente]);
+            } catch (e) {
+              erro = e;
+            }
+            if (erro?.message !== mensagem)
+              throw new Error(
+                "Recuse informação inválida com diagnóstico do campo, sem usá-la como ausência.",
+              );
+          }
+          trilha.push("Host, ausência, tipos e faixa completa conferidos.");
+        }
         await projeto.parar();
         trilha.push(await conferirEntrada(pasta));
       }
@@ -573,7 +711,27 @@ async function testarProjeto(aula, arquivos) {
   return resultados;
 }
 
+async function executarCliente(
+  projeto,
+  { funcao = "consultarProdutos", produto, token } = {},
+) {
+  if (!["consultarProdutos", "criarProduto"].includes(funcao))
+    throw new Error("Escolha consultarProdutos ou criarProduto.");
+  if (
+    funcao === "criarProduto" &&
+    (produto === null || typeof produto !== "object" || Array.isArray(produto))
+  )
+    throw new Error(
+      "Preencha o corpo JSON com o objeto do produto para executar criarProduto.",
+    );
+  const argumentos =
+    funcao === "criarProduto"
+      ? [projeto.base, produto, token]
+      : [projeto.base, token];
+  return projeto.modulo("cliente.cjs", funcao, argumentos);
+}
 module.exports = {
+  executarCliente,
   montarArquivos,
   prepararPasta,
   abrirProjeto,

@@ -34,7 +34,9 @@
         ><button data-rota="aulas">
           <span>▦</span><span id="nav-acervo-texto">Minhas aulas</span>
         </button>
-        <button data-rota="jornada"><span>◇</span><span id="nav-trilhas-texto">Trilhas recebidas</span></button>
+        <button data-rota="jornada">
+          <span>◇</span><span id="nav-trilhas-texto">Trilhas recebidas</span>
+        </button>
         <div id="nav-professor" hidden>
           <p class="nav-caption">ESTÚDIO DO PROFESSOR</p>
           <button id="painel-professor"><span>＋</span>Criar aula</button
@@ -49,7 +51,9 @@
             <strong id="perfil">Abrindo…</strong><small>Workspace local</small>
           </div>
         </div>
-        <button data-rota="conexao" class="nav-quiet" id="nav-conexao">Conexões e atualizações</button>
+        <button data-rota="conexao" class="nav-quiet" id="nav-conexao">
+          Conexões e atualizações
+        </button>
         <button id="ajuda" class="nav-quiet">Ajuda e informações</button
         ><button id="encerrar" class="nav-quiet">Fechar aplicativo</button>
       </div>
@@ -67,9 +71,16 @@
       </header>
       <main>
         <div id="mensagem" role="status" aria-live="polite" hidden></div>
-        <aside id="revisao-acervo" class="revisao-acervo" hidden aria-label="Atualizações das aulas">
+        <aside
+          id="revisao-acervo"
+          class="revisao-acervo"
+          hidden
+          aria-label="Atualizações das aulas"
+        >
           <p id="revisao-acervo-texto" role="status" aria-live="polite"></p>
-          <button id="aplicar-revisao-acervo" class="primary" hidden>Salvar e aplicar atualização</button>
+          <button id="aplicar-revisao-acervo" class="primary" hidden>
+            Salvar e aplicar atualização
+          </button>
         </aside>
         <section id="inicio">
           <div id="resumo-jornada"></div>
@@ -161,7 +172,9 @@
               </div>
               <div id="acoes-professor" class="hero-actions" hidden>
                 <button id="editar-aula-professor">Editar esta aula</button>
-                <button id="publicar-revisao-professor">Enviar atualização</button>
+                <button id="publicar-revisao-professor">
+                  Enviar atualização
+                </button>
                 <button id="previa">Visão do aluno</button
                 ><button id="liberar" class="primary">Liberar aula ↗</button>
               </div>
@@ -577,6 +590,28 @@ Escolha um comando para observar o programa.</pre>
                       ><button id="executar-cliente" hidden>
                         Executar cliente.cjs
                       </button>
+                      <label
+                        id="rotulo-funcao-cliente"
+                        for="funcao-cliente"
+                        hidden
+                        >Função do cliente</label
+                      >
+                      <select
+                        id="funcao-cliente"
+                        hidden
+                        aria-label="Função do cliente"
+                      >
+                        <option value="consultarProdutos">
+                          consultarProdutos(base)
+                        </option>
+                        <option value="criarProduto">
+                          criarProduto(base, produto do corpo JSON)
+                        </option>
+                      </select>
+                      <span id="orientacao-cliente" class="secondary" hidden
+                        >Para criar, preencha o corpo JSON acima. O cliente fará
+                        a requisição à API em execução.</span
+                      >
                     </div>
                     <div id="status-http" class="secondary"></div>
                     <pre id="resposta-http" class="console">
@@ -614,43 +649,131 @@ Nenhuma mensagem emitida pela aplicação.</pre>
         <section id="conexao" hidden>
           <p class="eyebrow">BENINDJ HUB · CONEXÃO</p>
           <h1 id="nuvem-cabecalho-titulo">Seu acervo, sempre por perto</h1>
-          <p class="lead" id="nuvem-introducao">Receba aulas liberadas pelo professor e mantenha o aplicativo atualizado. O que já foi baixado continua disponível offline.</p>
+          <p class="lead" id="nuvem-introducao">
+            Receba aulas liberadas pelo professor e mantenha o aplicativo
+            atualizado. O que já foi baixado continua disponível offline.
+          </p>
           <p id="nuvem-status" role="status" aria-live="polite"></p>
           <section class="card" id="nuvem-conectar">
             <h2 id="nuvem-conectar-titulo">Conectar ao professor</h2>
             <form id="form-nuvem-professor" hidden>
-              <label>Endereço do serviço<input id="nuvem-url" type="url" placeholder="https://seu-acervo.workers.dev" required /></label>
-              <label>Credencial administrativa<input id="nuvem-token" type="password" autocomplete="off" required /></label>
+              <label
+                >Endereço do serviço<input
+                  id="nuvem-url"
+                  type="url"
+                  placeholder="https://seu-acervo.workers.dev"
+                  required
+              /></label>
+              <label
+                >Credencial administrativa<input
+                  id="nuvem-token"
+                  type="password"
+                  autocomplete="off"
+                  required
+              /></label>
               <button class="primary" type="submit">Conectar meu acervo</button>
             </form>
             <form id="form-nuvem-aluno" hidden>
-              <p>Cole o convite completo enviado pelo professor. Ele pode ser usado uma única vez e ativa o acesso nesta instalação.</p>
-              <label>Convite do professor<textarea id="nuvem-convite" rows="3" required autocomplete="off" spellcheck="false"></textarea></label>
+              <p>
+                Cole o convite completo enviado pelo professor. Ele pode ser
+                usado uma única vez e ativa o acesso nesta instalação.
+              </p>
+              <label
+                >Convite do professor<textarea
+                  id="nuvem-convite"
+                  rows="3"
+                  required
+                  autocomplete="off"
+                  spellcheck="false"
+                ></textarea>
+              </label>
               <button class="primary" type="submit">Ativar meu acesso</button>
             </form>
           </section>
           <section class="card" id="nuvem-conectado" hidden>
-            <div class="nuvem-cabecalho"><div><h2 id="nuvem-titulo">Acervo conectado</h2><p id="nuvem-origem" class="secondary"></p></div><button id="nuvem-desconectar">Desconectar esta instalação</button></div>
+            <div class="nuvem-cabecalho">
+              <div>
+                <h2 id="nuvem-titulo">Acervo conectado</h2>
+                <p id="nuvem-origem" class="secondary"></p>
+              </div>
+              <button id="nuvem-desconectar">
+                Desconectar esta instalação
+              </button>
+            </div>
             <div id="nuvem-area-aluno" hidden>
-              <div class="grupo"><button id="nuvem-consultar">Conferir novas aulas</button><button id="nuvem-sincronizar" class="primary">Receber aulas disponíveis</button></div>
-              <p id="nuvem-turma-aluno"></p><div id="nuvem-catalogo"></div>
+              <div class="grupo">
+                <button id="nuvem-consultar">Conferir novas aulas</button
+                ><button id="nuvem-sincronizar" class="primary">
+                  Receber aulas disponíveis
+                </button>
+              </div>
+              <p id="nuvem-turma-aluno"></p>
+              <div id="nuvem-catalogo"></div>
             </div>
             <div id="nuvem-area-professor" hidden>
-              <form id="form-criar-turma" class="grupo"><label>Nova turma<input id="nuvem-nova-turma" maxlength="160" required /></label><button type="submit">Criar turma</button></form>
+              <form id="form-criar-turma" class="grupo">
+                <label
+                  >Nova turma<input
+                    id="nuvem-nova-turma"
+                    maxlength="160"
+                    required /></label
+                ><button type="submit">Criar turma</button>
+              </form>
               <label>Turma selecionada<select id="nuvem-turma"></select></label>
-              <details class="nuvem-secao"><summary>Publicar aulas para esta turma</summary><p>Escolha apenas o que deseja liberar agora. Gabaritos não são enviados. Uma nova revisão só substitui a liberada depois desta publicação.</p><div id="nuvem-aulas-professor" class="nuvem-selecao"></div><button id="nuvem-publicar" class="primary">Publicar aulas selecionadas</button></details>
-              <details class="nuvem-secao" open><summary>Aulas liberadas</summary><div id="nuvem-liberadas"></div></details>
-              <details class="nuvem-secao" open><summary>Alunos e convites</summary>
-                <form id="form-criar-convite" class="grupo"><label>Nome do aluno<input id="nuvem-nome-aluno" maxlength="160" required /></label><button type="submit">Gerar convite individual</button></form>
-                <p class="secondary">O convite vence em 48 horas. Depois de usado, outra pessoa não pode ativá-lo. Trocar o computador revoga a instalação anterior e emite um novo convite.</p>
+              <details class="nuvem-secao">
+                <summary>Publicar aulas para esta turma</summary>
+                <p>
+                  Escolha apenas o que deseja liberar agora. Gabaritos não são
+                  enviados. Uma nova revisão só substitui a liberada depois
+                  desta publicação.
+                </p>
+                <div id="nuvem-aulas-professor" class="nuvem-selecao"></div>
+                <button id="nuvem-publicar" class="primary">
+                  Publicar aulas selecionadas
+                </button>
+              </details>
+              <details class="nuvem-secao" open>
+                <summary>Aulas liberadas</summary>
+                <div id="nuvem-liberadas"></div>
+              </details>
+              <details class="nuvem-secao" open>
+                <summary>Alunos e convites</summary>
+                <form id="form-criar-convite" class="grupo">
+                  <label
+                    >Nome do aluno<input
+                      id="nuvem-nome-aluno"
+                      maxlength="160"
+                      required /></label
+                  ><button type="submit">Gerar convite individual</button>
+                </form>
+                <p class="secondary">
+                  O convite vence em 48 horas. Depois de usado, outra pessoa não
+                  pode ativá-lo. Trocar o computador revoga a instalação
+                  anterior e emite um novo convite.
+                </p>
                 <div id="nuvem-alunos"></div>
               </details>
             </div>
           </section>
           <section class="card" id="nuvem-update">
-            <h2>Atualizações do aplicativo</h2><p id="update-status" role="status" aria-live="polite">Consultar uma versão não interrompe sua atividade.</p>
-            <progress id="update-progresso" max="100" value="0" hidden></progress>
-            <div class="grupo"><button id="update-verificar">Verificar atualizações</button><button id="update-baixar" class="primary" hidden>Baixar atualização</button><button id="update-instalar" class="primary" hidden>Salvar e reiniciar para atualizar</button></div>
+            <h2>Atualizações do aplicativo</h2>
+            <p id="update-status" role="status" aria-live="polite">
+              Consultar uma versão não interrompe sua atividade.
+            </p>
+            <progress
+              id="update-progresso"
+              max="100"
+              value="0"
+              hidden
+            ></progress>
+            <div class="grupo">
+              <button id="update-verificar">Verificar atualizações</button
+              ><button id="update-baixar" class="primary" hidden>
+                Baixar atualização</button
+              ><button id="update-instalar" class="primary" hidden>
+                Salvar e reiniciar para atualizar
+              </button>
+            </div>
           </section>
         </section>
         <footer>
@@ -709,10 +832,26 @@ Nenhuma mensagem emitida pela aplicação.</pre>
         </button>
       </footer>
     </dialog>
-    <dialog id="convite-gerado" class="dialogo-lote" aria-labelledby="convite-gerado-titulo">
-      <h2 id="convite-gerado-titulo">Convite individual pronto</h2><p>Envie somente ao aluno indicado. O código é mostrado agora e não pode ser recuperado no servidor; se perdê-lo, emita outro.</p>
-      <textarea id="convite-gerado-texto" rows="4" readonly spellcheck="false"></textarea>
-      <footer><button id="convite-copiar">Copiar convite</button><button id="convite-fechar">Concluir</button></footer>
+    <dialog
+      id="convite-gerado"
+      class="dialogo-lote"
+      aria-labelledby="convite-gerado-titulo"
+    >
+      <h2 id="convite-gerado-titulo">Convite individual pronto</h2>
+      <p>
+        Envie somente ao aluno indicado. O código é mostrado agora e não pode
+        ser recuperado no servidor; se perdê-lo, emita outro.
+      </p>
+      <textarea
+        id="convite-gerado-texto"
+        rows="4"
+        readonly
+        spellcheck="false"
+      ></textarea>
+      <footer>
+        <button id="convite-copiar">Copiar convite</button
+        ><button id="convite-fechar">Concluir</button>
+      </footer>
     </dialog>
   </body>
 </html>

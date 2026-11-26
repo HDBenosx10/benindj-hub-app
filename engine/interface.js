@@ -292,7 +292,8 @@ function mostrarRota(rota) {
     aula: aula?.titulo ?? "Aula",
     estudio: "Criar aula",
     coruja: "DEV Coruja",
-    jornada: perfil==='professor'?'Trilhas do professor':'Trilhas recebidas',
+    jornada:
+      perfil === "professor" ? "Trilhas do professor" : "Trilhas recebidas",
   }[rota];
   document
     .querySelectorAll("[data-rota]")
@@ -692,6 +693,13 @@ function renderizarPratica() {
     $("executar-cliente").hidden = !aula.projeto.arquivos.some(
       (arq) => arq.nome === "cliente.cjs",
     );
+    for (const id of [
+      "rotulo-funcao-cliente",
+      "funcao-cliente",
+      "orientacao-cliente",
+    ])
+      $(id).hidden = $("executar-cliente").hidden;
+    $("funcao-cliente").value = "consultarProdutos";
     preencherRequest();
     mostrarObservacao("http");
   }
@@ -1055,10 +1063,15 @@ $("executar-cliente").onclick = tratar(async () => {
   const retorno = await api("/api/projeto/cliente", {
     aulaId: aula.id,
     token: sessao,
+    funcao: $("funcao-cliente").value,
+    produto:
+      $("funcao-cliente").value === "criarProduto"
+        ? JSON.parse($("corpo").value || "null")
+        : undefined,
   });
   $("resposta-http").textContent = fmt(retorno.valor);
   $("status-http").textContent =
-    "Resultado de cliente.cjs após consultar a própria API";
+    `Resultado de ${$("funcao-cliente").value} em cliente.cjs`;
 });
 $("consultar-banco").onclick = tratar(async () => {
   const retorno = await api("/api/projeto/sql", {
