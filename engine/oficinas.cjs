@@ -26,6 +26,7 @@ async function comando(pasta, definicao) {
     } catch {
       npm = path.join(
         path.dirname(process.execPath),
+        ...(process.platform === "win32" ? [] : ["..", "lib"]),
         "node_modules",
         "npm",
         "bin",

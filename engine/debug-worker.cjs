@@ -37,7 +37,9 @@ process.on("message", async (m) => {
       inspector.open(0, "127.0.0.1");
       enviar({ tipo: "inspector", url: inspector.url() });
     } else if (m.tipo === "executar") {
-      process.channel?.unref();
+      // Em código avulso, a IPC mantém o processo vivo durante await e os
+      // comandos finais do inspector. Projetos usam beforeExit para detectar fim.
+      if (dados.pasta) process.channel?.unref();
       const recursos = dados.conexao
         ? require("./recursos-cliente.cjs").criarCliente(dados.conexao)
         : undefined;
