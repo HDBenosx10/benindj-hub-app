@@ -12,6 +12,79 @@ const caso = (r) => ({
   esperado: true,
   tecnica: r,
 });
+test("Padrão, chamada auxiliar e função retornada respeitam os alvos indicados", () => {
+  assert.equal(
+    confere("function resolver(x,taxa=2){return x+taxa;}", {
+      ...regra("parametro-padrao"),
+      parametro: "taxa",
+    }),
+    true,
+  );
+  assert.equal(
+    confere("function resolver(x=2,taxa){return x+taxa;}", {
+      ...regra("parametro-padrao"),
+      parametro: "taxa",
+    }),
+    false,
+  );
+  assert.equal(
+    confere("function resolver(x){return auxiliar(x);}", {
+      ...regra("chama-funcao"),
+      referencia: "auxiliar",
+    }),
+    true,
+  );
+  assert.equal(
+    confere(
+      "function resolver(x){function auxiliar(n){return n;}return auxiliar(x);}",
+      { ...regra("funcao-interna-chamada"), referencia: "auxiliar" },
+    ),
+    true,
+  );
+  assert.equal(
+    confere(
+      "function auxiliar(n){return n;}function resolver(x){return auxiliar(x);}",
+      { ...regra("funcao-interna-chamada"), referencia: "auxiliar" },
+    ),
+    false,
+  );
+  assert.equal(
+    confere(
+      "function resolver(x){function interna(y){return x+y;}return interna;}",
+      regra("funcao-interna-retornada"),
+    ),
+    true,
+  );
+  assert.equal(
+    confere("const resolver=x=>y=>x+y;", regra("funcao-interna-retornada")),
+    true,
+  );
+  assert.equal(
+    confere(
+      "function resolver(x){function interna(y){return y;}return externa(interna);}",
+      regra("funcao-interna-retornada"),
+    ),
+    false,
+  );
+  assert.equal(
+    confere(
+      "function resolver(v){return v.map(x=>x);}",
+      regra("sem-metodo-map"),
+    ),
+    false,
+  );
+  assert.equal(
+    confere(
+      "function resolver(v){return v.filter(x=>true);}",
+      regra("sem-metodo-filter"),
+    ),
+    false,
+  );
+  assert.throws(
+    () => conteudo.validarTecnica(regra("parametro-padrao")),
+    /técnico/,
+  );
+});
 test("Laços aninhados não se confundem com laços irmãos; reverse não é permitido nem em helper interno", () => {
   assert.equal(
     confere(

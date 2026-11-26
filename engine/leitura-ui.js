@@ -226,7 +226,7 @@ function renderizarBriefing(exercicio) {
       elemento(
         lista,
         "li",
-        `${t.tecnica.funcao}: ${HubConteudo.tecnicasDisponiveis[t.tecnica.regra]}.`,
+        `${t.tecnica.funcao}: ${HubConteudo.tecnicasDisponiveis[t.tecnica.regra]}${t.tecnica.parametro ? " · parâmetro " + t.tecnica.parametro : ""}${t.tecnica.referencia ? " · auxiliar " + t.tecnica.referencia : ""}.`,
       );
     elemento(
       requisitos,

@@ -11,6 +11,12 @@
     laco: "Um laço de repetição",
     "lacos-aninhados": "Laços aninhados",
     "sem-metodo-reverse": "Não chamar .reverse",
+    "sem-metodo-map": "Não chamar .map",
+    "sem-metodo-filter": "Não chamar .filter",
+    "parametro-padrao": "Valor padrão na declaração do parâmetro",
+    "chama-funcao": "Chamar uma função auxiliar indicada",
+    "funcao-interna-chamada": "Definir e chamar uma função interna",
+    "funcao-interna-retornada": "Definir e retornar uma função interna",
     recursao: "Chamada recursiva direta",
     async: "Função async",
     await: "Expressão await",
@@ -29,13 +35,26 @@
     "metodo-catch": "Chamada direta de .catch",
   };
   function validarTecnica(t) {
+    const identificador = (s) =>
+      typeof s === "string" && /^[A-Za-z_$][\w$]{0,60}$/.test(s);
+    const extras =
+      t?.regra === "parametro-padrao"
+        ? ["parametro"]
+        : ["chama-funcao", "funcao-interna-chamada"].includes(t?.regra)
+          ? ["referencia"]
+          : [];
     if (
       !t ||
       t.versao !== 1 ||
       typeof t.funcao !== "string" ||
       !/^[A-Za-z_$][\w$]{0,60}$/.test(t.funcao) ||
       !Object.hasOwn(tecnicasDisponiveis, t.regra) ||
-      Object.keys(t).some((k) => !["versao", "funcao", "regra"].includes(k))
+      Object.keys(t).some(
+        (k) => !["versao", "funcao", "regra", ...extras].includes(k),
+      ) ||
+      (t.regra === "parametro-padrao" && !identificador(t.parametro)) ||
+      (t.regra === "chama-funcao" && !identificador(t.referencia)) ||
+      (t.referencia !== undefined && !identificador(t.referencia))
     )
       throw Error(
         "Requisito técnico inválido: informe a função e uma técnica suportada.",
