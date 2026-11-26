@@ -185,6 +185,20 @@ test("Aluno recusa conexão administrativa e convite HTTP; professor remove gaba
   });
   assert.equal(enviados[2].body.versaoMinima, "0.14.2");
   assert.ok(!enviados[2].body.aula.professor);
+  const tecnica = {
+    schema: 3,
+    id: "aula-09",
+    exercicios: [
+      { testes: [{ tecnica: { versao: 1, funcao: "dobro", regra: "arrow" } }] },
+    ],
+  };
+  await prof.cliente.executar("publicar", {
+    turmaId: "turma",
+    aulas: [tecnica],
+  });
+  assert.equal(enviados[4].body.versaoMinima, "0.15.0");
+  assert.equal(enviados[4].body.aula.schema, 4);
+  assert.equal(tecnica.schema, 3);
   assert.ok(
     !JSON.stringify(await prof.cliente.executar("estado")).includes("segredo"),
   );

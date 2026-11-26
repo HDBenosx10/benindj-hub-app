@@ -12,7 +12,8 @@ async function obterRuntime(destino) {
   const cache = path.join(raiz, ".cache");
   await fs.mkdir(cache, { recursive: true });
   if (process.platform === "darwin") {
-    if (!["arm64", "x64"].includes(process.arch)) throw Error("Arquitetura macOS não suportada.");
+    if (!["arm64", "x64"].includes(process.arch))
+      throw Error("Arquitetura macOS não suportada.");
     const nome = `node-v${versaoNode}-darwin-${process.arch}`;
     const arquivo = path.join(cache, nome + ".tar.gz");
     const extraido = path.join(cache, nome);
@@ -20,20 +21,42 @@ async function obterRuntime(destino) {
       await fs.access(path.join(extraido, "bin", "node"));
     } catch {
       const url = `https://nodejs.org/dist/v${versaoNode}/`;
-      const [resposta, somas] = await Promise.all([fetch(url + nome + ".tar.gz"), fetch(url + "SHASUMS256.txt")]);
-      if (!resposta.ok || !somas.ok) throw Error("Falha ao obter o runtime oficial do Mac.");
+      const [resposta, somas] = await Promise.all([
+        fetch(url + nome + ".tar.gz"),
+        fetch(url + "SHASUMS256.txt"),
+      ]);
+      if (!resposta.ok || !somas.ok)
+        throw Error("Falha ao obter o runtime oficial do Mac.");
       const bytes = Buffer.from(await resposta.arrayBuffer());
-      const esperado = (await somas.text()).split(/\r?\n/).find(l => l.trim().endsWith("  " + nome + ".tar.gz"))?.split(/\s+/)[0];
-      const hash = require("node:crypto").createHash("sha256").update(bytes).digest("hex");
+      const esperado = (await somas.text())
+        .split(/\r?\n/)
+        .find((l) => l.trim().endsWith("  " + nome + ".tar.gz"))
+        ?.split(/\s+/)[0];
+      const hash = require("node:crypto")
+        .createHash("sha256")
+        .update(bytes)
+        .digest("hex");
       if (hash !== esperado) throw Error("Hash do runtime macOS inválido.");
       await fs.writeFile(arquivo, bytes);
-      await require("node:util").promisify(require("node:child_process").execFile)("tar", ["-xzf", arquivo, "-C", cache]);
+      await require("node:util").promisify(
+        require("node:child_process").execFile,
+      )("tar", ["-xzf", arquivo, "-C", cache]);
     }
     await fs.mkdir(destino, { recursive: true });
-    await fs.copyFile(path.join(extraido, "bin", "node"), path.join(destino, "node"));
+    await fs.copyFile(
+      path.join(extraido, "bin", "node"),
+      path.join(destino, "node"),
+    );
     await fs.chmod(path.join(destino, "node"), 0o755);
-    await fs.copyFile(path.join(extraido, "LICENSE"), path.join(destino, "LICENSE-Node.txt"));
-    await fs.cp(path.join(extraido, "lib", "node_modules", "npm"), path.join(destino, "npm"), { recursive: true });
+    await fs.copyFile(
+      path.join(extraido, "LICENSE"),
+      path.join(destino, "LICENSE-Node.txt"),
+    );
+    await fs.cp(
+      path.join(extraido, "lib", "node_modules", "npm"),
+      path.join(destino, "npm"),
+      { recursive: true },
+    );
     return;
   }
   const arquivo = path.join(cache, `node-v${versaoNode}-win-x64.zip`);
@@ -81,6 +104,18 @@ exports.preparar = async (perfil = "aluno", professorRoot) => {
   if (perfil === "aluno")
     await fs.rm(path.join(backend, "curriculo.json"), { force: true });
   await require("./editor.cjs").gerarEditor(path.join(backend, "vendor"));
+  await require("esbuild").build({
+    entryPoints: [path.join(raiz, "engine", "tecnicas.cjs")],
+    outfile: path.join(backend, "tecnicas.cjs"),
+    bundle: true,
+    platform: "node",
+    format: "cjs",
+    target: "node24",
+  });
+  await fs.copyFile(
+    path.join(raiz, "node_modules", "acorn", "LICENSE"),
+    path.join(backend, "vendor", "LICENCA-Acorn.txt"),
+  );
   await fs.mkdir(path.join(backend, "aulas"), { recursive: true });
   await fs.copyFile(
     path.join(raiz, "aulas", "aula-00.aula-hub"),

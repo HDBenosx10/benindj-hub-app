@@ -88,10 +88,11 @@ function preservarAprovacoes(anterior, nova, salvo) {
     return false;
   const criterios = (e) =>
     JSON.stringify(
-      e.testes.map(({ executar, esperado, erroEsperado }) => ({
+      e.testes.map(({ executar, esperado, erroEsperado, tecnica }) => ({
         executar,
         esperado,
         erroEsperado,
+        tecnica,
       })),
     );
   let mudou = false;

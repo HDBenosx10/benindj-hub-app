@@ -289,10 +289,14 @@ function criarCliente({
       const publicadas = [];
       for (const original of dado.aulas) {
         const { professor, distribuicao, ...aula } = original;
+        const exigeTecnica = aula.exercicios?.some((e) =>
+          e.testes?.some((t) => t.tecnica !== undefined),
+        );
+        if (exigeTecnica) aula.schema = 4;
         publicadas.push(
           await requisitar(c, "/v1/professor/aulas", {
             aula,
-            versaoMinima: "0.14.2",
+            versaoMinima: exigeTecnica ? "0.15.0" : "0.14.2",
           }),
         );
       }

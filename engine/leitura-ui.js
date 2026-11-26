@@ -218,6 +218,22 @@ function renderizarBriefing(exercicio) {
     const lista = elemento(regras, "ul");
     contrato.regras.forEach((r) => elemento(lista, "li", r));
   }
+  const tecnicas = (atividade?.testes ?? []).filter((t) => t.tecnica);
+  if (tecnicas.length) {
+    const requisitos = secaoDeLeitura(dados, "Técnica exigida nesta questão");
+    const lista = elemento(requisitos, "ul");
+    for (const t of tecnicas)
+      elemento(
+        lista,
+        "li",
+        `${t.tecnica.funcao}: ${HubConteudo.tecnicasDisponiveis[t.tecnica.regra]}.`,
+      );
+    elemento(
+      requisitos,
+      "p",
+      "Verificar confere esta estrutura no código e também os testes de comportamento. Funções auxiliares não substituem a técnica pedida no corpo da função indicada.",
+    );
+  }
   contrato.exemplos.forEach((exemplo, indice) => {
     const bloco = secaoDeLeitura(dados, "Exemplo " + (indice + 1));
     elemento(

@@ -12,6 +12,14 @@ async function executarNoWorker() {
   const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
 
   const apoio = {};
+  let analise, erroAnalise;
+  if (workerData.testes.some((t) => t.tecnica !== undefined)) {
+    try {
+      analise = require("./tecnicas.cjs").analisar(workerData.codigo);
+    } catch (e) {
+      erroAnalise = "Não foi possível analisar a estrutura: " + e.message;
+    }
+  }
 
   function mostrar(valor) {
     return inspect(valor, {
@@ -46,6 +54,23 @@ async function executarNoWorker() {
     let resultado;
 
     try {
+      if (teste.tecnica !== undefined) {
+        const r = erroAnalise
+          ? { passou: false, mensagem: erroAnalise }
+          : require("./tecnicas.cjs").conferirArvore(analise, teste.tecnica);
+        parentPort.postMessage({
+          tipo: "resultado",
+          resultado: {
+            indice,
+            nome: teste.nome,
+            passou: r.passou,
+            esperado: `Técnica ${teste.tecnica.regra} em ${teste.tecnica.funcao}`,
+            recebido: r.mensagem,
+            registros: [],
+          },
+        });
+        continue;
+      }
       const programa = new AsyncFunction(
         "require",
         "console",

@@ -1,5 +1,44 @@
 "use strict";
 (function (raiz) {
+  const tecnicasDisponiveis = {
+    arrow: "Arrow function",
+    declaracao: "Declaração function",
+    expressao: "Expressão function",
+    for: "Laço for",
+    "for-of": "Laço for…of",
+    while: "Laço while",
+    "do-while": "Laço do…while",
+    recursao: "Chamada recursiva direta",
+    async: "Função async",
+    await: "Expressão await",
+    "try-catch": "Bloco try com catch",
+    finally: "Bloco finally",
+    "arrow-interna": "Arrow interna declarada e chamada",
+    "arrow-interna-expressao":
+      "Arrow interna chamada, com retorno de expressão",
+    "arrow-interna-bloco": "Arrow interna chamada, com corpo em bloco",
+    "metodo-map": "Chamada direta de .map",
+    "metodo-filter": "Chamada direta de .filter",
+    "metodo-find": "Chamada direta de .find",
+    "metodo-reduce": "Chamada direta de .reduce",
+    "metodo-some": "Chamada direta de .some",
+    "metodo-every": "Chamada direta de .every",
+    "metodo-catch": "Chamada direta de .catch",
+  };
+  function validarTecnica(t) {
+    if (
+      !t ||
+      t.versao !== 1 ||
+      typeof t.funcao !== "string" ||
+      !/^[A-Za-z_$][\w$]{0,60}$/.test(t.funcao) ||
+      !Object.hasOwn(tecnicasDisponiveis, t.regra) ||
+      Object.keys(t).some((k) => !["versao", "funcao", "regra"].includes(k))
+    )
+      throw Error(
+        "Requisito técnico inválido: informe a função e uma técnica suportada.",
+      );
+    return t;
+  }
   function validarContrato(c) {
     if (c === undefined) return;
     const texto = (s) =>
@@ -68,6 +107,23 @@
       throw Error("O estudo precisa de seções com título e explicações.");
     for (const a of [...(aula.exercicios ?? []), ...(aula.missoes ?? [])])
       validarContrato(a.contrato);
+    for (const e of aula.exercicios ?? [])
+      for (const t of e.testes ?? []) {
+        if (t.tecnica === undefined) continue;
+        validarTecnica(t.tecnica);
+        if (
+          t.executar !== "return true;" ||
+          t.esperado !== true ||
+          Object.hasOwn(t, "erroEsperado")
+        )
+          throw Error(
+            "O caso técnico deve usar executar return true; e esperado true; os testes de comportamento ficam separados.",
+          );
+        if (!e.testes.some((caso) => caso.tecnica === undefined))
+          throw Error(
+            "Inclua também testes de comportamento: somente a técnica não comprova a solução.",
+          );
+      }
   }
   function contrato(atividade) {
     if (atividade?.contrato) return atividade.contrato;
@@ -93,7 +149,14 @@
       }))
     );
   }
-  const api = { validar, validarContrato, contrato, estudo };
+  const api = {
+    validar,
+    validarContrato,
+    contrato,
+    estudo,
+    validarTecnica,
+    tecnicasDisponiveis,
+  };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else raiz.HubConteudo = api;
 })(typeof window === "undefined" ? globalThis : window);

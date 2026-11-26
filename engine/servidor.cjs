@@ -14,13 +14,18 @@ async function lerJson(caminho) {
   );
 }
 function publico(aula) {
-  return Object.fromEntries(
+  const resultado = Object.fromEntries(
     Object.entries(aula).filter(([campo]) => campo !== "professor"),
   );
+  if (
+    aula.exercicios?.some((e) => e.testes?.some((t) => t.tecnica !== undefined))
+  )
+    resultado.schema = 4;
+  return resultado;
 }
 function validarAula(aula) {
   if (
-    aula?.schema !== 3 ||
+    ![3, 4].includes(aula?.schema) ||
     !/^aula-\d{2}$/.test(aula.id) ||
     typeof aula.titulo !== "string" ||
     Object.hasOwn(aula, "professor")
@@ -29,6 +34,13 @@ function validarAula(aula) {
       "Escolha um arquivo de aula liberado pelo professor, com extensão .aula-hub.",
     );
   }
+  if (
+    aula.schema === 3 &&
+    aula.exercicios?.some((e) => e.testes?.some((t) => t.tecnica !== undefined))
+  )
+    throw Error(
+      "Aulas com técnica exigida devem ser exportadas no formato 4. Atualize o Professor e exporte novamente.",
+    );
   if (!["funcoes", "projeto"].includes(aula.modo)) {
     throw new Error("Formato de aula desconhecido.");
   }
