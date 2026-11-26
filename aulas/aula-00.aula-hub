@@ -73,7 +73,7 @@
       "id": "hello-world",
       "titulo": "Sua primeira mensagem",
       "tipoExecucao": "script",
-      "enunciado": "Você vai testar a primeira comunicação do programa com quem o executa. A mensagem combinada permite distinguir uma execução correta de um texto diferente.\n\nEscreva um programa que mostre exatamente Hello world! no console. Use console.log e coloque o texto entre aspas. Primeiro experimente com Executar; depois confira com Verificar.",
+      "enunciado": "Você vai testar a primeira comunicação do programa com quem o executa. A mensagem combinada permite distinguir uma execução correta de um texto diferente.\n\nEscreva um programa que mostre exatamente Hello world! no console. Use console.log e coloque o texto entre aspas. Primeiro experimente com Executar; depois confira com Verificar.\n\nNão há entrada externa nem parâmetros; escreva um programa completo no editor.",
       "codigoInicial": "// Escreva sua primeira mensagem aqui.\n",
       "experimento": "",
       "nivel": "Prática com apoio",
@@ -88,7 +88,7 @@
       ],
       "contrato": {
         "versao": 1,
-        "objetivo": "Sua primeira mensagem",
+        "objetivo": "Produzir uma única linha de saída com o texto especificado.",
         "assinaturas": [],
         "parametros": [],
         "semParametros": "O programa não recebe argumentos nem solicita digitação. A mensagem deve ser escrita no código.",
@@ -97,46 +97,44 @@
           "descricao": "Mostre exatamente Hello world! uma vez, com as maiúsculas, o espaço e o ponto de exclamação indicados. Não há uma função com retorno para implementar."
         },
         "regras": [
-          "A mensagem deve ser texto, entre aspas no programa.",
-          "As aspas delimitam a string e não aparecem na saída.",
-          "Executar permite experimentar; Verificar compara a mensagem com o objetivo."
+          "Não há entrada externa nem parâmetros; escreva um programa completo no editor."
         ],
         "exemplos": [
           {
             "entrada": "Nenhuma entrada externa. Execute o programa que você escreveu.",
             "saida": "Hello world!",
-            "explicacao": "O console recebe a mensagem como uma linha de texto. A saída não é um array nem o corpo de um teste."
+            "explicacao": "A instrução envia uma linha ao console. As aspas delimitam o texto e não fazem parte da mensagem exibida."
           }
         ],
         "guia": [
           {
-            "titulo": "Entender e prever",
-            "texto": "Leia a entrada e identifique a saída antes de executar. Escreva um programa que mostre exatamente Hello world! no console. Use console.log e coloque o texto entre aspas. Primeiro experimente com Executar; depois confira com Verificar."
+            "titulo": "Prever uma chamada",
+            "texto": "Não há parâmetros ou formulário. Preveja a linha de texto que será mostrada pelo seu programa e compare os caracteres com a mensagem pedida."
           },
           {
-            "titulo": "Experimentar sua hipótese",
-            "texto": "Use uma entrada pequena no rascunho e acompanhe o cálculo. A mensagem deve ser texto, entre aspas no programa."
+            "titulo": "Construir ou investigar",
+            "texto": "As aspas pertencem ao código. Confira o espaço, a inicial maiúscula e a exclamação da mensagem."
           },
           {
-            "titulo": "Conferir e adaptar",
-            "texto": "Depois de executar, compare com os exemplos e use Verificar. Explique por que a solução continua válida quando os dados mudam. Atenção nesta matéria: Confundir a instrução console.log com o texto que ela mostra."
+            "titulo": "Conferir o contrato",
+            "texto": "Use Executar para experimentar e Verificar para conferir os critérios. Justifique o caso de contraste. Não há entrada externa nem parâmetros; escreva um programa completo no editor."
           }
         ],
         "pistas": [
-          "A mensagem deve ser texto, entre aspas no programa.",
-          "Confira especialmente: Confundir a instrução console.log com o texto que ela mostra."
+          "As aspas pertencem ao código. Confira o espaço, a inicial maiúscula e a exclamação da mensagem."
         ],
         "descricao": [
           "Você vai testar a primeira comunicação do programa com quem o executa. A mensagem combinada permite distinguir uma execução correta de um texto diferente.",
-          "Escreva um programa que mostre exatamente Hello world! no console. Use console.log e coloque o texto entre aspas. Primeiro experimente com Executar; depois confira com Verificar."
+          "Escreva um programa que mostre exatamente Hello world! no console. Use console.log e coloque o texto entre aspas. Primeiro experimente com Executar; depois confira com Verificar.",
+          "Não há entrada externa nem parâmetros; escreva um programa completo no editor."
         ],
         "enunciadoBase": "Escreva um programa que mostre exatamente Hello world! no console. Use console.log e coloque o texto entre aspas. Primeiro experimente com Executar; depois confira com Verificar.",
         "contextoProprio": "Você vai testar a primeira comunicação do programa com quem o executa. A mensagem combinada permite distinguir uma execução correta de um texto diferente."
       },
-      "dica": "A mensagem deve ser texto, entre aspas no programa.\nConfira especialmente: Confundir a instrução console.log com o texto que ela mostra.",
+      "dica": "As aspas pertencem ao código. Confira o espaço, a inicial maiúscula e a exclamação da mensagem.",
       "qualidade": {
         "versao": "2026.11.integral-1",
-        "alvo": "Sua primeira mensagem",
+        "alvo": "Produzir uma única linha de saída com o texto especificado.",
         "evidencia": [
           "Mostra Hello world! no console"
         ],
