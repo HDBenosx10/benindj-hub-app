@@ -32,7 +32,7 @@ O motor interpreta esse caso como análise estrutural: não executa o corpo retu
 - `await`, `try-catch`, `finally`: a construção no corpo da função indicada. Um finally sozinho não satisfaz try-catch.
 - `recursao`: presença de chamada direta pelo nome da função ou pelo nome interno de uma expressão function. Recursão indireta e aliases não são resolvidos.
 - `arrow-interna`, `arrow-interna-expressao`, `arrow-interna-bloco`: variável local inicializada com arrow e uma chamada ao seu nome no corpo da função-alvo. As duas últimas distinguem retorno de expressão e corpo em bloco.
-- `metodo-map`, `metodo-filter`, `metodo-find`, `metodo-reduce`, `metodo-some`, `metodo-every`, `metodo-catch`: chamada de membro com esse nome no corpo da função. Tanto `.some(...)` quanto `["some"](...)` são reconhecidos; nomes calculados dinamicamente não são resolvidos.
+- `metodo-map`, `metodo-filter`, `metodo-find`, `metodo-toSorted`, `metodo-reduce`, `metodo-some`, `metodo-every`, `metodo-catch`: chamada de membro com esse nome no corpo da função. Tanto `.some(...)` quanto `["some"](...)` são reconhecidos; nomes calculados dinamicamente não são resolvidos. Exigir toSorted não prova o sentido ou a correção do comparador: os testes precisam conferir números, empates e preservação da entrada.
 
 Construções em helpers internos não contam como construções do próprio corpo; a regra precisa combinar com o enunciado. Não se compara a resposta com o texto do gabarito.
 

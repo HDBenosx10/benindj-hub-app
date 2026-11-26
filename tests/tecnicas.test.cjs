@@ -12,6 +12,29 @@ const caso = (r) => ({
   esperado: true,
   tecnica: r,
 });
+test("toSorted exigido distingue método real de sort, comentário e string", () => {
+  assert.equal(
+    confere(
+      "function resolver(v){return v.toSorted((a,b)=>a-b);}",
+      regra("metodo-toSorted"),
+    ),
+    true,
+  );
+  assert.equal(
+    confere(
+      'function resolver(v){return v["toSorted"]((a,b)=>a-b);}',
+      regra("metodo-toSorted"),
+    ),
+    true,
+  );
+  assert.equal(
+    confere(
+      'function resolver(v){/* .toSorted() */ const texto="toSorted";return [...v].sort((a,b)=>a-b);}',
+      regra("metodo-toSorted"),
+    ),
+    false,
+  );
+});
 test("Padrão, chamada auxiliar e função retornada respeitam os alvos indicados", () => {
   assert.equal(
     confere("function resolver(x,taxa=2){return x+taxa;}", {

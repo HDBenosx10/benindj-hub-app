@@ -29,6 +29,7 @@
     "metodo-map": "Chamada direta de .map",
     "metodo-filter": "Chamada direta de .filter",
     "metodo-find": "Chamada direta de .find",
+    "metodo-toSorted": "Chamada direta de .toSorted",
     "metodo-reduce": "Chamada direta de .reduce",
     "metodo-some": "Chamada direta de .some",
     "metodo-every": "Chamada direta de .every",
