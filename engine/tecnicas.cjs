@@ -75,13 +75,24 @@ function conferirArvore(arvore, requisito) {
     };
   }
   if (
-    ["json-parse", "json-stringify", "math-round", "intl-data"].includes(regra)
+    [
+      "json-parse",
+      "json-stringify",
+      "math-round",
+      "intl-data",
+      "promise-resolve",
+      "promise-all",
+      "promise-allSettled",
+    ].includes(regra)
   ) {
     const [objeto, metodo] = {
       "json-parse": ["JSON", "parse"],
       "json-stringify": ["JSON", "stringify"],
       "math-round": ["Math", "round"],
       "intl-data": ["Intl", "DateTimeFormat"],
+      "promise-resolve": ["Promise", "resolve"],
+      "promise-all": ["Promise", "all"],
+      "promise-allSettled": ["Promise", "allSettled"],
     }[regra];
     let encontrou = false;
     visitar(alvo.body, (n) => {

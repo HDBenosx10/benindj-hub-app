@@ -58,6 +58,12 @@ test("APIs nativas exigidas reconhecem namespace e forma de construção", () =>
     ["function resolver(t){return JSON.parse(t);}", "json-parse"],
     ['function resolver(d){return JSON["stringify"](d);}', "json-stringify"],
     ["function resolver(n){return Math.round(n);}", "math-round"],
+    ["function resolver(v){return Promise.resolve(v);}", "promise-resolve"],
+    ["function resolver(v){return Promise.all(v);}", "promise-all"],
+    [
+      "function resolver(v){return Promise.allSettled(v);}",
+      "promise-allSettled",
+    ],
     [
       'function resolver(){return new Intl.DateTimeFormat("pt-BR");}',
       "intl-data",
@@ -85,6 +91,30 @@ test("APIs nativas exigidas reconhecem namespace e forma de construção", () =>
       regra("json-parse"),
     ),
     false,
+  );
+});
+test("Regras de Promise não confundem all, allSettled, alias ou string", () => {
+  assert.equal(
+    confere(
+      "function resolver(v){return Promise.allSettled(v);}",
+      regra("promise-all"),
+    ),
+    false,
+  );
+  assert.equal(
+    confere("function resolver(v){return outra.all(v);}", regra("promise-all")),
+    false,
+  );
+  assert.equal(
+    confere(
+      'function resolver(){return "Promise.resolve(1)";}',
+      regra("promise-resolve"),
+    ),
+    false,
+  );
+  assert.equal(
+    confere("function resolver(p){return p.then(v=>v);}", regra("metodo-then")),
+    true,
   );
 });
 test("Desestruturação, rest e spread distinguem seus contextos e ignoram helpers", () => {
