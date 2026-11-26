@@ -12,6 +12,47 @@ const caso = (r) => ({
   esperado: true,
   tecnica: r,
 });
+test("Importação de assert e construções Map/Set são específicas do alvo", () => {
+  for (const [r, trecho] of [
+    ["assert-node", 'require("node:assert/strict")'],
+    ["construtor-map", "new Map()"],
+    ["construtor-set", "new Set()"],
+  ]) {
+    assert.equal(
+      confere(`function resolver(){return ${trecho};}`, regra(r)),
+      true,
+    );
+    assert.equal(
+      confere(
+        `function resolver(){const texto=${JSON.stringify(trecho)};return texto;}`,
+        regra(r),
+      ),
+      false,
+    );
+    assert.equal(
+      confere(
+        `function resolver(){function auxiliar(){return ${trecho};}return auxiliar();}`,
+        regra(r),
+      ),
+      false,
+    );
+  }
+  assert.equal(
+    confere(
+      'function resolver(){return require("node:assert");}',
+      regra("assert-node"),
+    ),
+    false,
+  );
+  assert.equal(
+    confere("function resolver(){return Map();}", regra("construtor-map")),
+    false,
+  );
+  assert.equal(
+    confere("function resolver(){return new Set();}", regra("construtor-map")),
+    false,
+  );
+});
 test("APIs nativas exigidas reconhecem namespace e forma de construção", () => {
   for (const [codigo, r] of [
     ["function resolver(t){return JSON.parse(t);}", "json-parse"],

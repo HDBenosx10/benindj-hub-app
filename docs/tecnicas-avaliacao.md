@@ -40,6 +40,10 @@ A análise é estrutural, não uma prova de fluxo de dados ou de execução de c
 
 ## Distribuição e progresso
 
+`json-parse`, `json-stringify`, `math-round` e `intl-data` exigem a chamada no namespace nativo correspondente. DateTimeFormat aceita chamada ou construção com new. `metodo-formatToParts` exige a chamada do método. `assert-node` exige require("node:assert/strict") na função-alvo; `construtor-map` e `construtor-set` exigem new Map/new Set nesse corpo. Strings, comentários e helpers não atendem. Presença não garante uso efetivo: casos de comportamento, estado e efeitos continuam obrigatórios.
+
+Para busca binária, a aula pode fornecer um teste de leituras de posições com orçamento explícito, em vez de exigir nomes de variáveis ou tempo de execução. Isso distingue percurso linear da redução de intervalo sem reprovar outra implementação binária válida. A instrumentação do teste não é conteúdo que o aluno precise implementar.
+
 As regras `desestruturacao-objeto`, `desestruturacao-com-padrao`, `rest-parametro`, `rest-objeto`, `rest-array` e `spread-objeto` distinguem os contextos sintáticos. Desestruturação é reconhecida no corpo ou nos parâmetros da função-alvo; helpers internos não satisfazem o requisito. O padrão exige uma propriedade com inicializador em ObjectPattern. Rest em parâmetro não é spread em chamada; rest de array não é uma cópia com spread. Nenhuma dessas regras prova sozinha que a variável extraída ou o padrão escolhido contribuiu para o resultado: confira valores, ausência, campos permitidos, referências e mutação nos testes e na explicação do aluno.
 
 A próxima versão do runtime com esse recurso é **0.15.0**. Aulas com técnica exigida são exportadas no formato 4; versões antigas que só aceitam formato 3 recusam a importação. O acervo online exige no mínimo 0.15.0 para essas aulas. Atualize aplicativo e API antes de publicá-las. Não há liberação automática de conteúdos por acrescentar um requisito.

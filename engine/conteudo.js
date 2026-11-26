@@ -44,6 +44,9 @@
     "json-stringify": "Chamada de JSON.stringify",
     "math-round": "Chamada de Math.round",
     "intl-data": "Uso de Intl.DateTimeFormat",
+    "assert-node": "Importação de node:assert/strict na função",
+    "construtor-map": "Construção de Map na função",
+    "construtor-set": "Construção de Set na função",
     "metodo-formatToParts": "Chamada direta de .formatToParts",
   };
   function validarTecnica(t) {

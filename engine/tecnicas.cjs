@@ -48,6 +48,32 @@ function conferirArvore(arvore, requisito) {
     };
   const alvo = candidatos[0];
   const regra = requisito.regra;
+  if (["assert-node", "construtor-map", "construtor-set"].includes(regra)) {
+    let encontrou = false;
+    visitar(alvo.body, (n) => {
+      if (regra === "assert-node") {
+        if (
+          n.type === "CallExpression" &&
+          n.callee.type === "Identifier" &&
+          n.callee.name === "require" &&
+          n.arguments.length === 1 &&
+          n.arguments[0].value === "node:assert/strict"
+        )
+          encontrou = true;
+      } else if (
+        n.type === "NewExpression" &&
+        n.callee.type === "Identifier" &&
+        n.callee.name === (regra === "construtor-map" ? "Map" : "Set")
+      )
+        encontrou = true;
+    });
+    return {
+      passou: encontrou,
+      mensagem: encontrou
+        ? "Estrutura encontrada; os testes de comportamento continuam necessários."
+        : `Use ${regra === "assert-node" ? 'require("node:assert/strict")' : regra === "construtor-map" ? "new Map" : "new Set"} na própria função ${requisito.funcao}.`,
+    };
+  }
   if (
     ["json-parse", "json-stringify", "math-round", "intl-data"].includes(regra)
   ) {
