@@ -75,32 +75,40 @@ function resumo(aula, salvo = {}) {
     total: ids.length,
     percentual: ids.length ? Math.round((concluidos / ids.length) * 100) : 0,
     completa: ids.length > 0 && concluidos === ids.length,
+    revalidar: ids.filter((id) => salvo.progresso?.[id] && salvo.progresso[id] !== assinatura(aula, salvo, id)).length,
+    aprovadas: ids.filter(id => salvo.progresso?.[id] === assinatura(aula, salvo, id)),
+    revalidacoes: ids.filter(id => salvo.progresso?.[id] && salvo.progresso[id] !== assinatura(aula, salvo, id)),
   };
 }
 function preservarAprovacoes(anterior, nova, salvo) {
-  if (
-    anterior.modo !== "funcoes" ||
-    nova.modo !== "funcoes" ||
-    !salvo?.progresso
-  )
-    return false;
+  if (anterior.modo !== nova.modo || !salvo?.progresso) return false;
   if (JSON.stringify(anterior.ambiente) !== JSON.stringify(nova.ambiente))
     return false;
-  const criterios = (e) =>
-    JSON.stringify(
-      e.testes.map(({ executar, esperado, erroEsperado, tecnica }) => ({
-        executar,
-        esperado,
-        erroEsperado,
-        tecnica,
-      })),
-    );
+  // O nome do cenário é apresentação; todos os outros campos podem afetar a avaliação.
+  const criterios = (testes) => JSON.stringify(testes.map(({ nome, ...regra }) => regra));
+  if (anterior.modo === "projeto") {
+    const contrato = (aula) => {
+      const { testes, arquivos, requisicoes, titulo, descricao, ...config } = aula.projeto;
+      return JSON.stringify({
+        config,
+        testes: criterios(testes),
+        testesAdicionais: aula.testes,
+        // Arquivos de apoio podem mudar o comportamento mesmo sem alterar os testes.
+        arquivos: arquivos.map(({ nome, editavel, codigo }) => ({ nome, editavel, ...(!editavel ? { codigo } : {}) })),
+      });
+    };
+    if (contrato(anterior) !== contrato(nova) || salvo.progresso.projeto !== assinatura(anterior, salvo, "projeto")) return false;
+    const novoHash = assinatura(nova, salvo, "projeto");
+    if (novoHash === salvo.progresso.projeto) return false;
+    salvo.progresso.projeto = novoHash;
+    return true;
+  }
   let mudou = false;
   for (const e of anterior.exercicios) {
     const atual = nova.exercicios.find((item) => item.id === e.id);
     if (
       atual &&
-      criterios(e) === criterios(atual) &&
+      criterios(e.testes) === criterios(atual.testes) &&
       salvo.progresso[e.id] === assinatura(anterior, salvo, e.id)
     ) {
       const novoHash = assinatura(nova, salvo, e.id);

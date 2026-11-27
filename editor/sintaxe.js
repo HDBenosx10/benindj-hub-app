@@ -1,93 +1,41 @@
+import { createHighlighterCoreSync } from "@shikijs/core";
+import { createJavaScriptRegexEngine } from "@shikijs/engine-javascript";
+import js from "@shikijs/langs/javascript";
+import json from "@shikijs/langs/json";
+import sql from "@shikijs/langs/sql";
+import tema from "./temas/dracula-pro.json" with { type: "json" };
 import { javascriptLanguage } from "@codemirror/lang-javascript";
-import { HighlightStyle } from "@codemirror/language";
-import { highlightTree, tags, Tag, styleTags } from "@lezer/highlight";
 
-const parametro = Tag.define(tags.variableName);
-// A gramática padrão agrupa parâmetros com variáveis comuns.
-// A mesma configuração atende o editor e os exemplos estáticos.
-export const linguagemJavaScript = javascriptLanguage.configure({
-  props: [
-    styleTags({
-      "ParamList/VariableDefinition ArrowFunction/VariableDefinition":
-        parametro,
-      "FunctionExpression/VariableDefinition": tags.function(
-        tags.definition(tags.variableName),
-      ),
-      ":": tags.operator,
-      Arrow: tags.operator,
-      super: tags.self,
-    }),
-  ],
-});
-
-// Paleta consultada no Dracula Pro do usuário. As regras do editor são do Hub.
+// Tema original da extensão VS Code 1.1.0 do repositório do professor.
+// TextMate resolve escopos e prioridades; não aproximamos tokens por regex.
+export const temaOriginal = tema;
+export const linguagemJavaScript = javascriptLanguage;
 export const cores = {
-  fundo: "#22212c",
-  texto: "#f8f8f2",
-  selecao: "#454158",
-  comentario: "#7970a9",
-  ciano: "#80ffea",
-  verde: "#8aff80",
-  laranja: "#ffca80",
-  rosa: "#ff80bf",
-  roxo: "#9580ff",
-  vermelho: "#ff9580",
-  amarelo: "#ffff80",
+  fundo: tema.colors["editor.background"],
+  texto: tema.colors["editor.foreground"],
+  selecao: tema.colors["editor.selectionBackground"],
+  comentario: tema.colors["editorLineNumber.foreground"],
+  ciano: "#80FFEA",
+  verde: "#8AFF80",
+  laranja: "#FFCA80",
+  rosa: "#FF80BF",
+  roxo: "#9580FF",
+  vermelho: "#FF9580",
+  amarelo: "#FFFF80",
 };
-export const regras = [
-  {
-    tag: tags.comment,
-    class: "hl-comment",
-    color: cores.comentario,
-  },
-  { tag: tags.keyword, class: "hl-keyword", color: cores.rosa },
-  {
-    tag: tags.definitionKeyword,
-    class: "hl-definition",
-    color: cores.rosa,
-  },
-  { tag: tags.operator, class: "hl-operator", color: cores.rosa },
-  {
-    tag: [tags.punctuation, tags.bracket],
-    class: "hl-punctuation",
-    color: cores.texto,
-  },
-  { tag: [tags.string, tags.regexp], class: "hl-string", color: cores.amarelo },
-  { tag: tags.escape, class: "hl-escape", color: cores.rosa },
-  {
-    tag: [tags.number, tags.bool, tags.null, tags.atom],
-    class: "hl-number",
-    color: cores.roxo,
-  },
-  { tag: tags.variableName, class: "hl-variable", color: cores.texto },
-  {
-    tag: parametro,
-    class: "hl-parameter",
-    color: cores.laranja,
-    fontStyle: "italic",
-  },
-  {
-    tag: [tags.typeName, tags.className],
-    class: "hl-type",
-    color: cores.ciano,
-    fontStyle: "italic",
-  },
-  {
-    tag: [tags.function(tags.variableName), tags.function(tags.propertyName)],
-    class: "hl-function",
-    color: cores.verde,
-  },
-  { tag: tags.propertyName, class: "hl-property", color: cores.texto },
-  {
-    tag: [tags.special(tags.variableName), tags.self],
-    class: "hl-special",
-    color: cores.roxo,
-    fontStyle: "italic",
-  },
-  { tag: tags.invalid, class: "hl-invalid", color: cores.vermelho },
-];
-export const destaque = HighlightStyle.define(regras);
-function escapar(texto) {
+export const highlighter = createHighlighterCoreSync({
+  themes: [tema],
+  langs: [js, json, sql],
+  engine: createJavaScriptRegexEngine(),
+});
+export function classeToken(token) {
+  return `tm-${token.color.slice(1).toLowerCase()}-${token.fontStyle || 0}`;
+}
+export function tokens(codigo, linguagem = "javascript") {
+  return highlighter.codeToTokens(codigo, { lang: linguagem, theme: tema.name })
+    .tokens;
+}
+export function escapar(texto) {
   return texto.replace(
     /[&<>"']/g,
     (c) =>
@@ -97,16 +45,28 @@ function escapar(texto) {
   );
 }
 export function colorirJS(codigo) {
-  let fim = 0,
-    html = "";
-  highlightTree(
-    linguagemJavaScript.parser.parse(codigo),
-    destaque,
-    (inicio, final, classes) => {
-      html += escapar(codigo.slice(fim, inicio));
-      html += `<span class="${classes}">${escapar(codigo.slice(inicio, final))}</span>`;
-      fim = final;
-    },
-  );
-  return html + escapar(codigo.slice(fim));
+  return tokens(codigo)
+    .map((linha) =>
+      linha
+        .map(
+          (t) => `<span class="${classeToken(t)}">${escapar(t.content)}</span>`,
+        )
+        .join(""),
+    )
+    .join("\n");
+}
+export function cssTema() {
+  const cores = new Set([
+    tema.colors["editor.foreground"],
+    ...tema.tokenColors.map((r) => r.settings.foreground).filter(Boolean),
+  ]);
+  return [...cores]
+    .flatMap((cor) =>
+      Array.from(
+        { length: 8 },
+        (_, estilo) =>
+          `.tm-${cor.slice(1).toLowerCase()}-${estilo}{color:${cor};font-style:${estilo & 1 ? "italic" : "normal"};font-weight:${estilo & 2 ? "bold" : "normal"};text-decoration:${estilo & 4 ? "underline" : "none"}}`,
+      ),
+    )
+    .join("\n");
 }

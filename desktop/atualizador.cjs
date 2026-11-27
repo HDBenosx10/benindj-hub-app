@@ -56,7 +56,8 @@ function criarAtualizador({
   let estado = { fase: "ocioso", versaoAtual: versao, portable },
     ocupado = false,
     conferido = null,
-    feed = null;
+    feed = null,
+    inicializacao = null;
   const mudar = (fase, dados = {}) => {
     estado = { ...estado, fase, ...dados };
     aoMudar({ ...estado });
@@ -88,7 +89,7 @@ function criarAtualizador({
       return mudar("manual", {
         mensagem: "No macOS, baixe a nova versão pela página de releases e substitua o aplicativo em Aplicativos. Seus dados ficam preservados. A atualização automática ainda não está disponível para Mac.",
       });
-    if (ocupado) return { ...estado };
+    if (ocupado || estado.fase === "pronta") return { ...estado };
     if (!empacotado)
       return mudar("desenvolvimento", {
         mensagem: "O updater funciona no aplicativo empacotado.",
@@ -212,7 +213,17 @@ function criarAtualizador({
       );
     }
   }
+  function iniciarAutomaticamente() {
+    // Uma única consulta por abertura; falhas não impedem o uso offline.
+    inicializacao ??= (async () => {
+      const resultado = await verificar();
+      if (resultado.fase === "disponivel" && !portable) return baixar();
+      return resultado;
+    })();
+    return inicializacao;
+  }
   return {
+    iniciarAutomaticamente,
     verificar,
     baixar,
     instalar,

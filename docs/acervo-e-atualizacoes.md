@@ -79,6 +79,16 @@ Os downloads exigem um manifesto Ed25519 assinado pela chave fixada no aplicativ
 
 A atualização do Professor passa pela API autenticada porque seu repositório é privado. Credenciais do GitHub não são distribuídas nos aplicativos. Se o token de leitura expirar, o Professor continua funcionando; renove o token com o configurador local do serviço.
 
+## Avisos e progresso após uma revisão
+
+Os avisos de atualização de aula podem ser fechados pelo botão **✕**. Fechar dispensa apenas o aviso: a revisão continua disponível em **Conexões e atualizações**. Consultas periódicas não reabrem o aviso da mesma revisão durante essa sessão; uma revisão nova gera um novo aviso. As confirmações de recebimento desaparecem após dez segundos. Os demais avisos informativos também expiram; erros podem ser fechados manualmente.
+
+Os cartões do início e de **Minhas aulas** mostram uma barra, percentual e quantidade de desafios validados. Depois de importar uma revisão ou verificar uma solução, essas visualizações são atualizadas a partir do progresso calculado pelo motor.
+
+Revisões de texto e nomes de cenários preservam aprovações válidas, tanto em exercícios de função quanto em projetos. Mudar critérios executáveis, arquivos de apoio ou ambiente pode exigir nova verificação. Os cartões indicam quantas aprovações anteriores precisam ser verificadas novamente; o código salvo e o ponto de retomada são preservados. Novos desafios entram como pendentes, sem apagar a aprovação dos demais.
+
+Na edição instalada para Windows, cada abertura consulta a release estável em segundo plano após a interface carregar. Se houver uma versão compatível com manifesto assinado e metadados correspondentes, o download começa automaticamente. O aviso **Salvar e atualizar** permite instalar quando o aluno estiver pronto; o aplicativo aguarda o salvamento do código, preferências e registro de horas antes de reiniciar. Falta de rede ou erro de validação não bloqueiam o estudo. A portable apenas verifica e oferece o download manual; no macOS, a substituição continua manual. O Professor usa o feed privado autenticado.
+
 ## Limite da proteção do conteúdo
 
 O resgate é atômico: duas tentativas simultâneas não conseguem ativar o mesmo convite. As requisições do aluno exigem prova com a chave privada da instalação e um desafio de uso único, evitando usar apenas um identificador copiado. A chave fica protegida pelo Windows.

@@ -94,6 +94,41 @@ test("Manifesto adulterado, edição incorreta e pré-release são recusados", (
     validarManifesto(raw, sig, c.par.publicKey, "aluno", "0.11.2"),
   );
 });
+
+test("Abertura baixa uma atualização assinada uma única vez, sem reiniciar o estudo", async () => {
+  const c = cenario();
+  await Promise.all([c.atualizador.iniciarAutomaticamente(), c.atualizador.iniciarAutomaticamente()]);
+  assert.equal(c.atualizador.estado().fase, "pronta");
+  assert.equal(c.chamadas.filter(x=>x[0]==="download").length, 1);
+  assert.equal(c.chamadas.filter(x=>x[0]==="install").length, 0);
+  const consultas = c.requests.length;
+  assert.equal((await c.atualizador.verificar()).fase, "pronta");
+  assert.equal(c.requests.length, consultas);
+  await c.atualizador.instalar();
+  assert.equal(c.chamadas.at(-1)[0], "install");
+});
+
+test("Consulta automática em portable não abre download ou instalação; Mac mantém atualização manual", async () => {
+  for (const opcoes of [{portable:true}, {plataforma:"darwin"}]) {
+    const c = cenario(opcoes);
+    await c.atualizador.iniciarAutomaticamente();
+    assert.ok(!c.chamadas.some(x=>["download","install"].includes(x[0])));
+  }
+});
+
+test("Abertura recusa release adulterada e permite nova tentativa manual", async () => {
+  const c = cenario({alterarInfo:true});
+  assert.equal((await c.atualizador.iniciarAutomaticamente()).fase,"erro");
+  assert.ok(!c.chamadas.some(x=>x[0]==="download"));
+  assert.equal((await c.atualizador.verificar()).fase,"erro");
+});
+
+test("Professor consulta e baixa automaticamente pelo feed privado sem expor credencial", async () => {
+  const c = cenario({perfil:"professor"});
+  assert.equal((await c.atualizador.iniciarAutomaticamente()).fase,"pronta");
+  assert.equal(c.chamadas.filter(x=>x[0]==="download").length,1);
+  assert.ok(!JSON.stringify(c.atualizador.estado()).includes("privado"));
+});
 test("macOS informa atualização manual sem consultar ou baixar executáveis Windows", async () => {
   const c = cenario({ plataforma: "darwin" });
   assert.equal((await c.atualizador.verificar()).fase, "manual");

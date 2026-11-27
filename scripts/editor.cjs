@@ -42,19 +42,17 @@ exports.gerarEditor = async function gerarEditor(destino) {
       }
     }
   }
+  licencas += "\nDracula Pro (extensão VS Code 1.1.0)\n" + await fs.readFile(path.join(raiz, "editor/temas/DRACULA-LICENSE.txt"), "utf8");
+  licencas += "\nFira Code\n" + await fs.readFile(path.join(raiz, "node_modules/@fontsource/fira-code/LICENSE"), "utf8");
   await fs.writeFile(path.join(destino, "LICENCAS.txt"), licencas, "utf8");
-  const { regras, cores } = await import(
+  const { cssTema, cores } = await import(
     require("node:url").pathToFileURL(path.join(raiz, "editor/sintaxe.js"))
   );
-  const css = regras
-    .map(
-      (r) =>
-        `.${r.class}{color:${r.color};${r.fontStyle ? "font-style:" + r.fontStyle + ";" : ""}}`,
-    )
-    .join("\n");
+  await fs.copyFile(path.join(raiz, "node_modules/@fontsource/fira-code/files/fira-code-latin-400-normal.woff2"), path.join(destino, "fira-code.woff2"));
+  await fs.copyFile(path.join(raiz, "node_modules/@fontsource/fira-code/files/fira-code-latin-600-normal.woff2"), path.join(destino, "fira-code-semibold.woff2"));
   await fs.writeFile(
     path.join(destino, "editor-tema.css"),
-    `.code{background:${cores.fundo};color:${cores.texto}}\n` + css + "\n",
+    `@font-face{font-family:'Fira Code';src:url('/vendor/fira-code.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}\n@font-face{font-family:'Fira Code';src:url('/vendor/fira-code-semibold.woff2') format('woff2');font-weight:600 900;font-style:normal;font-display:swap}\n.code{background:${cores.fundo};color:${cores.texto};font-family:'Fira Code',monospace;font-variant-ligatures:contextual}\n` + cssTema() + "\n",
     "utf8",
   );
 };

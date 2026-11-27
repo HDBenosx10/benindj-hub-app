@@ -1,27 +1,31 @@
 import { basicSetup } from "codemirror";
 import { EditorState, Compartment, Transaction, Prec } from "@codemirror/state";
-import { EditorView, keymap } from "@codemirror/view";
+import { EditorView, keymap, ViewPlugin, Decoration } from "@codemirror/view";
 import { indentWithTab, isolateHistory } from "@codemirror/commands";
 import {
   syntaxHighlighting,
   indentUnit,
   LanguageSupport,
+  HighlightStyle,
 } from "@codemirror/language";
 import { javascript } from "@codemirror/lang-javascript";
 import { json } from "@codemirror/lang-json";
 import { sql, SQLite } from "@codemirror/lang-sql";
-import { cores, destaque, linguagemJavaScript } from "./sintaxe.js";
+import { cores, tokens, classeToken, linguagemJavaScript } from "./sintaxe.js";
 import { formatarTexto, podeFormatar } from "./formatacao.js";
 import { extensoesDebug, definirDebug, linhasBreakpoints } from "./debug.js";
 export { colorirJS } from "./sintaxe.js";
+export { chamadasDeTeste, argumentosChamada } from "./chamadas.js";
 
 const tema = EditorView.theme(
   {
     "&": { color: cores.texto, backgroundColor: cores.fundo, height: "100%" },
     ".cm-scroller": {
-      fontFamily: 'Consolas, "Cascadia Code", monospace',
-      fontSize: "13px",
-      lineHeight: "1.85",
+      fontFamily: '"Fira Code", Consolas, monospace',
+      fontSize: "var(--tamanho-codigo, 15px)",
+      fontVariantLigatures: "var(--ligaturas-codigo, contextual)",
+      fontFeatureSettings: "var(--recursos-fonte, 'calt' 1, 'liga' 1)",
+      lineHeight: "1.65",
       overflow: "auto",
     },
     ".cm-content": { padding: "14px 0", caretColor: cores.texto },
@@ -31,7 +35,14 @@ const tema = EditorView.theme(
       color: cores.comentario,
       borderRight: "1px solid #454158",
     },
-    ".cm-activeLine, .cm-activeLineGutter": { backgroundColor: cores.selecao },
+    ".cm-activeLine": {
+      backgroundColor: "transparent",
+      boxShadow: `inset 0 0 0 1px ${cores.selecao}`,
+    },
+    ".cm-activeLineGutter": {
+      backgroundColor: "transparent",
+      color: cores.texto,
+    },
     "&.cm-focused .cm-selectionBackground, .cm-selectionBackground, ::selection":
       { backgroundColor: cores.selecao },
     ".cm-cursor, .cm-dropCursor": { borderLeftColor: cores.texto },
@@ -52,6 +63,22 @@ const tema = EditorView.theme(
 
 export function criar(parent, opcoes = {}) {
   const permissao = new Compartment();
+  const quebra = new Compartment();
+  const documentos = new Map();
+  const posicoes = new Map();
+  const chavePosicao = (id) => "hub-editor-posicao:" + id;
+  const guardarPosicao = () => {
+    if (!chave) return;
+    const posicao = {
+      cursor: view.state.selection.main.head,
+      scrollTop: view.scrollDOM.scrollTop,
+      scrollLeft: view.scrollDOM.scrollLeft,
+    };
+    posicoes.set(chave, posicao);
+    try {
+      localStorage.setItem(chavePosicao(chave), JSON.stringify(posicao));
+    } catch {}
+  };
   let arquivo = "atividade.js",
     chave = null,
     leitura = false,
@@ -69,7 +96,39 @@ export function criar(parent, opcoes = {}) {
       opcoes.aoBreakpoints?.(linhas, automatico),
     ),
     tema,
-    syntaxHighlighting(destaque),
+    // Desliga as cores de fallback do basicSetup; TextMate aplica as cores finais.
+    syntaxHighlighting(HighlightStyle.define([])),
+    ViewPlugin.fromClass(
+      class {
+        constructor(v) {
+          this.decorations = this.colorir(v);
+        }
+        update(u) {
+          if (u.docChanged) this.decorations = this.colorir(u.view);
+        }
+        colorir(v) {
+          const lang = /\.json$/i.test(arquivo)
+            ? "json"
+            : /\.sql$/i.test(arquivo)
+              ? "sql"
+              : "javascript";
+          const marcas = [];
+          for (const linha of tokens(v.state.doc.toString(), lang))
+            for (const token of linha) {
+              if (token.content.length)
+                marcas.push(
+                  Decoration.mark({ class: classeToken(token) }).range(
+                    token.offset,
+                    token.offset + token.content.length,
+                  ),
+                );
+            }
+          return Decoration.set(marcas, true);
+        }
+      },
+      { decorations: (v) => v.decorations },
+    ),
+    quebra.of([]),
     indentUnit.of("  "),
     EditorView.cspNonce.of(opcoes.nonce ?? ""),
     EditorView.contentAttributes.of({
@@ -103,12 +162,14 @@ export function criar(parent, opcoes = {}) {
     ),
     EditorView.updateListener.of((update) => {
       if (update.docChanged && !silencioso) api?.oninput?.();
+      if (update.selectionSet && !silencioso) guardarPosicao();
     }),
   ];
   const view = new EditorView({
     parent,
     state: EditorState.create({ doc: "", extensions: extensoes() }),
   });
+  view.scrollDOM.addEventListener("scroll", guardarPosicao, { passive: true });
   const notificarEstado = () =>
     opcoes.aoEstado?.({
       somenteLeitura: leitura,
@@ -148,13 +209,40 @@ export function criar(parent, opcoes = {}) {
       notificarEstado();
     },
     abrir(contexto, nome, texto, somenteLeitura) {
+      if (chave && chave !== contexto) {
+        guardarPosicao();
+        documentos.set(chave, view.state);
+        if (documentos.size > 60)
+          documentos.delete(documentos.keys().next().value);
+      }
       arquivo = nome;
       leitura = Boolean(somenteLeitura);
       if (chave !== contexto) {
         chave = contexto;
-        view.setState(
-          EditorState.create({ doc: texto ?? "", extensions: extensoes() }),
-        );
+        let estado = documentos.get(chave);
+        if (!estado || estado.doc.toString() !== (texto ?? ""))
+          estado = EditorState.create({
+            doc: texto ?? "",
+            extensions: extensoes(),
+          });
+        view.setState(estado);
+        api.readOnly = leitura;
+        let posicao = posicoes.get(chave);
+        try {
+          posicao ??= JSON.parse(localStorage.getItem(chavePosicao(chave)));
+        } catch {}
+        if (posicao) {
+          const cursor = Math.max(
+            0,
+            Math.min(view.state.doc.length, Number(posicao.cursor) || 0),
+          );
+          view.dispatch({ selection: { anchor: cursor } });
+          requestAnimationFrame(() => {
+            if (chave !== contexto) return;
+            view.scrollDOM.scrollTop = posicao.scrollTop || 0;
+            view.scrollDOM.scrollLeft = posicao.scrollLeft || 0;
+          });
+        }
       } else {
         api.value = texto;
         api.readOnly = leitura;
@@ -164,6 +252,15 @@ export function criar(parent, opcoes = {}) {
     notificarAlteracao() {
       api.oninput?.();
     },
+    configurar({ quebrarLinhas = false } = {}) {
+      view.dispatch({
+        effects: quebra.reconfigure(
+          quebrarLinhas ? EditorView.lineWrapping : [],
+        ),
+      });
+      view.requestMeasure();
+    },
+    guardarPosicao,
     depurar(linhas, linha) {
       definirDebug(view, linhas, linha);
     },

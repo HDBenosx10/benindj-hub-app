@@ -1,0 +1,649 @@
+/* Área de estudo: dois painéis estáveis; ferramentas ocupam espaço próprio. */
+:root {
+  --tamanho-codigo: 15px;
+  --tamanho-leitura: 16px;
+  --largura-leitura: 36%;
+}
+#central-avisos { position: fixed; right: 18px; bottom: 18px; z-index: 40; display: flex; flex-direction: column; gap: 10px; width: min(650px, calc(100vw - 36px)); max-height: 65dvh; overflow: auto; }
+#central-avisos .revisao-acervo, #central-avisos #mensagem { position: static; inset: auto; max-width: none; width: 100%; margin: 0; flex: 0 0 auto; }
+.top-actions {
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.top-actions button {
+  min-height: 36px;
+  font-size: 12px;
+}
+#tempo-resumo {
+  font-variant-numeric: tabular-nums;
+}
+#tempo-resumo[data-contando="true"] {
+  border-color: #8aff8066;
+}
+.conforto-dialog {
+  width: min(820px, 94vw);
+  max-height: 88dvh;
+  overflow: auto;
+  background: var(--bg);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 24px;
+}
+.conforto-dialog::backdrop {
+  background: #0009;
+}
+.conforto-dialog .campo {
+  margin: 16px 0;
+}
+.conforto-dialog pre {
+  max-height: 35dvh;
+  overflow: auto;
+}
+.conforto-dialog textarea {
+  width: 100%;
+}
+.preferencia-check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 0;
+}
+.preferencia-check input {
+  width: 18px;
+  height: 18px;
+}
+.questao-linha {
+  display: block;
+  text-align: left;
+  width: 100%;
+  margin: 8px 0;
+  padding: 12px;
+}
+.tentativa-linha {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+.tentativa-linha > strong {
+  display: block;
+  margin-bottom: 8px;
+}
+.comparacao-codigo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+}
+.comparacao-codigo pre {
+  font-size: 12px;
+}
+.voltar-questao-estudo {
+  position: sticky;
+  bottom: 16px;
+  margin: 16px 0;
+}
+@media (max-width: 700px) {
+  .comparacao-codigo {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.tabela-tempo {
+  width: 100%;
+  margin: 20px 0;
+  font-size: 13px;
+}
+.tabela-tempo td,
+.tabela-tempo th {
+  padding: 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+.tabela-tempo td:not(:first-child) {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.navegacao-questoes {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 0;
+  min-height: 44px;
+}
+.navegacao-questoes button {
+  font-size: 12px;
+  min-height: 32px;
+  padding: 5px 10px;
+}
+.navegacao-questoes .secondary {
+  margin-left: auto;
+}
+.questao-concluida {
+  box-shadow: inset 0 -2px var(--green);
+}
+.entrada-parametro {
+  display: grid;
+  grid-template-columns: minmax(80px, 120px) minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  margin: 8px 0;
+}
+.entrada-parametro input,
+#rascunho,
+.small-code {
+  font-family: "Fira Code", monospace;
+  font-feature-settings: var(--recursos-fonte);
+}
+.entrada-titulo {
+  margin: 8px 0;
+  font-weight: 600;
+}
+#entradas-parametros {
+  margin: 8px 0 16px;
+}
+#entradas-parametros small {
+  display: block;
+  margin: 8px 0;
+  color: var(--muted);
+}
+.aula-artigo p,
+.aula-artigo li,
+.briefing p,
+.briefing li {
+  font-size: var(--tamanho-leitura);
+}
+.aula-artigo {
+  max-width: 82ch;
+}
+.briefing .eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+.briefing h3 {
+  font-size: 19px;
+}
+.briefing .ajuda-contrato {
+  font-size: 13px;
+}
+.divisor-paineis {
+  width: 8px;
+  align-self: stretch;
+  cursor: col-resize;
+  border-radius: 4px;
+  touch-action: none;
+}
+.divisor-paineis:hover,
+.divisor-paineis:focus-visible {
+  background: var(--plum);
+  outline: 2px solid var(--plum);
+}
+
+/* O editor permanece presente em Console e Verificação. */
+body[data-rota="aula"][data-aba="praticar"] .editor-shell,
+body[data-rota="aula"][data-aba="praticar"] #arquivos {
+  display: flex;
+}
+body[data-rota="aula"][data-aba="praticar"] .editor-shell {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+body[data-rota="aula"][data-aba="praticar"] #exploracao #meus-experimentos {
+  display: block;
+}
+body[data-rota="aula"][data-aba="praticar"] .lesson-header,
+body[data-rota="aula"][data-aba="praticar"] #mapa-recursos,
+body[data-rota="aula"][data-aba="praticar"] #progresso-aula,
+body[data-rota="aula"][data-aba="praticar"] .practice-head h2,
+body[data-rota="aula"][data-aba="praticar"] .practice-head p,
+body[data-rota="aula"][data-aba="praticar"] footer,
+body[data-rota="aula"][data-aba="praticar"] #concluido {
+  display: none;
+}
+body[data-rota="aula"][data-aba="praticar"] main {
+  padding: 0 18px 12px;
+  max-width: none;
+}
+body[data-rota="aula"][data-aba="praticar"] .lesson-nav {
+  margin: 0 0 4px;
+}
+body[data-rota="aula"][data-aba="praticar"] .practice-head {
+  margin: 0;
+  position: absolute;
+  top: 7px;
+  right: 0;
+  max-width: 48%;
+}
+body[data-rota="aula"][data-aba="praticar"] .practice-head > div:first-child {
+  display: none;
+}
+body[data-rota="aula"][data-aba="praticar"] #exercicios select {
+  max-width: 360px;
+  font-size: 12px;
+  padding: 6px;
+}
+body[data-rota="aula"][data-aba="praticar"] #exercicios label {
+  font-size: 0;
+}
+body[data-rota="aula"][data-aba="praticar"] #praticar {
+  position: relative;
+}
+body[data-rota="aula"][data-aba="praticar"] #workspace-tabs {
+  margin: 0;
+}
+body[data-rota="aula"][data-aba="praticar"] .bancada,
+body:has(.debug-panel.aberto)[data-rota="aula"][data-aba="praticar"] .bancada {
+  display: grid;
+  grid-template-columns: minmax(260px, var(--largura-leitura)) 8px minmax(
+      0,
+      1fr
+    );
+  gap: 6px;
+  min-height: 0;
+  height: calc(100dvh - 230px);
+  align-items: stretch;
+}
+body[data-rota="aula"][data-aba="praticar"] .bancada.leitura-recolhida {
+  grid-template-columns: 44px 8px minmax(0, 1fr);
+}
+body[data-rota="aula"][data-aba="praticar"] .bancada > .bancada-codigo {
+  grid-column: 3;
+}
+body[data-rota="aula"][data-aba="praticar"] .briefing,
+body:has(.debug-panel.aberto)[data-rota="aula"][data-aba="praticar"] .briefing {
+  position: relative;
+  left: auto;
+  top: auto;
+  width: auto;
+  max-height: none;
+  height: 100%;
+  z-index: auto;
+  box-shadow: none;
+  overflow: auto;
+}
+body[data-rota="aula"][data-aba="praticar"] .bancada-codigo {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  gap: 8px;
+}
+body[data-rota="aula"][data-aba="praticar"] .bancada-codigo {
+  display: grid;
+  grid-template-rows: auto minmax(180px, 1fr) minmax(
+      140px,
+      var(--altura-resultados, 40%)
+    );
+}
+body[data-rota="aula"][data-aba="praticar"] #arquivos {
+  grid-row: 1;
+  margin: 0;
+}
+body[data-rota="aula"][data-aba="praticar"] .editor-debug-layout {
+  grid-row: 2;
+  height: 100%;
+}
+body[data-rota="aula"][data-aba="praticar"] #exploracao,
+body[data-rota="aula"][data-aba="praticar"] #verificacoes,
+body[data-rota="aula"][data-aba="praticar"] #terminal,
+body[data-rota="aula"][data-aba="praticar"] #observatorio,
+body.resource-drawer-open[data-rota="aula"][data-aba="praticar"]
+  #ambiente:not([hidden]) {
+  grid-row: 3;
+  height: 100%;
+  max-height: none;
+  min-height: 0;
+  resize: none;
+}
+body[data-rota="aula"][data-aba="praticar"] .editor-debug-layout {
+  flex: 1 1 56%;
+  min-height: 180px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 40px;
+  gap: 8px;
+}
+body[data-rota="aula"][data-aba="praticar"]
+  .editor-debug-layout:has(.debug-panel.aberto) {
+  grid-template-columns: minmax(180px, 1fr) minmax(230px, 32%);
+}
+body[data-rota="aula"][data-aba="praticar"] .editor-shell {
+  min-width: 0;
+  height: 100%;
+}
+body[data-rota="aula"][data-aba="praticar"] .editor-codigo {
+  height: auto;
+  min-height: 0;
+  resize: none;
+  overflow: hidden;
+}
+body[data-rota="aula"][data-aba="praticar"] .editor-codigo .cm-editor {
+  height: 100%;
+}
+body[data-rota="aula"][data-aba="praticar"] .debug-panel,
+body[data-rota="aula"][data-aba="praticar"] .debug-panel.aberto {
+  position: relative;
+  width: auto;
+  right: auto;
+  top: auto;
+  height: 100%;
+  max-height: none;
+  box-shadow: none;
+  z-index: auto;
+  overflow: auto;
+}
+body[data-rota="aula"][data-aba="praticar"] .editor-top {
+  min-height: 38px;
+  padding: 6px 10px;
+}
+body[data-rota="aula"][data-aba="praticar"] #salvo {
+  font-size: 12px;
+  color: var(--muted);
+}
+body[data-rota="aula"][data-aba="praticar"] .editor-actions {
+  padding: 8px;
+}
+body[data-rota="aula"][data-aba="praticar"] .editor-actions button {
+  min-height: 36px;
+  font-size: 12px;
+}
+body[data-rota="aula"][data-aba="praticar"] #exploracao,
+body[data-rota="aula"][data-aba="praticar"] #verificacoes,
+body[data-rota="aula"][data-aba="praticar"] #terminal,
+body[data-rota="aula"][data-aba="praticar"] #observatorio {
+  flex: 0 1 38%;
+  min-height: 120px;
+  max-height: 46%;
+  overflow: auto;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  resize: vertical;
+}
+body[data-rota="aula"][data-aba="praticar"] #rascunho {
+  min-height: 80px;
+}
+.test > summary {
+  font-size: 13px;
+}
+.detalhe-teste,
+.detalhe-teste pre,
+.resultado {
+  font-size: 12px;
+}
+.detalhe-teste button {
+  margin: 8px 8px 8px 0;
+}
+.revisao-acervo,
+#mensagem {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  top: auto;
+  max-width: min(650px, calc(100vw - 36px));
+  max-height: 32dvh;
+  overflow: auto;
+  margin: 0;
+  z-index: 40;
+  box-shadow: 0 8px 24px #0007;
+  background: var(--surface);
+}
+#mensagem {
+  bottom: 18px;
+}
+.revisao-acervo:not([hidden]) ~ * {
+  --aviso-visivel: 1;
+}
+body.resource-drawer-open[data-rota="aula"][data-aba="praticar"]
+  #ambiente:not([hidden]) {
+  display: block;
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: auto;
+  min-height: 180px;
+  max-height: 48%;
+  flex: 0 1 45%;
+  overflow: auto;
+  box-shadow: none;
+  z-index: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+}
+body.resource-drawer-open[data-rota="aula"][data-aba="praticar"] #exploracao,
+body.resource-drawer-open[data-rota="aula"][data-aba="praticar"] #verificacoes,
+body.resource-drawer-open[data-rota="aula"][data-aba="praticar"] #observatorio,
+body.resource-drawer-open[data-rota="aula"][data-aba="praticar"] #terminal {
+  display: none;
+}
+body.resource-drawer-open[data-rota="aula"][data-aba="praticar"]
+  .bancada-codigo {
+  padding-right: 0;
+}
+body:has(.revisao-acervo:not([hidden])) #mensagem {
+  bottom: 180px;
+}
+
+/* Navegação compacta mantém rótulos acessíveis e tooltips. */
+body[data-concentracao="true"][data-rota="aula"][data-aba="praticar"] .hub-nav {
+  width: 72px;
+  padding: 20px 8px;
+}
+body[data-concentracao="true"][data-rota="aula"][data-aba="praticar"]
+  .hub-layout {
+  margin-left: 72px;
+}
+body[data-concentracao="true"][data-rota="aula"][data-aba="praticar"]
+  .brand
+  > span:last-child,
+body[data-concentracao="true"][data-rota="aula"][data-aba="praticar"]
+  .nav-caption,
+body[data-concentracao="true"][data-rota="aula"][data-aba="praticar"]
+  .profile-card {
+  display: none;
+}
+body[data-concentracao="true"][data-rota="aula"][data-aba="praticar"]
+  .hub-nav
+  button {
+  font-size: 0;
+  justify-content: center;
+  padding: 12px 4px;
+}
+body[data-concentracao="true"][data-rota="aula"][data-aba="praticar"]
+  .hub-nav
+  nav
+  button
+  > span:first-child {
+  font-size: 20px;
+}
+body[data-concentracao="true"][data-rota="aula"][data-aba="praticar"]
+  .hub-nav
+  nav
+  button
+  > span:not(:first-child) {
+  display: none;
+}
+body[data-concentracao="true"][data-rota="aula"][data-aba="praticar"]
+  #nav-recursos
+  button::before {
+  content: "◇";
+  font-size: 20px;
+}
+body[data-concentracao="true"][data-rota="aula"][data-aba="praticar"]
+  #nav-recursos
+  button {
+  font-size: 0;
+  overflow: hidden;
+}
+body[data-concentracao="true"][data-rota="aula"][data-aba="praticar"]
+  #nav-recursos
+  button[data-tipo="sqlite"]::before {
+  content: "▤";
+}
+body[data-concentracao="true"][data-rota="aula"][data-aba="praticar"]
+  #nav-recursos
+  button[data-tipo="mock-http"]::before {
+  content: "⇄";
+}
+body[data-concentracao="true"][data-rota="aula"][data-aba="praticar"]
+  #nav-conexao::before {
+  content: "⇄";
+  font-size: 20px;
+}
+body[data-concentracao="true"][data-rota="aula"][data-aba="praticar"]
+  #ajuda::before {
+  content: "?";
+  font-size: 20px;
+}
+body[data-concentracao="true"][data-rota="aula"][data-aba="praticar"]
+  #encerrar::before {
+  content: "⏻";
+  font-size: 20px;
+}
+body[data-rota="aula"][data-aba="praticar"] #importar,
+body[data-rota="aula"][data-aba="praticar"] .local-indicator {
+  display: none;
+}
+body[data-rota="aula"][data-aba="praticar"] .top {
+  height: 60px;
+  padding: 0 18px;
+}
+body[data-contraste="true"] {
+  --subtle: #b8b3c9;
+  --muted: #d3cfdf;
+}
+body[data-contraste="true"] .cm-content [class*="tm-7970a9"] {
+  color: #b9b0dd;
+}
+
+/* Ao reduzir a largura/usar zoom, as ferramentas passam para baixo sem cobrir o código. */
+@media (max-width: 1100px) {
+  body[data-rota="aula"][data-aba="praticar"] .bancada {
+    grid-template-columns: minmax(230px, 34%) 8px minmax(0, 1fr);
+  }
+  body[data-rota="aula"][data-aba="praticar"]
+    .editor-debug-layout:has(.debug-panel.aberto) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(180px, 1fr) minmax(140px, 1fr);
+    overflow: auto;
+  }
+  body[data-rota="aula"][data-aba="praticar"] .navegacao-questoes .text-button {
+    display: none;
+  }
+  body[data-rota="aula"][data-aba="praticar"] .top .breadcrumb {
+    max-width: 34%;
+    overflow: hidden;
+  }
+}
+@media (max-width: 820px), (max-height: 600px) {
+  body[data-rota="aula"][data-aba="praticar"] .bancada,
+  body:has(.debug-panel.aberto)[data-rota="aula"][data-aba="praticar"]
+    .bancada {
+    height: auto;
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  body[data-rota="aula"][data-aba="praticar"] .bancada > .bancada-codigo {
+    grid-column: 1;
+    height: auto;
+  }
+  body[data-rota="aula"][data-aba="praticar"] .briefing {
+    max-height: 38dvh;
+    height: auto;
+    position: relative;
+  }
+  body[data-rota="aula"][data-aba="praticar"] .briefing.recolhido {
+    max-height: 44px;
+  }
+  body[data-rota="aula"][data-aba="praticar"]
+    .briefing.recolhido
+    #leitura-toggle {
+    writing-mode: initial;
+    min-height: 40px;
+    width: 100%;
+  }
+  body[data-rota="aula"][data-aba="praticar"] .editor-debug-layout {
+    min-height: 350px;
+    flex: auto;
+  }
+  body[data-rota="aula"][data-aba="praticar"] #exploracao,
+  body[data-rota="aula"][data-aba="praticar"] #verificacoes {
+    max-height: 45dvh;
+    min-height: 160px;
+    flex: auto;
+  }
+  .divisor-paineis {
+    display: none;
+  }
+  body[data-rota="aula"][data-aba="praticar"] .practice-head {
+    position: static;
+    max-width: none;
+  }
+  .top .breadcrumb {
+    display: none;
+  }
+  .top {
+    min-height: 60px;
+    height: auto;
+    padding: 8px;
+  }
+  .top-actions {
+    gap: 5px;
+  }
+  .navegacao-questoes .secondary {
+    margin-left: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* Limita o tamanho intrínseco do editor e dá ao resultado todo seu espaço. */
+body[data-rota="aula"][data-aba="praticar"] .editor-debug-layout {
+  grid-template-rows: minmax(0, 1fr);
+  overflow: hidden;
+}
+body[data-rota="aula"][data-aba="praticar"] .editor-shell {
+  min-height: 0;
+  overflow: hidden;
+}
+body[data-rota="aula"][data-aba="praticar"] #exploracao,
+body[data-rota="aula"][data-aba="praticar"] #verificacoes,
+body[data-rota="aula"][data-aba="praticar"] #terminal,
+body[data-rota="aula"][data-aba="praticar"] #observatorio,
+body.resource-drawer-open[data-rota="aula"][data-aba="praticar"]
+  #ambiente:not([hidden]) {
+  max-height: none;
+  min-height: 0;
+  height: 100%;
+}
+@media (max-width: 1100px) {
+  body[data-rota="aula"][data-aba="praticar"]
+    .editor-debug-layout:has(.debug-panel.aberto) {
+    grid-template-rows: minmax(140px, 1fr) minmax(120px, 1fr);
+  }
+}
+@media (max-width: 820px), (max-height: 600px) {
+  body[data-rota="aula"][data-aba="praticar"] .bancada-codigo {
+    display: flex;
+  }
+  body[data-rota="aula"][data-aba="praticar"] .editor-debug-layout {
+    height: 350px;
+    min-height: 350px;
+    flex: 0 0 350px;
+  }
+  body[data-rota="aula"][data-aba="praticar"] #exploracao,
+  body[data-rota="aula"][data-aba="praticar"] #verificacoes,
+  body.resource-drawer-open[data-rota="aula"][data-aba="praticar"]
+    #ambiente:not([hidden]) {
+    height: 250px;
+    min-height: 160px;
+    max-height: 55dvh;
+    flex: 0 0 250px;
+  }
+}

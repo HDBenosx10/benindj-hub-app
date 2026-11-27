@@ -107,3 +107,51 @@ test("Projeto não recebe conclusão com lista de resultados vazia", () => {
   s.arquivos["app.cjs"] = "novo";
   assert.equal(resumo(a, s).completa, false);
 });
+
+test("Revisão de projeto preserva aprovação de texto, mas exige verificar mudanças executáveis", () => {
+  const original = {
+    modo: "projeto",
+    projeto: {
+      tipo: "http",
+      arquivos: [{ nome: "app.cjs", editavel: true, codigo: "// inicial" }, { nome: "apoio.cjs", editavel: false, codigo: "exports.x = 1;" }],
+      testes: [{ nome: "Nome anterior", acoes: [{ metodo: "GET", caminho: "/", status: 200 }] }],
+      requisicoes: [{ nome: "Explorar" }],
+    },
+  };
+  const salvo = { arquivos: { "app.cjs": "// minha solução", "apoio.cjs": "exports.x = 1;" } };
+  registrar(original, salvo, [{ passou: true }]);
+  const nova = structuredClone(original);
+  nova.projeto.testes[0].nome = "Nome mais claro";
+  nova.projeto.requisicoes[0].nome = "Exemplo explicado";
+  nova.projeto.arquivos[0].codigo = "// novo ponto de partida";
+  assert.ok(preservarAprovacoes(original, nova, salvo));
+  assert.ok(resumo(nova, salvo).completa);
+  assert.equal(salvo.arquivos["app.cjs"], "// minha solução");
+  for (const alterar of [
+    (a) => { a.projeto.testes[0].acoes[0].status = 201; },
+    (a) => { a.projeto.arquivos[1].codigo = "exports.x = 2;"; },
+    (a) => { a.ambiente = { recursos: [] }; },
+  ]) {
+    const alterada = structuredClone(nova), tentativa = structuredClone(salvo);
+    alterar(alterada);
+    assert.equal(preservarAprovacoes(nova, alterada, tentativa), false);
+    assert.equal(resumo(alterada, tentativa).revalidar, 1);
+  }
+  const editado = structuredClone(salvo);
+  editado.arquivos["app.cjs"] = "// outra tentativa";
+  const textual = structuredClone(nova); textual.projeto.testes[0].nome = "Outro título";
+  assert.equal(preservarAprovacoes(nova, textual, editado), false);
+});
+
+test("Reordenação e inclusão de exercício preservam aprovados por ID; novo critério pede verificação", () => {
+  const original = structuredClone(aula), salvo = { codigos: { a: "minha solução", b: "outra" } };
+  registrar(original, salvo, [{ exercicioId: "a", passou: true }], "a");
+  const nova = structuredClone(original);
+  nova.exercicios.reverse();
+  nova.exercicios.push({ id: "c", testes: [{}] });
+  assert.equal(resumo(nova, salvo).concluidos, 1);
+  nova.exercicios.find((e) => e.id === "a").testes.push({ executar: "return 3;", esperado: 3 });
+  assert.equal(preservarAprovacoes(original, nova, salvo), false);
+  assert.equal(resumo(nova, salvo).revalidar, 1);
+  assert.equal(salvo.codigos.a, "minha solução");
+});

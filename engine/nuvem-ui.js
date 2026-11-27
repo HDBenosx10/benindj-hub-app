@@ -269,6 +269,15 @@ function renderizarTurmaNuvem() {
     elemento(liberadas, "p", "Nenhuma turma selecionada.");
   }
 }
+const avisoAtualizacaoApp = HubNotificacoes.criar({
+  mostrar: ({ texto }) => {
+    $("atualizacao-app-texto").textContent = texto;
+    $("atualizacao-app").hidden = false;
+  },
+  ocultar: () => { $("atualizacao-app").hidden = true; },
+});
+$("atualizacao-app-fechar").onclick = () => avisoAtualizacaoApp.fechar();
+$("atualizacao-app-instalar").onclick = () => acaoUpdate("instalar");
 function renderizarEstadoUpdate(estado) {
   $("update-status").textContent =
     estado.mensagem ?? `Versão atual: ${estado.versaoAtual}`;
@@ -284,6 +293,13 @@ function renderizarEstadoUpdate(estado) {
   $("update-progresso").value = estado.progresso ?? 0;
   if (estado.fase === "disponivel" || estado.fase === "pronta")
     $("nav-conexao").textContent = "Conexões · atualização disponível";
+  else if (estado.fase === "baixando") $("nav-conexao").textContent = "Conexões · baixando atualização";
+  else $("nav-conexao").textContent = "Conexões e atualizações";
+  if (estado.fase === "pronta") avisoAtualizacaoApp.exibir({
+    chave: "pronta:" + estado.novaVersao,
+    texto: `A versão ${estado.novaVersao} foi baixada e está pronta. Atualize quando quiser; seu trabalho será salvo antes de reiniciar.`,
+  });
+  else avisoAtualizacaoApp.exibir(null);
 }
 $("form-nuvem-professor").onsubmit = (e) => {
   e.preventDefault();
@@ -454,29 +470,37 @@ async function aplicarRevisoesAutomaticas(fontes, { incluirAberta } = {}) {
     } finally { if (aula) bloquear(false); }
     if (atualizaAberta && aula?.id === id) {
       const rota = document.body.dataset.rota;
-      await abrirAula(id, { retomar: true });
+      await abrirAula(id, { retomar: true, semSalvar: true });
       if (rota !== "aula") mostrarRota(rota);
     }
   });
   filaImportacoes = trabalho.catch(() => {});
   return trabalho;
 }
+const avisoRevisao = HubNotificacoes.criar({
+  mostrar: ({ texto, podeAplicar }) => {
+    $("revisao-acervo-texto").textContent = texto;
+    $("aplicar-revisao-acervo").hidden = !podeAplicar;
+    $("revisao-acervo").hidden = false;
+  },
+  ocultar: () => { $("revisao-acervo").hidden = true; },
+});
+$("fechar-revisao-acervo").onclick = () => avisoRevisao.fechar();
 function estadoRevisoes(estado) {
-  const banner = $("revisao-acervo"), texto = $("revisao-acervo-texto"), botao = $("aplicar-revisao-acervo");
-  botao.hidden = true;
+  const revisoes = JSON.stringify(estado.revisoes ?? estado.pendentes);
   if (estado.erro) {
-    banner.hidden = false;
-    texto.textContent = "Atualizações das aulas: " + estado.erro + " O material já recebido continua salvo. Tentaremos novamente quando houver conexão.";
+    avisoRevisao.exibir({ chave: "erro:" + estado.erro,
+      texto: "Atualizações das aulas: " + estado.erro + " O material já recebido continua salvo. Tentaremos novamente quando houver conexão." });
   } else if (estado.pendentes.length) {
-    banner.hidden = false; botao.hidden = false;
-    texto.textContent = "Seu professor publicou uma atualização para " + estado.pendentes.join(", ") + ". Seu código será mantido. Pare a execução ou o debugger e aplique quando estiver pronto.";
+    avisoRevisao.exibir({ chave: "pendentes:" + revisoes, podeAplicar: true,
+      texto: "Seu professor publicou uma atualização para " + estado.pendentes.join(", ") + ". Seu código será mantido. Pare a execução ou o debugger e aplique quando estiver pronto. Você também pode recebê-la depois em Conexões e atualizações." });
   } else if (estado.aplicadas?.length) {
-    banner.hidden = false;
-    texto.textContent = "Atualização do professor recebida: " + estado.aplicadas.join(", ") + ". Seus códigos foram mantidos. Exercícios com critérios alterados precisam ser verificados novamente.";
+    avisoRevisao.exibir({ chave: "aplicadas:" + JSON.stringify(estado.revisoesAplicadas ?? estado.aplicadas), duracao: 10000,
+      texto: "Atualização do professor recebida: " + estado.aplicadas.join(", ") + ". Seus códigos foram mantidos. Exercícios com critérios alterados precisam ser verificados novamente." });
   } else if (estado.exigeAtualizacao) {
-    banner.hidden = false;
-    texto.textContent = "Há uma revisão de aula que exige atualizar o aplicativo. Acesse Conexões e atualizações.";
-  } else if (!banner.textContent.includes("Atualização do professor recebida")) banner.hidden = true;
+    avisoRevisao.exibir({ chave: "runtime:" + JSON.stringify(estado.incompativeis ?? []),
+      texto: "Há uma revisão de aula que exige atualizar o aplicativo. Acesse Conexões e atualizações." });
+  } else avisoRevisao.exibir(null);
 }
 async function verificarRevisoesAulas() {
   if (perfil !== "aluno" || previa || !nuvemDisponivel() || nuvemOcupada || document.hidden) return;

@@ -194,15 +194,7 @@ function renderizarInicioAluno() {
       `Aula ${String(item.numero).padStart(2, "0")} · ${item.titulo}`,
     );
     elemento(b, "p", item.grupoPercurso ?? item.modulo ?? item.foco);
-    elemento(b, "span", estadoDaAula(item), "lesson-progress");
-    elemento(
-      b,
-      "span",
-      item.disponivel === false
-        ? "Planejamento recebido · conteúdo ainda não liberado"
-        : `${item.progresso?.concluidos ?? 0} de ${item.progresso?.total ?? 0} desafios validados`,
-      "secondary",
-    );
+    renderizarProgressoCartao(b, item);
     elemento(
       b,
       "span",

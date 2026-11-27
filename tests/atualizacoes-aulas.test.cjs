@@ -58,3 +58,11 @@ test("Conteúdo fora da seleção e gabaritos são recusados antes da aplicaçã
     await t.c.verificar(); assert.equal(t.aplicados.length, 0); assert.ok(t.estados.at(-1).erro);
   }
 });
+
+test("Aviso de runtime incompatível termina quando a revisão é retirada", async () => {
+  const t = contexto({ receber: async () => ({ fontes: [], indisponiveis: [{ id: "aula-09" }] }) });
+  await t.c.verificar();
+  assert.equal(t.estados.at(-1).exigeAtualizacao, true);
+  t.catalogo({ aulas: [] }); await t.c.verificar();
+  assert.equal(t.estados.at(-1).exigeAtualizacao, false);
+});

@@ -113,6 +113,7 @@ async function iniciar() {
     ? await require("./autoria.cjs").criar(raiz, catalogo)
     : null;
   const coruja = professor ? await require("./coruja.cjs").criar(raiz) : null;
+  const revisao = professor ? await require("./revisao.cjs").criar({ raiz, catalogo, autoria }) : null;
   const token = crypto.randomBytes(24).toString("hex");
   const identidade = crypto.createHash("sha256").update(raiz).digest("hex");
   const pastaDados = path.join(raiz, ".dados");
@@ -193,6 +194,8 @@ async function iniciar() {
   );
   let conferindo = false;
   const depuracoes = new Map();
+  let registroTempo;
+  const tempo = () => registroTempo ??= require("./tempo-registro.cjs").criar(path.join(pastaDados, "tempo.sqlite"));
   let iniciandoDebug = false;
   let encerrando = false;
   const importadorAulas = require("./pacotes-aulas.cjs").criarImportador({
@@ -259,15 +262,31 @@ async function iniciar() {
   }
   function dadosDaAula(req, aula) {
     const salvo = respostas[chave(req, aula)] ?? {};
+    const professorNoEditor = visao(req) === "professor";
+    function codigoDePartida(anterior, inicial, gabarito) {
+      if (!professorNoEditor) return anterior ?? inicial;
+      // Atualiza templates antigos sem substituir experimentos já escritos.
+      const templateAntigo = !salvo.baseProfessor && anterior === inicial;
+      return anterior === undefined || templateAntigo
+        ? gabarito ?? inicial
+        : anterior;
+    }
     const codigos = {};
     for (const exercicio of aula.exercicios ?? []) {
-      codigos[exercicio.id] =
-        salvo.codigos?.[exercicio.id] ?? exercicio.codigoInicial;
+      codigos[exercicio.id] = codigoDePartida(
+        salvo.codigos?.[exercicio.id],
+        exercicio.codigoInicial,
+        aula.professor?.gabaritos?.[exercicio.id],
+      );
     }
     const arquivos = {};
     for (const arquivo of aula.projeto?.arquivos ?? []) {
       arquivos[arquivo.nome] = arquivo.editavel
-        ? (salvo.arquivos?.[arquivo.nome] ?? arquivo.codigo)
+        ? codigoDePartida(
+            salvo.arquivos?.[arquivo.nome],
+            arquivo.codigo,
+            aula.professor?.solucaoProjeto?.[arquivo.nome],
+          )
         : arquivo.codigo;
     }
     return {
@@ -276,6 +295,7 @@ async function iniciar() {
       experimentos: salvo.experimentos ?? {},
       progresso: salvo.progresso ?? {},
       estudo: salvo.estudo ?? null,
+      ...(professorNoEditor ? { baseProfessor: 1 } : {}),
     };
   }
   async function salvar(req, aula, dado) {
@@ -361,6 +381,10 @@ async function iniciar() {
       const estaticos = {
         "/": "index.html",
         "/interface.js": "interface.js",
+        "/notificacoes.js": "notificacoes.js",
+        "/conforto-ui.js": "conforto-ui.js",
+        "/tempo-ativo.js": "tempo-ativo.js",
+        "/tempo-ui.js": "tempo-ui.js",
         "/vendor/editor.js": "vendor/editor.js",
         "/vendor/editor-tema.css": "vendor/editor-tema.css",
         "/ambiente-ui.js": "ambiente-ui.js",
@@ -374,13 +398,20 @@ async function iniciar() {
         "/nuvem-ui.js": "nuvem-ui.js",
         "/acervo-atualizacoes.js": "acervo-atualizacoes.js",
         "/estilo.css": "estilo.css",
+        "/conforto.css": "conforto.css",
         ...(professor
           ? {
               "/estudio.js": "estudio.js",
+              "/revisao-ui.js": "revisao-ui.js",
+              "/revisao.css": "revisao.css",
               "/estudio-recursos.js": "estudio-recursos.js",
             }
           : {}),
       };
+      if (req.method === "GET" && ["/vendor/fira-code.woff2", "/vendor/fira-code-semibold.woff2"].includes(url.pathname)) {
+        res.writeHead(200, { "Content-Type": "font/woff2", "Cache-Control": "public, max-age=86400" });
+        return res.end(await fs.readFile(path.join(__dirname, url.pathname.slice(1))));
+      }
       if (req.method === "GET" && estaticos[url.pathname]) {
         const nome = estaticos[url.pathname];
         const tipo = nome.endsWith(".html")
@@ -393,7 +424,7 @@ async function iniciar() {
           .replace(
             "__ESTUDIO__",
             professor
-              ? '<script src="/estudio.js" defer></script><script src="/estudio-recursos.js" defer></script>'
+              ? '<link rel="stylesheet" href="/revisao.css"><script src="/estudio.js" defer></script><script src="/estudio-recursos.js" defer></script><script src="/revisao-ui.js" defer></script>'
               : "",
           );
         res.writeHead(200, {
@@ -479,6 +510,7 @@ async function iniciar() {
         return json(res, 200, {
           perfil: visao(req),
           versaoApp: config.versaoApp,
+          preferencias: respostas["preferencias:" + visao(req)] ?? {},
           jornada: {
             escolha: respostas["jornada:" + visao(req)] ?? null,
             trilhas: jornada.trilhas,
@@ -547,6 +579,7 @@ async function iniciar() {
         depuracoes.clear();
         await ambientes.encerrar();
         await gravacao;
+        registroTempo?.fechar();
         servidor.close(() => {
           process.exitCode = 0;
         });
@@ -554,6 +587,27 @@ async function iniciar() {
         return;
       }
       const dado = req.method === "POST" ? await corpo(req) : {};
+      if (url.pathname === "/api/preferencias" && req.method === "POST") {
+        const valores = dado.valores;
+        if (!valores || typeof valores !== "object" || Array.isArray(valores) || Object.keys(valores).length > 2000)
+          throw Error("Preferências inválidas.");
+        for (const [k,v] of Object.entries(valores)) if (!/^(hub-conforto$|hub-tempo-pendente$|hub-layout:|hub-editor-posicao:|hub-debug:)/.test(k) || k.length > 240 || typeof v !== "string" || v.length > 500000) throw Error("Preferência inválida.");
+        respostas["preferencias:" + visao(req)] = valores;
+        await persistir();
+        return json(res, 200, { salvo: true });
+      }
+      if (url.pathname === "/api/tempo") {
+        const registros = req.method === "POST"
+          ? tempo().registrar(visao(req), dado.eventos, (evento) => {
+              const a = aulaPorId(req, evento.aulaId);
+              if (evento.atividadeId !== null && !/^[\w-]{1,100}$/.test(evento.atividadeId)) throw Error("Identificador de atividade inválido.");
+            })
+          : tempo().resumo(visao(req));
+        return json(res, 200, { registros: registros.map(r => {
+          const a = (professor ? catalogo : liberadas).get(r.aulaId);
+          return { ...r, atividadeTitulo: (a?.exercicios ?? a?.missoes ?? []).find(e => e.id === r.atividadeId)?.titulo ?? null };
+        }) });
+      }
       if (req.method === "POST" && url.pathname === "/api/aulas/exportar") {
         if (visao(req) !== "professor")
           return json(res, 403, { erro: "Exportação exclusiva do professor." });
@@ -590,12 +644,16 @@ async function iniciar() {
       }
       if (
         url.pathname.startsWith("/api/autoria/") ||
+        url.pathname.startsWith("/api/revisao/") ||
         url.pathname.startsWith("/api/coruja/")
       ) {
         if (visao(req) !== "professor") {
           return json(res, 403, { erro: "Recurso exclusivo do professor." });
         }
         const operacao = url.pathname.split("/").pop();
+        if (url.pathname.startsWith("/api/revisao/")) {
+          return json(res, 200, await revisao(operacao, dado));
+        }
         if (url.pathname.startsWith("/api/coruja/")) {
           return json(res, 200, await coruja(operacao, dado));
         }
@@ -603,6 +661,17 @@ async function iniciar() {
       }
       const aula = aulaPorId(req, dado.aulaId ?? url.searchParams.get("aula"));
       const id = chave(req, aula);
+      if (url.pathname === "/api/historico") {
+        const historico = respostas["historico:" + id] ?? [];
+        return json(res, 200, { historico: historico.map(({ conteudo, ...meta }) => ({ ...meta, conteudo: dado.id === meta.id ? conteudo : undefined })) });
+      }
+      if (req.method === "POST" && url.pathname === "/api/historico/guardar") {
+        const salvo = await salvar(req, aula, dado);
+        const atividadeId = aula.exercicios?.some(e => e.id === dado.exercicioId) ? dado.exercicioId : null;
+        respostas["historico:" + id] = require("./historico.cjs").registrar(respostas["historico:" + id] ?? [], salvo, "Antes de restaurar", atividadeId);
+        await persistir();
+        return json(res, 200, { salvo: true });
+      }
       if (url.pathname.startsWith("/api/debug/")) {
         if (req.method !== "POST")
           throw Error("Use POST para operar o debugger.");
@@ -697,6 +766,7 @@ async function iniciar() {
         return json(res, 200, {
           aula: visao(req) === "professor" ? aula : publico(aula),
           respostas: dadosDaAula(req, aula),
+          progresso: jornada.resumo(aula, dadosDaAula(req, aula)),
           estudo: jornada.posicao(aula, dadosDaAula(req, aula)),
         });
       }
@@ -849,6 +919,11 @@ async function iniciar() {
             dado.exercicioId,
           );
           respostas[chave(req, aula)] = salvo;
+          const idsVerificados = aula.modo === "funcoes" ? aula.exercicios.filter(e => !dado.exercicioId || e.id === dado.exercicioId).map(e => e.id) : [null];
+          for (const atividadeId of idsVerificados) {
+            const rs = atividadeId ? resultados.filter(r => r.exercicioId === atividadeId) : resultados;
+            respostas["historico:" + id] = require("./historico.cjs").registrar(respostas["historico:" + id] ?? [], salvo, "Verificação", atividadeId, rs.length > 0 && rs.every(r => r.passou));
+          }
           await persistir();
           return json(res, 200, { resultados, progresso });
         } finally {

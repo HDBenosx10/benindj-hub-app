@@ -329,6 +329,7 @@ function desenharBancada() {
       () => {
         document.body.classList.remove("resource-drawer-open");
         raiz.hidden = aba !== "ambiente";
+        $("nav-recursos").querySelector("button")?.focus();
       },
       "drawer-close",
     );

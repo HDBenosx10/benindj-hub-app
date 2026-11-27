@@ -7,16 +7,21 @@
     <title>BeninDJ Hub</title>
     <link rel="stylesheet" href="/estilo.css" />
     <link rel="stylesheet" href="/vendor/editor-tema.css" />
+    <link rel="stylesheet" href="/conforto.css" />
     <script src="/vendor/editor.js" defer></script>
     <script src="/debug-ui.js" defer></script>
     <script src="/conteudo.js" defer></script>
     <script src="/leitura-ui.js" defer></script>
     <script src="/lotes-ui.js" defer></script>
+    <script src="/notificacoes.js" defer></script>
     <script src="/interface.js" defer></script>
     <script src="/ambiente-ui.js" defer></script>
     <script src="/jornada-ui.js" defer></script>
     <script src="/percurso.js" defer></script>
     <script src="/percurso-ui.js" defer></script>
+    <script src="/conforto-ui.js" defer></script>
+    <script src="/tempo-ativo.js" defer></script>
+    <script src="/tempo-ui.js" defer></script>
     <script src="/acervo-atualizacoes.js" defer></script>
     <script src="/nuvem-ui.js" defer></script>
     __ESTUDIO__
@@ -65,12 +70,24 @@
           ><strong id="rota-titulo">Início</strong>
         </div>
         <div class="top-actions">
+          <button id="tempo-resumo" type="button" title="Ver minhas horas de estudo">⏱ Hoje · 00:00</button>
+          <button id="tempo-pausar" type="button" aria-label="Pausar contagem de estudo" title="Pausar contagem">Ⅱ</button>
+          <button id="preferencias-editor" type="button" aria-label="Preferências de leitura e editor">Conforto</button>
           <button id="importar" class="secondary-button">↓ Importar aula</button
           ><span class="local-indicator">● Salvo neste computador</span>
         </div>
       </header>
       <main>
-        <div id="mensagem" role="status" aria-live="polite" hidden></div>
+        <div id="central-avisos" aria-label="Notificações">
+        <aside id="atualizacao-app" class="revisao-acervo" hidden aria-label="Atualização do aplicativo">
+          <p id="atualizacao-app-texto" role="status" aria-live="polite"></p>
+          <button id="atualizacao-app-instalar" class="primary" type="button">Salvar e atualizar</button>
+          <button id="atualizacao-app-fechar" class="fechar-aviso" type="button" aria-label="Fechar aviso de atualização do aplicativo">✕</button>
+        </aside>
+        <div id="mensagem" hidden>
+          <span id="mensagem-texto" role="status" aria-live="polite"></span>
+          <button id="fechar-mensagem" class="fechar-aviso" type="button" aria-label="Fechar notificação" title="Fechar notificação">✕</button>
+        </div>
         <aside
           id="revisao-acervo"
           class="revisao-acervo"
@@ -81,7 +98,9 @@
           <button id="aplicar-revisao-acervo" class="primary" hidden>
             Salvar e aplicar atualização
           </button>
+          <button id="fechar-revisao-acervo" class="fechar-aviso" type="button" aria-label="Fechar aviso de atualização das aulas" title="Fechar aviso">✕</button>
         </aside>
+        </div>
         <section id="inicio">
           <div id="resumo-jornada"></div>
           <div class="home-hero">
@@ -211,6 +230,7 @@
               </div>
               <div id="exercicios" class="activity-picker"></div>
             </div>
+            <div id="navegacao-questoes" class="navegacao-questoes"></div>
             <nav
               id="workspace-tabs"
               class="abas"
@@ -475,10 +495,11 @@ Continue até o servidor iniciar. Depois envie uma requisição para alcançar o
                   </aside>
                 </div>
                 <section id="exploracao" class="exploracao">
-                  <details id="meus-experimentos">
+                  <details id="meus-experimentos" open>
                     <summary>
                       Meus experimentos <span>Chamadas e rascunho livre</span>
                     </summary>
+                    <div id="entradas-parametros"></div>
                     <label for="modo-experimento">Executar</label
                     ><select id="modo-experimento">
                       <option value="desafio">
@@ -645,6 +666,7 @@ Nenhuma mensagem emitida pela aplicação.</pre>
           </section>
         </section>
         <section id="estudio" hidden></section>
+        <section id="revisao-professor" hidden></section>
         <section id="assistente" hidden></section>
         <section id="conexao" hidden>
           <p class="eyebrow">BENINDJ HUB · CONEXÃO</p>

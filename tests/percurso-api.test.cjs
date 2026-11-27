@@ -20,7 +20,7 @@ test("Trilha criada pelo professor acompanha exportação/importação; históri
     path.join(backend, "conteudo/percursos.json"),
     JSON.stringify([seed]),
   );
-  for (const nome of ["autoria", "coruja"])
+  for (const nome of ["autoria", "coruja", "revisao"])
     await fs.writeFile(
       path.join(backend, nome + ".cjs"),
       "exports.criar=async()=>()=>{};",
@@ -248,6 +248,45 @@ test("Trilha criada pelo professor acompanha exportação/importação; históri
     true,
   );
   assert.equal(preservada.respostas.codigos[idExemplo], tentativa);
+  assert.equal(preservada.progresso.completa, true);
+  const registroTempo = { id: require("node:crypto").randomUUID(), aulaId: "aula-00", atividadeId: idExemplo, modo: "pratica", dia: "2026-11-27", milisegundos: 15000 };
+  assert.equal((await aluno.req("/api/tempo", { eventos: [registroTempo] })).status, 200);
+  await aluno.req("/api/tempo", { eventos: [registroTempo] });
+  assert.equal((await aluno.req("/api/tempo")).dado.registros[0].milisegundos, 15000);
+  const preferencias = { "hub-conforto": JSON.stringify({codigo:18,ligaturas:true}), ["hub-editor-posicao:aula-00:"+idExemplo]: "{}" };
+  assert.equal((await aluno.req("/api/preferencias", { valores: preferencias })).status, 200);
+  const historico = (await aluno.req("/api/historico?aula=aula-00")).dado.historico;
+  assert.ok(historico.some(h => h.aprovada));
+  const snapshot = (await aluno.req("/api/historico", { aulaId:"aula-00", id:historico[0].id })).dado.historico[0];
+  assert.equal(snapshot.conteudo.codigos[idExemplo], tentativa);
+  const ampliada = structuredClone(revisada);
+  ampliada.exercicios.unshift({ ...structuredClone(original.exercicios[0]), id: "novo-desafio" });
+  async function atualizarAula(aula) {
+    const p = await aluno.req("/api/aulas/preparar-importacao", {
+      fontes: [{ nome: "aula-00.aula-hub", conteudo: JSON.stringify(aula) }],
+    });
+    const r = await aluno.req("/api/aulas/confirmar-importacao", { planoId: p.dado.planoId, chaves: [0] });
+    assert.equal(r.dado.resumo.atualizadas, 1);
+  }
+  await atualizarAula(ampliada);
+  let progresso = (await aluno.req("/api/aula?aula=aula-00")).dado.progresso;
+  assert.equal(progresso.concluidos, 1);
+  assert.equal(progresso.total, 2);
+  assert.equal(progresso.percentual, 50);
+  assert.equal(progresso.revalidar, 0);
+  const novoCriterio = structuredClone(ampliada);
+  novoCriterio.exercicios.find((e) => e.id === idExemplo).testes.push({ nome: "Nova regra", executar: "return 1;", esperado: 1 });
+  await atualizarAula(novoCriterio);
+  await aluno.fechar();
+  aluno = await abrir("aluno");
+  assert.deepEqual((await aluno.req("/api/inicio")).dado.preferencias, preferencias);
+  assert.equal((await aluno.req("/api/tempo")).dado.registros[0].milisegundos, 15000);
+  const atualizada = (await aluno.req("/api/aula?aula=aula-00")).dado;
+  assert.equal(atualizada.progresso.concluidos, 0);
+  assert.equal(atualizada.progresso.revalidar, 1);
+  assert.equal(atualizada.respostas.codigos[idExemplo], tentativa);
+  const listaAtualizada = (await aluno.req("/api/inicio")).dado.aulas.find((a) => a.id === "aula-00");
+  assert.deepEqual(listaAtualizada.progresso, atualizada.progresso);
   await aluno.fechar();
   await prof.req("/api/percursos", {
     ...seed,

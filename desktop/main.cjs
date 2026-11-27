@@ -440,8 +440,8 @@ async function iniciar() {
     !process.env.HUB_TEST_DATA
   ) {
     const timerAtualizacao = setTimeout(
-      () => atualizador.verificar().catch(() => {}),
-      8000,
+      () => atualizador.iniciarAutomaticamente().catch(() => {}),
+      3000,
     );
     timerAtualizacao.unref();
   }

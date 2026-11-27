@@ -265,6 +265,9 @@ function renderizarBriefing(exercicio) {
             ");";
           $("rascunho").dispatchEvent(new Event("input"));
           $("meus-experimentos").open = true;
+          focarPratica("execucao");
+          window.HubConforto?.sincronizarEntradas();
+          $("rascunho").focus();
           aviso(
             "Entrada copiada para o rascunho. Execute sua tentativa para investigar o resultado.",
           );

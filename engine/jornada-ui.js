@@ -26,6 +26,24 @@ function barraProgresso(parent, valor, texto) {
   progress.value = valor;
   progress.setAttribute("aria-label", texto);
 }
+function renderizarProgressoCartao(parent, item) {
+  if (item.disponivel === false) {
+    elemento(parent, "span", "Aguardando liberação do professor", "lesson-progress");
+    return;
+  }
+  const p = item.progresso ?? { concluidos: 0, total: 0, percentual: 0 };
+  const raiz = elemento(parent, "div", undefined, "lesson-meter");
+  raiz.dataset.completa = String(!!p.completa);
+  const legenda = elemento(raiz, "div", undefined, "lesson-meter-heading");
+  elemento(legenda, "span", estadoDaAula(item));
+  elemento(legenda, "strong", `${p.percentual}%`);
+  const progress = elemento(raiz, "progress");
+  progress.max = 100;
+  progress.value = p.percentual;
+  progress.setAttribute("aria-label", `Progresso da aula ${item.numero}: ${p.concluidos} de ${p.total} desafios validados`);
+  elemento(raiz, "span", `${p.concluidos} de ${p.total} desafios validados`, "secondary");
+  if (p.revalidar) elemento(raiz, "span", `${p.revalidar} ${p.revalidar === 1 ? "desafio precisa" : "desafios precisam"} de nova verificação`, "progress-review");
+}
 function renderizarJornada() {
   renderizarPercursos();
 }
@@ -119,9 +137,15 @@ function renderizarProgressoAula() {
       p.percentual,
       `${p.completa ? "✓ Aula concluída" : "Seu progresso"} · ${p.concluidos}/${p.total} desafios validados`,
     );
+  if (p?.revalidar) elemento(raiz, "p", `${p.revalidar} desafio(s) com código ou critérios alterados. Verifique novamente; seu código foi mantido.`, "progress-review");
 }
 function celebrarProgresso(antes, depois) {
   if (!depois || depois.concluidos <= (antes?.concluidos ?? 0)) return;
+  if (!depois.completa) {
+    aviso(`Questão concluída! ${depois.concluidos} de ${depois.total} desafios validados. Seu progresso está salvo.`);
+    window.HubConforto?.mostrarConquista();
+    return;
+  }
   const d = elemento(document.body, "dialog", undefined, "completion-dialog");
   const simbolo = elemento(d, "div", "✓", "completion-symbol");
   simbolo.setAttribute("aria-hidden", "true");
@@ -223,7 +247,8 @@ function renderizarMapaRecursos() {
         : r.tipo === "mock-http"
           ? "Mock de API"
           : "Documentos JSON";
-    botao(nav, `${icone} ${r.nome ?? r.id}`, () => abrirRecursoLateral(r.id));
+    const botaoRecurso = botao(nav, `${icone} ${r.nome ?? r.id}`, () => abrirRecursoLateral(r.id));
+    botaoRecurso.dataset.tipo = r.tipo;
     const b = botao(
       dependencias,
       `${icone} ${r.nome ?? r.id}`,
@@ -246,6 +271,7 @@ function renderizarMapaRecursos() {
   }
   if (aula.ambiente.permitirCriacao)
     botao(nav, "＋ Criar recurso", () => abrirEdicaoRecurso());
+  nav.querySelectorAll("button").forEach(b => { b.title = b.textContent.trim(); });
 }
 async function abrirRecursoLateral(id) {
   recursoSelecionado = id;
@@ -255,6 +281,9 @@ async function abrirRecursoLateral(id) {
       )?.tipo ?? "visao")
     : "visao";
   document.body.classList.add("resource-drawer-open");
+  if (aba !== "praticar") mostrarAba("praticar");
+  window.HubConforto?.posicionarAmbiente("praticar", true);
   $("ambiente").hidden = false;
   await carregarBancada();
+  $("ambiente").querySelector("button")?.focus();
 }

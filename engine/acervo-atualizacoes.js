@@ -1,9 +1,9 @@
 (function (root) {
   "use strict";
   function criar({ listar, locais, receber, aplicar, protegidas, podeAplicar, aoEstado }) {
-    let pendentes = [], ocupado = false, exigeAtualizacao = false;
+    let pendentes = [], ocupado = false, exigeAtualizacao = false, incompativeis = [];
     function estado(extra = {}) {
-      aoEstado({ pendentes: pendentes.map((p) => p.id), exigeAtualizacao, ...extra });
+      aoEstado({ pendentes: pendentes.map((p) => p.id), revisoes: pendentes.map((p) => `${p.id}:${p.revisao}`).sort(), exigeAtualizacao, incompativeis, ...extra });
     }
     async function aplicarPendentes(incluirAberta) {
       if (!podeAplicar()) return estado();
@@ -12,7 +12,7 @@
       if (!lote.length) return estado();
       await aplicar(lote.map((p) => p.fonte), { incluirAberta });
       pendentes = pendentes.filter((p) => !lote.includes(p));
-      estado({ aplicadas: lote.map((p) => p.id) });
+      estado({ aplicadas: lote.map((p) => p.id), revisoesAplicadas: lote.map((p) => `${p.id}:${p.revisao}`).sort() });
     }
     return {
       async verificar() {
@@ -27,6 +27,8 @@
           // Retirada/revogação nunca deixa uma revisão previamente baixada na fila.
           pendentes = pendentes.filter((p) => revisoes.get(p.id) === p.revisao);
           const ids = [...revisoes.keys()].filter((id) => !pendentes.some((p) => p.id === id));
+          exigeAtualizacao = false;
+          incompativeis = [];
           if (ids.length) {
             const recebido = await receber(ids);
             for (const fonte of recebido.fontes ?? []) {
@@ -36,6 +38,7 @@
               pendentes.push({ id: aula.id, revisao: revisoes.get(aula.id), fonte });
             }
             exigeAtualizacao = !!recebido.indisponiveis?.length;
+            incompativeis = (recebido.indisponiveis ?? []).map((a) => `${a.id}:${revisoes.get(a.id)}`).sort();
           }
           await aplicarPendentes(false);
         } catch (e) {

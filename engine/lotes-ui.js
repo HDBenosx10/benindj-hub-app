@@ -137,7 +137,7 @@ async function revisarImportacao(fontes) {
         }
         confirmar.hidden = true;
         fechar.textContent = "Concluir";
-        await carregarInicio(aula?.id);
+        await carregarInicio(aula?.id, { recarregarAula: true });
       } catch (erro) {
         aviso(erro.message, true);
         confirmar.disabled = false;
